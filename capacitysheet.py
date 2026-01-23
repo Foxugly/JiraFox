@@ -1,15 +1,14 @@
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 
-from data import FIRSTNAMES, JIRA_ONLY_STANDARD_TYPES, REC_EPIC_KEY, PROJECT_ID, NEXT_SPRINT_ID, \
-    CURRENT_SPRINT_ID, dict_statuses
+from data import FIRSTNAMES, JIRA_ONLY_STANDARD_TYPES, REC_EPIC_KEY, BOARD_ID, PROJECT_ID, dict_statuses
 from jiramanager import JiraManager
 
 
 def create_xlsx(path: str, jm: "JiraManager"):
     wb = Workbook()
-    ws = wb.active
-    ws.title = "Capacity sheet"
+    ws1 = wb.active
+    ws1.title = "Capacity sheet"
 
     start_col = 3  # C
     title_col = 2  # B
@@ -19,7 +18,7 @@ def create_xlsx(path: str, jm: "JiraManager"):
 
     list_sum_rows: list[int] = []
 
-    def write_header(row: int) -> int:
+    def write_header(ws, row: int) -> int:
         for i, (name, _) in enumerate(ordered_FIRSTNAMES):
             ws.cell(row=row, column=start_col + i, value=name)
         ws.cell(row=row, column=state_col, value="State")
@@ -39,7 +38,7 @@ def create_xlsx(path: str, jm: "JiraManager"):
         est_txt = "" if est is None else str(est)
         return f"{key} - {summary} ({est_txt})"
 
-    def write_issue_row(row: int, issue: dict) -> int:
+    def write_issue_row(ws, row: int, issue: dict, diff_spent_hours: bool) -> int:
         firstname = get_firstname(issue)
 
         if firstname == "Renaud":
@@ -49,12 +48,18 @@ def create_xlsx(path: str, jm: "JiraManager"):
 
         if firstname and firstname in FIRSTNAMES:
             col = start_col + FIRSTNAMES[firstname]
-            ws.cell(row=row, column=col, value=issue.get("remaining_hours", 0))
+            if diff_spent_hours:
+                estimated_hours = float(issue.get("estimation").get("original_estimate_hours"))
+                spent_hours = float(issue.get("spent_hours"))
+                value = estimated_hours - spent_hours
+            else:
+                value = float(issue.get("remaining_hours", 0))
+            ws.cell(row=row, column=col, value=value)
 
         ws.cell(row=row, column=state_col, value=issue.get("state"))
         return row + 1
 
-    def write_sum_row(row: int, first_row: int) -> int:
+    def write_sum_row(ws, row: int, first_row: int) -> int:
         # Somme par colonne (prénoms)
         for i in range(len(FIRSTNAMES)):
             col = start_col + i
@@ -68,20 +73,20 @@ def create_xlsx(path: str, jm: "JiraManager"):
         list_sum_rows.append(row)
         return row + 1
 
-    def write_section(title: str, row: int, jqls: list[str]) -> int:
+    def write_section(ws, title: str, row: int, jqls: list[str], diff_spent_hours=False) -> int:
         ws.cell(row=row, column=1, value=title)
         row += 1
         first_row = row
 
         for jql in jqls:
             for issue in jm.run_jql(jql):
-                row = write_issue_row(row, issue)
+                row = write_issue_row(ws, row, issue, diff_spent_hours)
 
         # Ligne SUM
-        row = write_sum_row(row, first_row)
+        row = write_sum_row(ws, row, first_row)
         return row
 
-    def write_total_sum(row: int) -> int:
+    def write_total_sum(ws, row: int) -> int:
         ws.cell(row=row, column=1, value="TOTAL")
 
         # Total par colonne = somme des sommes intermédiaires
@@ -100,30 +105,48 @@ def create_xlsx(path: str, jm: "JiraManager"):
 
     # --- Header
     row = 1
-    row = write_header(row)
+    row = write_header(ws1, row)
 
     done_statuses = ",".join([f'"{s["name"]}"' for s in dict_statuses["Done"]["statuses"]])
-
+    current_sprint = jm.get_current_sprint(BOARD_ID)
+    current_sprint_id = current_sprint.get("id")
+    next_sprint = jm.get_next_sprint(BOARD_ID)
+    next_sprint_id = next_sprint.get("id")
     # --- Sections
     jql_bkl = (
-        f"project = {PROJECT_ID} and sprint = {CURRENT_SPRINT_ID} "
+        f"project = {PROJECT_ID} and sprint = {current_sprint_id} "
         f"and status not in ({done_statuses}) and {JIRA_ONLY_STANDARD_TYPES} ORDER BY status ASC"
     )
-    row = write_section("BKL", row, [jql_bkl])
+    row = write_section(ws1, "BKL", row, [jql_bkl], False)
 
-    jql_recurrents = f"project = {PROJECT_ID} and sprint = {NEXT_SPRINT_ID} and 'Epic Link' = {REC_EPIC_KEY}"
-    row = write_section("RECURRENTS", row, [jql_recurrents])
+    jql_recurrents = f"project = {PROJECT_ID} and sprint = {next_sprint_id} and 'Epic Link' = {REC_EPIC_KEY}"
+    row = write_section(ws1, "RECURRENTS", row, [jql_recurrents], False)
 
-    jql_new_bkl = f"project = {PROJECT_ID} and sprint = {NEXT_SPRINT_ID} and 'Epic Link' != {REC_EPIC_KEY}"
-    row = write_section("NEW BKL", row, [jql_new_bkl])
+    jql_new_bkl = f"project = {PROJECT_ID} and sprint = {next_sprint_id} and 'Epic Link' != {REC_EPIC_KEY}"
+    row = write_section(ws1, "NEW BKL", row, [jql_new_bkl], False)
 
     jql_projects_current = (
-        f"project != {PROJECT_ID} and sprint = {CURRENT_SPRINT_ID} and status not in ({done_statuses})"
+        f"project != {PROJECT_ID} and sprint = {current_sprint_id} and status not in ({done_statuses})"
     )
-    jql_projects_next = f"project != {PROJECT_ID} and sprint = {NEXT_SPRINT_ID}"
-    row = write_section("PROJECTS", row, [jql_projects_current, jql_projects_next])
+    jql_projects_next = f"project != {PROJECT_ID} and sprint = {next_sprint_id}"
+    row = write_section(ws1, "PROJECTS", row, [jql_projects_current, jql_projects_next], False)
 
     # --- TOTAL
-    row = write_total_sum(row)
+    row = write_total_sum(ws1, row)
+
+    ws2 = wb.create_sheet('Estimation VS Reality')
+    # --- Header
+    row = 1
+    row = write_header(ws2, row)
+    jql_bkl = (
+        f"project = {PROJECT_ID} and sprint = {current_sprint_id} "
+        f"and status in ({done_statuses}) and {JIRA_ONLY_STANDARD_TYPES} ORDER BY status ASC"
+    )
+    row = write_section(ws2, "BKL", row, [jql_bkl], True)
+    jql_not_bkl = (
+        f"project != {PROJECT_ID} and sprint = {current_sprint_id} "
+        f"and status in ({done_statuses}) and {JIRA_ONLY_STANDARD_TYPES} ORDER BY status ASC"
+    )
+    row = write_section(ws2, "PROJECTS", row, [jql_not_bkl], True)
 
     wb.save(path)

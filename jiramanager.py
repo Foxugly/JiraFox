@@ -9,7 +9,7 @@ from jira import JIRA
 
 def _to_hours(seconds: Optional[int]) -> Optional[float]:
     if seconds is None:
-        return None
+        return 0
     return round(seconds / 3600.0, 2)
 
 
@@ -32,7 +32,7 @@ def _parse_jira_dt(s: Optional[str]) -> Optional[datetime]:
 class JiraConnectionConfig:
     url: str
     token: str
-    verify: bool | str = True     # True / False / "C:\\path\\corp-ca.pem"
+    verify: bool | str = True  # True / False / "C:\\path\\corp-ca.pem"
     timeout: int = 30
     proxies: Optional[Dict[str, str]] = None  # {"https": "http://proxy:8080", "http": "http://proxy:8080"}
 
@@ -71,7 +71,6 @@ class JiraManager:
         if self.cfg.proxies:
             options["proxies"] = self.cfg.proxies
 
-        print(options, self.cfg.token)
         self._jira = JIRA(options=options, token_auth=self.cfg.token)
 
         # force a call
@@ -128,7 +127,8 @@ class JiraManager:
             })
         return out
 
-    def list_sprints(self, board_id: int, *, state: str = "active,future,closed", max_results: int = 50) -> List[Dict[str, Any]]:
+    def list_sprints(self, board_id: int, *, state: str = "active,future,closed", max_results: int = 50) -> List[
+        Dict[str, Any]]:
         """
         List sprints for a given board.
         state can be "active", "future", "closed" or comma-separated.
@@ -147,6 +147,30 @@ class JiraManager:
             })
         return out
 
+    def get_current_sprint(self, board_id: int, max_results: int = 50) -> Optional[Dict[str, Any]]:
+        """
+        Find the next sprint on a board with id strictly greater than current_sprint_id.
+        Returns None if not found.
+        """
+        sprints = self.list_sprints(board_id, state="active", max_results=max_results)
+        candidates = [s for s in sprints if isinstance(s.get("id"), int)]
+        if not candidates:
+            return None
+        return min(candidates, key=lambda s: s["id"])
+
+    def get_next_sprint(self, board_id: int, max_results: int = 50) -> Optional[Dict[str, Any]]:
+        """
+        Find the next sprint on a board with id strictly greater than current_sprint_id.
+        Returns None if not found.
+        """
+        current_sprint = self.get_current_sprint(board_id)
+        current_sprint_id = int(current_sprint.get("id"))
+        sprints = self.list_sprints(board_id, state="future", max_results=max_results)
+        candidates = [s for s in sprints if isinstance(s.get("id"), int) and s["id"] > current_sprint_id]
+        if not candidates:
+            return None
+        return max(candidates, key=lambda s: s["id"])
+
     # ---------------------------
     # Sprint details + issues
     # ---------------------------
@@ -164,7 +188,8 @@ class JiraManager:
             "goal": getattr(s, "goal", None),
         }
 
-    def get_sprint_issues(self, sprint_id: int, *, jql_extra: str = "", max_results: int = 1000) -> List[Dict[str, Any]]:
+    def get_sprint_issues(self, sprint_id: int, *, jql_extra: str = "", max_results: int = 1000) -> List[
+        Dict[str, Any]]:
         """
         Get issues in a sprint via JQL.
         """
@@ -190,7 +215,7 @@ class JiraManager:
         )
         return [self._ticket_info(i.key) for i in issues]
 
-    def get_sprint_report(self, sprint_id: int, jql_extra:str="", max_results: int = 1000) -> Dict[str, Any]:
+    def get_sprint_report(self, sprint_id: int, jql_extra: str = "", max_results: int = 1000) -> Dict[str, Any]:
         """
         Return sprint info + tickets with requested ticket fields.
         """
@@ -224,6 +249,7 @@ class JiraManager:
 
         # remaining time
         remaining_sec = getattr(timetracking, "remainingEstimateSeconds", None) if timetracking else None
+        spent_sec = getattr(timetracking, "timeSpentSeconds", None) if timetracking else None
 
         # status / assignee
         status_name = getattr(getattr(fields, "status", None), "name", None)
@@ -251,6 +277,7 @@ class JiraManager:
                 "original_estimate_hours": _to_hours(original_estimate_sec),
             },
             "remaining_hours": _to_hours(remaining_sec),
+            "spent_hours": _to_hours(spent_sec),
             "kanban_metrics": metrics,
         }
 

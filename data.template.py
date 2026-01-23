@@ -12,10 +12,8 @@ JIRA_ONLY_STANDARD_TYPES = "issuetype in standardIssueTypes()"
 REC_EPIC_KEY = 'PROJECT-1'
 BOARD_ID = 4
 PROJECT_ID = 1
-CURRENT_SPRINT_ID = 2
-NEXT_SPRINT_ID = 3
 
-FIRSTNAMES = {'Pierre': 3, 'Paul': 1, 'Jack': 2,}
+FIRSTNAMES = {'Pierre': 3, 'Paul': 1, 'Jack': 2, }
 
 dict_statuses = {'Done': {'order': 2, 'statuses': []}, 'To Do': {'order': 0, 'statuses': []},
-                     'In Progress': {'order': 1, 'statuses': []}}
+                 'In Progress': {'order': 1, 'statuses': []}}
