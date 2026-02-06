@@ -11,6 +11,7 @@
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <!-- Titre -->
+            <a href="{% url 'sprint-list' %}">Retour</a>
             <h2 class="mb-0">
                 Sprint {{ sprint.id }} – {{ sprint.name }}
             </h2>
@@ -24,6 +25,11 @@
                 <a class="btn btn-outline-secondary" role="button" aria-pressed="true"
                    href="{% url 'sprint-report' sprint.id %}">
                     <i class="fa-solid fa-chart-line"></i>
+                </a>
+
+                <a class="btn btn-outline-secondary" role="button" aria-pressed="true"
+                   href="{% url 'sprint-export' sprint.id %}">
+                    <i class="fa-regular fa-file-excel"></i>
                 </a>
 
                 <a class="btn btn-outline-secondary" role="button" aria-pressed="true"
@@ -50,30 +56,25 @@
         <!-- DataTables CSS -->
 
 
-        <table id="issuesTable" class="table table-striped table-hover mt-3">
+        <table id="issuesTable" class="table table-striped table-bordered table-hover mt-3">
             <thead>
             <tr>
                 <th>Key</th>
                 <th>Résumé</th>
-                <th>Projet</th>
                 <th>Type</th>
                 <th>État</th>
                 <th>Assigné</th>
-                <!--<th>SP</th>
-                <th>Restant (h)</th>
-                <th>Dépensé (h)</th>-->
             </tr>
             </thead>
             <tbody>
             {% for issue in issues %}
                 <tr>
                     <td>
-                        <a href="#" target="_blank">
+                        <a href="{{ issue.url }}" target="_blank">
                             {{ issue.key }}
                         </a>
                     </td>
                     <td>{{ issue.summary }}</td>
-                    <td>{{ issue.project }}</td>
                     <td>{{ issue.issueType }}</td>
                     <td>{{ issue.state }}</td>
                     <td>{{ issue.assignee|format_assignee }}</td>

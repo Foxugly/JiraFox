@@ -114,6 +114,8 @@ class JiraManager:
     - 'Story points' depends on your custom field; we auto-detect by name.
     """
     JIRA_ONLY_STANDARD_TYPES = "issuetype in standardIssueTypes()"
+    dict_statuses = {'Done': {'order': 2, 'statuses': []}, 'To Do': {'order': 0, 'statuses': []},
+                     'In Progress': {'order': 1, 'statuses': []}}
 
     def __init__(self, jc: JiraConfiguration) -> None:
         self.cfg = jc
@@ -152,6 +154,10 @@ class JiraManager:
     def server_info(self) -> dict[str, Any]:
         return self._jira.server_info()
 
+    def get_dict_statuses(self)->dict:
+        for s in self.list_statuses():
+            self.dict_statuses[s['statusCategory']]['statuses'].append(s)
+        return self.dict_statuses
     # ---------------------------
     # Core listings
     # ---------------------------
@@ -271,6 +277,14 @@ class JiraManager:
             "goal": getattr(s, "goal", None),
         }
 
+    def _search_issues(self, jql: str,max_results: int = 1000) -> List[Dict[str, Any]]:
+        issues = self.jira.search_issues(
+            jql,
+            maxResults=max_results,
+            fields="summary,status,assignee,timetracking,created,updated,resolutiondate,issuetype,project",
+        )
+        return issues
+
     def get_sprint_issues(self, sprint_id: int, *, jql_extra: str = "", max_results: int = 1000) -> List[
         Dict[str, Any]]:
         """
@@ -280,28 +294,27 @@ class JiraManager:
         if jql_extra.strip():
             jql = f"({jql}) AND ({jql_extra.strip()})"
 
-        issues = self.jira.search_issues(
-            jql,
-            maxResults=max_results,
-            fields="summary,status,assignee,timetracking,created,updated,resolutiondate,issuetype,project",
-        )
+        issues = self._search_issues(jql)
         return [self._ticket_info(i.key) for i in issues]
 
-    def run_jql(self, jql: str, *, max_results: int = 1000) -> List[Dict[str, Any]]:
+    def run_jql(self, jql: str, *, max_results: int = 1000, full=True) -> List[Dict[str, Any]]:
         """
         Execute a JQL query and return ticket details.
         """
-        issues = self.jira.search_issues(
-            jql,
-            maxResults=max_results,
-            fields="summary,status,assignee,timetracking,created,updated,resolutiondate,issuetype,project",
-        )
-        return [self._ticket_info(i.key) for i in issues]
+        issues = self._search_issues(jql, max_results=max_results)
+        if full :
+            return [self._ticket_info_detail(i.key) for i in issues]
+        else:
+            return [self._ticket_info(i.key) for i in issues]
 
     def get_url_jql(self, jql: str) -> str:
         params = {"jql": jql}
         encoded = urllib.parse.urlencode(params)
         url = f"{self.cfg.jira_url}issues/?{encoded}"
+        return url
+
+    def get_issue_url(self, issue_key: str) -> str:
+        url = f"{self.cfg.jira_url}browse/{issue_key}"
         return url
 
     def get_sprint_report(self, sprint_id: int, jql_extra: str = "", max_results: int = 1000) -> Dict[str, Any]:
@@ -323,6 +336,37 @@ class JiraManager:
         return self._ticket_info(issue_key)
 
     def _ticket_info(self, issue_key: str) -> Dict[str, Any]:
+        issue = self.jira.issue(
+            issue_key,
+            fields="summary,status,assignee,issuetype,project",
+            expand="changelog",
+        )
+
+        fields = issue.fields
+
+        # status / assignee
+        status_name = getattr(getattr(fields, "status", None), "name", None)
+        assignee_obj = getattr(fields, "assignee", None)
+        assignee = None
+        if assignee_obj:
+            assignee = {
+                "displayName": getattr(assignee_obj, "displayName", None),
+                "emailAddress": getattr(assignee_obj, "emailAddress", None),
+                "accountId": getattr(assignee_obj, "accountId", None),
+                "name": getattr(assignee_obj, "name", None),  # some Server versions
+            }
+
+        return {
+            "key": issue.key,
+            "summary": getattr(fields, "summary", None),
+            "project": getattr(getattr(fields, "project", None), "key", None),
+            "issueType": getattr(getattr(fields, "issuetype", None), "name", None),
+            "state": status_name,
+            "assignee": assignee,
+            "url" : self.get_issue_url(issue.key),
+        }
+
+    def _ticket_info_detail(self, issue_key: str) -> Dict[str, Any]:
         issue = self.jira.issue(
             issue_key,
             fields="summary,status,assignee,timetracking,created,updated,resolutiondate,issuetype,project",
@@ -368,6 +412,7 @@ class JiraManager:
             "remaining_hours": _to_hours(remaining_sec),
             "spent_hours": _to_hours(spent_sec),
             "kanban_metrics": metrics,
+            "url": self.get_issue_url(issue.key),
         }
 
     def _detect_story_points_field_id(self) -> Optional[str]:

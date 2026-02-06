@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <a href="{% url 'sprint-detail' sprint.id %}">Retour</a>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <!-- Titre -->
+                <h2 class="mb-0">
+                    Sprint {{ sprint.id }} – {{ sprint.name }} - Report
+                </h2>
+
+            </div>
+        </div>
+        <table id="StatusesTable" class="table table-striped table-bordered table-hover mt-3">
+            <thead>
+            <tr>
+                <th>NAME</th>
+                <th>JQL</th>
+                <th>ACTIONS</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for s in statuses %}
+                <tr>
+                    <td>{{ s.name }}</td>
+                    <td>{{ s.jql }}</td>
+                    <td><a class="btn btn-outline-secondary" href="{{ s.url_jql }}" target="_blank" rel="noopener">
+                        <i class="fa-brands fa-jira"></i></a></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
