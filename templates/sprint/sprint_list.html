@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% load datetime_filters %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <h2>Sprints – Board {{ board_id }}</h2>
+
+    <!-- ===== Filtres ===== -->
+    <form method="get" class="mb-3">
+
+        <div class="btn-group" role="group" aria-label="Filter states">
+
+            <!-- ACTIVE -->
+            <input type="checkbox" class="btn-check" id="filter-active"
+                   name="state" value="active"
+                   {% if "active" in selected_states %}checked{% endif %}>
+            <label class="btn btn-outline-success" for="filter-active">
+                Active
+            </label>
+
+            <!-- FUTURE -->
+            <input type="checkbox" class="btn-check" id="filter-future"
+                   name="state" value="future"
+                   {% if "future" in selected_states %}checked{% endif %}>
+            <label class="btn btn-outline-info" for="filter-future">
+                Future
+            </label>
+
+            <!-- CLOSED -->
+            <input type="checkbox" class="btn-check" id="filter-closed"
+                   name="state" value="closed"
+                   {% if "closed" in selected_states %}checked{% endif %}>
+            <label class="btn btn-outline-secondary" for="filter-closed">
+                Closed
+            </label>
+
+        </div>
+
+        <button type="submit" class="btn btn-primary ms-3">Filtrer</button>
+    </form>
+
+    <!-- ===== TABLEAU ===== -->
+    <table class="table table-striped table-hover mt-3">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Nom</th>
+                <th>État</th>
+                <th>Début</th>
+                <th>Fin</th>
+                <th>Boutons</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for sprint in sprints %}
+            <tr>
+                <td><a href="{% url 'sprint-detail' sprint.id  %}">{{ sprint.id }}</a></td>
+                <td>{{ sprint.name }}</td>
+                <td>
+                    <span class="badge
+                        {% if sprint.state == 'active' %}bg-success
+                        {% elif sprint.state == 'future' %}bg-info
+                        {% else %}bg-secondary{% endif %}
+                    ">
+                        {{ sprint.state }}
+                    </span>
+                </td>
+                <td>{{ sprint.startDate|format_jira_date:"%d/%m/%Y"}}</td>
+                <td>{{ sprint.endDate|format_jira_date:"%d/%m/%Y"}}</td>
+                <td></td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="6" class="text-center text-muted">
+                    Aucun sprint trouvé
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav>
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}&state={{ selected_states|join:',' }}">Précédent</a>
+                </li>
+            {% endif %}
+
+            <li class="page-item active">
+                <span class="page-link">
+                    Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+                </span>
+            </li>
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}&state={{ selected_states|join:',' }}">Suivant</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,143 @@
+{% load i18n %}
+
+<div class="modal-header">
+  <h5 class="modal-title">
+    {% if mode == "edit" %}Modifier{% else %}Ajouter{% endif %} une configuration Jira
+  </h5>
+  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
+</div>
+
+<div class="modal-body">
+  <form id="jiraConfigForm"
+        method="post"
+        action="{% if mode == 'edit' %}{% url 'jira_config_modal_edit' cfg.id %}{% else %}{% url 'jira_config_modal_create' %}{% endif %}"
+        novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger">
+        {{ form.non_field_errors|striptags }}
+      </div>
+    {% endif %}
+
+    <div class="row g-3">
+      <div class="col-12">
+        <label class="form-label" for="{{ form.jira_url.id_for_label }}">Jira URL</label>
+        {{ form.jira_url }}
+        {% if form.jira_url.errors %}
+          <div class="invalid-feedback d-block">{{ form.jira_url.errors|striptags }}</div>
+        {% else %}
+          <div class="form-text">Ex: https://jira.sm-ms.lan/</div>
+        {% endif %}
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.jira_email.id_for_label }}">Email</label>
+        {{ form.jira_email }}
+        {% if form.jira_email.errors %}
+          <div class="invalid-feedback d-block">{{ form.jira_email.errors|striptags }}</div>
+        {% endif %}
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.jira_token.id_for_label }}">Token</label>
+        {{ form.jira_token }}
+        {% if form.jira_token.errors %}
+          <div class="invalid-feedback d-block">{{ form.jira_token.errors|striptags }}</div>
+        {% else %}
+          <div class="form-text">Le token utilisé par ton backend (token_auth / bearer selon config).</div>
+        {% endif %}
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.jira_board_id.id_for_label }}">Board ID</label>
+        {{ form.jira_board_id }}
+        {% if form.jira_board_id.errors %}
+          <div class="invalid-feedback d-block">{{ form.jira_board_id.errors|striptags }}</div>
+        {% endif %}
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.jira_project_id.id_for_label }}">Project ID</label>
+        {{ form.jira_project_id }}
+        {% if form.jira_project_id.errors %}
+          <div class="invalid-feedback d-block">{{ form.jira_project_id.errors|striptags }}</div>
+        {% endif %}
+      </div>
+
+      <div class="col-12">
+        <label class="form-label" for="{{ form.jira_recurrent_epic_key.id_for_label }}">Recurrent Epic Key</label>
+        {{ form.jira_recurrent_epic_key }}
+        {% if form.jira_recurrent_epic_key.errors %}
+          <div class="invalid-feedback d-block">{{ form.jira_recurrent_epic_key.errors|striptags }}</div>
+        {% else %}
+          <div class="form-text">Ex: ABC-123</div>
+        {% endif %}
+      </div>
+
+      <div class="col-12">
+        <div class="form-check form-switch">
+          {{ form.current }}
+          <label class="form-check-label" for="{{ form.current.id_for_label }}">
+            Configuration courante
+          </label>
+        </div>
+        {% if form.current.errors %}
+          <div class="invalid-feedback d-block">{{ form.current.errors|striptags }}</div>
+        {% endif %}
+      </div>
+    </div>
+  </form>
+
+  {# Zone résultat test (remplie en JS) #}
+  <div class="mt-3">
+    <div id="jiraTestResult" class="alert d-none mb-0" role="alert"></div>
+
+    {% if mode == "edit" %}
+      <div class="mt-2 small text-muted">
+        Dernier test :
+        {% if cfg.last_tested_at %}
+          {{ cfg.last_tested_at }} —
+          {% if cfg.last_test_ok %}
+            <span class="badge text-bg-success">OK</span>
+          {% else %}
+            <span class="badge text-bg-danger">KO</span>
+          {% endif %}
+        {% else %}
+          -
+        {% endif %}
+      </div>
+
+      {% if cfg.last_test_error and not cfg.last_test_ok %}
+        <div class="mt-2">
+          <div class="small text-muted">Dernière erreur :</div>
+          <pre class="bg-light border rounded-3 p-2 small mb-0"
+               style="white-space: pre-wrap; word-break: break-word;">{{ cfg.last_test_error }}</pre>
+        </div>
+      {% endif %}
+    {% endif %}
+  </div>
+
+  <div class="alert alert-info mt-4 mb-0">
+    Tu peux sauvegarder puis tester, ou tester directement après modification.
+  </div>
+</div>
+
+<div class="modal-footer">
+  {% if mode == "edit" %}
+    <button type="button"
+            class="btn btn-outline-success"
+            id="btnTestJira"
+            data-url="{% url 'jira_config_test' cfg.id %}">
+      Tester la connexion
+    </button>
+  {% endif %}
+
+  <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+    Annuler
+  </button>
+
+  <button type="submit" id="jiraConfigSubmitBtn" form="jiraConfigForm" class="btn btn-primary">
+    {% if mode == "edit" %}Enregistrer{% else %}Ajouter{% endif %}
+  </button>
+</div>

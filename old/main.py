@@ -3,6 +3,7 @@ from __future__ import annotations
 import urllib.parse
 import webbrowser
 
+from datetime import datetime
 from jira.exceptions import JIRAError
 
 from capacitysheet import create_xlsx
@@ -25,8 +26,8 @@ try:
 
     for s in jm.list_statuses():
         dict_statuses[s['statusCategory']]['statuses'].append(s)
-
-    current_sprint_id = jm.get_current_sprint(BOARD_ID).get("id")
+    current_sprint = jm.get_current_sprint(BOARD_ID)
+    current_sprint_id = current_sprint.get("id")
     jqls = []
     for name, data in sorted(dict_statuses.items(), key=lambda item: item[1]["order"]):
         print(name)
@@ -41,7 +42,9 @@ try:
 
     # open_jira_tabs(JIRA_URL, jqls)
     print("CAPACITY SHEET")
-    create_xlsx("stats.xlsx", jm)
+    prefix = datetime.now().strftime("%Y%m%d%H%M%S")
+    filename = f" {prefix}_{current_sprint.get("name")}.xlsx".replace(" ","").replace("/","_")
+    create_xlsx(filename, jm)
 except JIRAError as e:
     print("JIRAError:", e)
 except Exception as e:

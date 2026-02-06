@@ -1,4 +1,5 @@
 from openpyxl import Workbook
+from openpyxl.styles import PatternFill
 from openpyxl.utils import get_column_letter
 
 from data import FIRSTNAMES, JIRA_ONLY_STANDARD_TYPES, REC_EPIC_KEY, BOARD_ID, PROJECT_ID, dict_statuses
@@ -61,14 +62,22 @@ def create_xlsx(path: str, jm: "JiraManager"):
 
     def write_sum_row(ws, row: int, first_row: int) -> int:
         # Somme par colonne (prénoms)
+        fill = PatternFill(start_color="C5D9F1", end_color="C5D9F1", fill_type="solid")
+
+        for i in range(1, start_col):
+            cell = ws.cell(row=row, column=i)
+            cell.fill = fill
         for i in range(len(FIRSTNAMES)):
             col = start_col + i
             col_letter = get_column_letter(col)
-
+            cell = ws.cell(row=row, column=col)
+            cell.fill = fill
             if row - 1 >= first_row:
-                ws.cell(row=row, column=col, value=f"=SUM({col_letter}{first_row}:{col_letter}{row - 1})")
+                #ws.cell(row=row, column=col, value=f"=SUM({col_letter}{first_row}:{col_letter}{row - 1})")
+                cell.value = f"=SUM({col_letter}{first_row}:{col_letter}{row - 1})"
             else:
-                ws.cell(row=row, column=col, value=0)
+                #ws.cell(row=row, column=col, value=0)
+                cell.value = int(0)
 
         list_sum_rows.append(row)
         return row + 1
@@ -117,19 +126,20 @@ def create_xlsx(path: str, jm: "JiraManager"):
         f"project = {PROJECT_ID} and sprint = {current_sprint_id} "
         f"and status not in ({done_statuses}) and {JIRA_ONLY_STANDARD_TYPES} ORDER BY status ASC"
     )
+
     row = write_section(ws1, "BKL", row, [jql_bkl], False)
 
     jql_recurrents = f"project = {PROJECT_ID} and sprint = {next_sprint_id} and 'Epic Link' = {REC_EPIC_KEY}"
-    row = write_section(ws1, "RECURRENTS", row, [jql_recurrents], False)
+    row = write_section(ws1, "RECURRENTS", row + 1, [jql_recurrents], False)
 
     jql_new_bkl = f"project = {PROJECT_ID} and sprint = {next_sprint_id} and 'Epic Link' != {REC_EPIC_KEY}"
-    row = write_section(ws1, "NEW BKL", row, [jql_new_bkl], False)
+    row = write_section(ws1, "NEW BKL", row + 1, [jql_new_bkl], False)
 
     jql_projects_current = (
         f"project != {PROJECT_ID} and sprint = {current_sprint_id} and status not in ({done_statuses})"
     )
     jql_projects_next = f"project != {PROJECT_ID} and sprint = {next_sprint_id}"
-    row = write_section(ws1, "PROJECTS", row, [jql_projects_current, jql_projects_next], False)
+    row = write_section(ws1, "PROJECTS", row + 1, [jql_projects_current, jql_projects_next], False)
 
     # --- TOTAL
     row = write_total_sum(ws1, row)
