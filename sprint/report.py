@@ -1,21 +1,19 @@
 from io import BytesIO
 from openpyxl import Workbook
-from openpyxl.styles import PatternFill
+from openpyxl.styles import PatternFill, Side, Border
 from openpyxl.utils import get_column_letter
-
-from old.data import REC_EPIC_KEY
 
 FIRSTNAMES = {'Benjamin': 5, 'Wim': 1, 'Sybren': 6, 'Stéphane': 3, 'Joseph': 4, 'Nancy': 0, 'Bart': 2}
 
 
 def create_xlsx_bytes(jm: "JiraManager", sprint_id:int) -> bytes:
     buffer = BytesIO()
-
+    fill = PatternFill(start_color="C5D9F1", end_color="C5D9F1", fill_type="solid")
     # --- Ici, ON REUTILISE TON CODE A L’IDENTIQUE ---
     wb = Workbook()
     ws1 = wb.active
     ws1.title = "Capacity sheet"
-
+    available_row = 7
     start_col = 3  # C
     title_col = 2  # B
     state_col = start_col + len(FIRSTNAMES)  # colonne après les prénoms
@@ -25,9 +23,50 @@ def create_xlsx_bytes(jm: "JiraManager", sprint_id:int) -> bytes:
     list_sum_rows: list[int] = []
 
     def write_header(ws, row: int) -> int:
+        # ----------- FIRSTNAME ---------------------
         for i, (name, _) in enumerate(ordered_FIRSTNAMES):
-            ws.cell(row=row, column=start_col + i, value=name)
+            c = ws.cell(row=row, column=start_col + i, value=name)
+            c.fill = fill
         ws.cell(row=row, column=state_col, value="State")
+        ws.freeze_panes = "A2"
+        row += 1
+        #------------ CAPACITY -----------------
+        for i, (name, _) in enumerate(ordered_FIRSTNAMES):
+            ws.cell(row=row, column=start_col + i, value=72)
+        ws.cell(row=row, column=start_col-1, value="Capacity")
+        row += 1
+        # ------------ HOLIDAY --------------------
+        for i, (name, _) in enumerate(ordered_FIRSTNAMES):
+            ws.cell(row=row, column=start_col + i, value=0)
+        ws.cell(row=row, column=start_col-1, value="Holidays")
+        row += 1
+        # ------------ FASTLANE ------------------
+        for i, (name, _) in enumerate(ordered_FIRSTNAMES):
+            col = start_col + i
+            col_letter = get_column_letter(col)
+            c = f"=({col_letter}{row-2}-{col_letter}{row - 1})* 0.1"
+            ws.cell(row=row, column=start_col + i, value=c)
+        ws.cell(row=row, column=start_col-1, value="Fastlane (10%)")
+        row += 1
+        # ------------ PROJECT MEETINGS -------------
+        for i, (name, _) in enumerate(ordered_FIRSTNAMES):
+            ws.cell(row=row, column=start_col + i, value=5)
+        ws.cell(row=row, column=start_col-1, value="Project meetings")
+        row += 1
+        # ------------ MEETINGS --------------------
+        for i, (name, _) in enumerate(ordered_FIRSTNAMES):
+            ws.cell(row=row, column=start_col + i, value=4)
+        ws.cell(row=row, column=start_col-1, value="Meetings")
+        row += 1
+        # ------------ AVAILABLE --------------------
+        for i, (name, _) in enumerate(ordered_FIRSTNAMES):
+            col = start_col + i
+            col_letter = get_column_letter(col)
+            form = f"={col_letter}{row-5}-{col_letter}{row-4}-{col_letter}{row-3}-{col_letter}{row-2}-{col_letter}{row - 1}"
+            c = ws.cell(row=row, column=start_col + i, value=form)
+            c.fill = fill
+        c = ws.cell(row=row, column=start_col-1, value="Available")
+        c.fill = fill
         return row + 1
 
     def get_firstname(issue: dict) -> str | None:
@@ -67,7 +106,7 @@ def create_xlsx_bytes(jm: "JiraManager", sprint_id:int) -> bytes:
 
     def write_sum_row(ws, row: int, first_row: int) -> int:
         # Somme par colonne (prénoms)
-        fill = PatternFill(start_color="C5D9F1", end_color="C5D9F1", fill_type="solid")
+
 
         for i in range(1, start_col):
             cell = ws.cell(row=row, column=i)
@@ -115,7 +154,14 @@ def create_xlsx_bytes(jm: "JiraManager", sprint_id:int) -> bytes:
                 refs = ",".join([f"{col_letter}{r}" for r in list_sum_rows])
                 ws.cell(row=row, column=col, value=f"=SUM({refs})")
 
-        return row + 1
+            # DELTA
+            c = ws.cell(row=row+1, column=col, value=f"={col_letter}{available_row}-{col_letter}{row}")
+            c.fill = fill
+        c = ws.cell(row=row+1, column=1, value="DELTA")
+        c.fill = fill
+        c = ws.cell(row=row + 1, column=2, value="")
+        c.fill = fill
+        return row + 2
 
     # --- Header
     row = 1
@@ -150,6 +196,11 @@ def create_xlsx_bytes(jm: "JiraManager", sprint_id:int) -> bytes:
 
     # --- TOTAL
     row = write_total_sum(ws1, row)
+    medium = Side(style="medium")
+    border = Border(left=medium, right=medium, top=medium, bottom=medium )
+    for row in ws1[f"A1:J{row-1}"]:
+        for cell in row:
+            cell.border = border
 
     ws2 = wb.create_sheet('Estimation VS Reality')
     # --- Header
