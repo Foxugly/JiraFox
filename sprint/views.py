@@ -212,18 +212,24 @@ def get_api_sprint_wia_issues(request, sprint_id: int) -> JsonResponse:
         if status not in STATUS_EXCLUDED:
             # current_wip_age_hours peut être float / int / None selon la source
             age_hours = i.get("kanban_metrics", {}).get("current_wip_age_hours") or 0
+            cycle_time_hours = i.get("kanban_metrics", {}).get("cycle_time_hours") or 0
             try:
                 age_hours = float(age_hours)
             except (TypeError, ValueError):
                 age_hours = 0
-
+            try:
+                cycle_time_hours = float(cycle_time_hours)
+            except (TypeError, ValueError):
+                cycle_time_hours = 0
             # 8h = 1 jour (comme tu fais), on force >= 0
             age_days = max(0, int(age_hours // 8))
+            cycle_time_days = max(0, int(cycle_time_hours // 8))
 
             mapped_items.append({
                 "key": i.get("key"),
                 "status": status,
                 "ageDays": age_days,
+                "cycleTime" : cycle_time_days,
                 "title": i.get("summary") or "",
                 "url": i.get("url") or "",
             })

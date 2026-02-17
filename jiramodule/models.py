@@ -1,13 +1,12 @@
+import urllib.parse
+from datetime import datetime, time, timedelta
 from typing import Optional, Tuple, List, Any, Dict
 
 from django.conf import settings
-from django.db import models, transaction
-from django.db.models import Q
 from django.contrib.auth.models import AbstractUser
-from datetime import datetime
+from django.db import models, transaction
 from django.utils import timezone
 from jira import JIRA
-import urllib.parse
 
 
 def _to_hours(seconds: Optional[int]) -> Optional[float]:
@@ -154,10 +153,11 @@ class JiraManager:
     def server_info(self) -> dict[str, Any]:
         return self._jira.server_info()
 
-    def get_dict_statuses(self)->dict:
+    def get_dict_statuses(self) -> dict:
         for s in self.list_statuses():
             self.dict_statuses[s['statusCategory']]['statuses'].append(s)
         return self.dict_statuses
+
     # ---------------------------
     # Core listings
     # ---------------------------
@@ -277,7 +277,7 @@ class JiraManager:
             "goal": getattr(s, "goal", None),
         }
 
-    def _search_issues(self, jql: str,max_results: int = 1000) -> List[Dict[str, Any]]:
+    def _search_issues(self, jql: str, max_results: int = 1000) -> List[Dict[str, Any]]:
         issues = self.jira.search_issues(
             jql,
             maxResults=max_results,
@@ -305,7 +305,7 @@ class JiraManager:
         Execute a JQL query and return ticket details.
         """
         issues = self._search_issues(jql, max_results=max_results)
-        if full :
+        if full:
             return [self._ticket_info_detail(i.key) for i in issues]
         else:
             return [self._ticket_info(i.key) for i in issues]
@@ -366,7 +366,7 @@ class JiraManager:
             "issueType": getattr(getattr(fields, "issuetype", None), "name", None),
             "state": status_name,
             "assignee": assignee,
-            "url" : self.get_issue_url(issue.key),
+            "url": self.get_issue_url(issue.key),
         }
 
     def _ticket_info_detail(self, issue_key: str) -> Dict[str, Any]:
@@ -454,6 +454,67 @@ class JiraManager:
         except Exception:
             return None
 
+    from datetime import datetime
+
+    def business_hours_between(self, start: datetime, end: datetime) -> float:
+        """
+        Compute business hours between start and end with daily caps:
+          - Mon-Thu: 8h/day
+          - Fri: 4h/day
+          - Sat-Sun: 0h/day
+
+        This is a *daily cap* model (not 9-17 schedule). If any part of a weekday is included,
+        we count up to the cap proportionally to the fraction of that day included.
+        """
+        if start is None or end is None:
+            return 0.0
+
+        tz = timezone.get_default_timezone()
+        if timezone.is_naive(start):
+            start = timezone.make_aware(start, tz)
+        else:
+            start = start.astimezone(tz)
+
+        if timezone.is_naive(end):
+            end = timezone.make_aware(end, tz)
+        else:
+            end = end.astimezone(tz)
+
+        if end <= start:
+            return 0.0
+
+        def daily_cap(dt: datetime) -> float:
+            wd = dt.weekday()  # 0=Mon ... 4=Fri ... 6=Sun
+            if wd <= 3:
+                return 8.0
+            if wd == 4:
+                return 4.0
+            return 0.0
+
+        total = 0.0
+        cur = start
+
+        while cur.date() <= end.date():
+            day_start = datetime.combine(cur.date(), time.min, tzinfo=tz)
+            day_end = datetime.combine(cur.date(), time.max, tzinfo=tz)
+
+            seg_start = max(cur, day_start)
+            seg_end = min(end, day_end)
+
+            if seg_end > seg_start:
+                cap = daily_cap(seg_start)
+                if cap > 0:
+                    # fraction of the day covered by [seg_start, seg_end]
+                    day_seconds = 24 * 3600
+                    seg_seconds = (seg_end - seg_start).total_seconds()
+                    frac = max(0.0, min(1.0, seg_seconds / day_seconds))
+                    total += cap * frac
+
+            # move to next day
+            cur = datetime.combine(cur.date() + timedelta(days=1), time.min, tzinfo=tz)
+
+        return round(total, 2)
+
     def _kanban_metrics(self, issue: Any) -> Dict[str, Any]:
         """
         "ses metriques kanban" — Jira doesn't expose cycle/lead time directly via python-jira.
@@ -472,7 +533,7 @@ class JiraManager:
 
         lead_time_hours = None
         if created:
-            lead_time_hours = round((end - created.astimezone(tz)).total_seconds() / 3600.0, 2)
+            lead_time_hours = self.business_hours_between(created.astimezone(tz), end.astimezone(tz))
 
         # Build status change timeline from changelog
         histories = getattr(getattr(issue, "changelog", None), "histories", None) or []
@@ -536,10 +597,10 @@ class JiraManager:
 
         cycle_time_hours = None
         if first_in_progress:
-            cycle_time_hours = round((end.astimezone(tz) - first_in_progress).total_seconds() / 3600.0, 2)
+            cycle_time_hours = self.business_hours_between(first_in_progress, end.astimezone(tz))
 
         # current WIP age: time since last status point
-        current_wip_age_hours = round((now - points[-1][0]).total_seconds() / 3600.0, 2)
+        current_wip_age_hours = self.business_hours_between(points[-1][0], now)
 
         return {
             "lead_time_hours": lead_time_hours,

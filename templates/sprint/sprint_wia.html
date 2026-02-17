@@ -1,364 +1,442 @@
 {% extends "base.html" %}
 
 {% block header %}
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
-  <style>
-    body { background:#f8f9fa; }
+    {# DataTables (jQuery) + Bootstrap 5 CSS (version 1.13.x) #}
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.8/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/datatables.net-responsive-bs5@2.5.0/css/responsive.bootstrap5.min.css">
 
-    .card {
-      border:0;
-      border-radius:16px;
-      box-shadow:0 10px 25px rgba(0,0,0,.06);
-    }
+    <style>
+        body {
+            background: #f8f9fa;
+        }
 
-    canvas { height: 650px !important; }
+        .card {
+            border: 0;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, .06);
+        }
 
-    /* Tooltip HTML externe (cliquable) */
-    #chartTooltip {
-      position: absolute;
-      pointer-events: auto; /* permet de cliquer sur le lien */
-      transform: translate(-50%, -100%);
-      z-index: 20;
-      display: none;
-      min-width: 260px;
-      max-width: 360px;
-    }
+        canvas {
+            height: 650px !important;
+        }
 
-    #chartTooltip .tt-card {
-      border-radius: 12px;
-      box-shadow: 0 12px 30px rgba(0,0,0,.18);
-      border: 1px solid rgba(0,0,0,.08);
-      background: #fff;
-      padding: .75rem .9rem;
-    }
+        #chartTooltip {
+            position: absolute;
+            pointer-events: auto;
+            transform: translate(-50%, -100%);
+            z-index: 20;
+            display: none;
+            min-width: 260px;
+            max-width: 360px;
+        }
 
-    #chartTooltip .tt-title {
-      font-weight: 600;
-      margin-bottom: .25rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: .5rem;
-    }
+        #chartTooltip .tt-card {
+            border-radius: 12px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, .18);
+            border: 1px solid rgba(0, 0, 0, .08);
+            background: #fff;
+            padding: .75rem .9rem;
+        }
 
-    #chartTooltip .tt-meta {
-      font-size: .9rem;
-      color: #6c757d;
-      margin-bottom: .5rem;
-    }
+        #chartTooltip .tt-title {
+            font-weight: 600;
+            margin-bottom: .25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .5rem;
+        }
 
-    #chartTooltip .tt-link a {
-      text-decoration: none;
-      font-weight: 600;
-    }
+        #chartTooltip .tt-meta {
+            font-size: .9rem;
+            color: #6c757d;
+            margin-bottom: .5rem;
+        }
 
-    #chartTooltip .badge-age { font-weight: 600; }
-  </style>
+        #chartTooltip .tt-link a {
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        #chartTooltip .badge-age {
+            font-weight: 600;
+        }
+
+        .table thead th {
+            white-space: nowrap;
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
-  {% include "sprint/sprint_header.html" %}
+    {% include "sprint/sprint_header.html" %}
 
-  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-    <div>
-      <h1 class="h4 mb-1">Work Item Age Diagram</h1>
-      <div class="text-secondary">Zones stackées + dots (1 par item) — données via API REST</div>
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+        <div>
+            <h1 class="h4 mb-1">Work Item Age Diagram</h1>
+            <div class="text-secondary small">Diagramme + table (même source API)</div>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+            <span id="statusBadge" class="badge text-bg-secondary">Chargement…</span>
+            <button id="reloadBtn" class="btn btn-sm btn-outline-secondary" type="button">Recharger</button>
+        </div>
     </div>
 
-    <div class="d-flex align-items-center gap-2">
-      <span id="statusBadge" class="badge text-bg-secondary">Chargement…</span>
-      <button id="reloadBtn" class="btn btn-sm btn-outline-secondary" type="button">Recharger</button>
-    </div>
-  </div>
+    <div class="card p-4 position-relative mb-3">
+        <canvas id="ageChart"></canvas>
 
-  <div class="card p-4 position-relative">
-    <canvas id="ageChart"></canvas>
-
-    <!-- Tooltip HTML externe -->
-    <div id="chartTooltip">
-      <div class="tt-card">
-        <div class="tt-title">
-          <span id="ttKey">—</span>
-          <span id="ttAge" class="badge text-bg-dark badge-age">—</span>
+        <div id="chartTooltip">
+            <div class="tt-card">
+                <div class="tt-title">
+                    <span id="ttKey">—</span>
+                    <span id="ttAge" class="badge text-bg-dark badge-age">—</span>
+                </div>
+                <div id="ttTitle" class="small mb-2 text-dark">—</div>
+                <div class="tt-meta">
+                    <span class="me-2">Statut: <strong id="ttStatus">—</strong></span>
+                </div>
+                <div class="tt-link">
+                    <a id="ttLink" href="#" target="_blank" rel="noopener noreferrer">Ouvrir dans Jira →</a>
+                </div>
+            </div>
         </div>
-        <div id="ttTitle" class="small mb-2 text-dark">—</div>
-        <div class="tt-meta">
-          <span class="me-2">Statut: <strong id="ttStatus">—</strong></span>
-        </div>
-        <div class="tt-link">
-          <a id="ttLink" href="#" target="_blank" rel="noopener noreferrer">Ouvrir dans Jira →</a>
-        </div>
-      </div>
     </div>
-  </div>
+
+    <div class="card p-4">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+            <h2 class="h6 mb-0">Items (triés par âge décroissant)</h2>
+            <div class="text-secondary small">Recherche / tri / pagination.</div>
+        </div>
+
+        <div class="table-responsive">
+            <table id="wiaTable" class="table table-sm table-striped table-hover align-middle w-100">
+                <thead>
+                <tr>
+                    <th>Key</th>
+                    <th>Titre</th>
+                    <th>Statut</th>
+                    <th>Âge (jours)</th>
+                    <th>Cycle Time (jours)</th>
+                    <th class="text-end">Lien</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
 {% endblock %}
 
 {% block js %}
-<script>
-(() => {
-  // =========================
-  // CONFIG API
-  // =========================
-  const API_URL = "/sprint/{{ sprint_id }}/api/wia/";
+    {# jQuery #}
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
 
-  const FALLBACK = {
-    statuses: ["To Do", "In Progress", "Review", "Done"],
-    items: [
-      { key:"PROJ-101", status:"To Do",       ageDays:2,  title:"Example ticket A", url:"https://jira.example/browse/PROJ-101" },
-      { key:"PROJ-102", status:"To Do",       ageDays:7,  title:"Example ticket B", url:"https://jira.example/browse/PROJ-102" },
-      { key:"PROJ-103", status:"In Progress", ageDays:4,  title:"Example ticket C", url:"https://jira.example/browse/PROJ-103" },
-      { key:"PROJ-104", status:"In Progress", ageDays:12, title:"Example ticket D", url:"https://jira.example/browse/PROJ-104" },
-      { key:"PROJ-105", status:"In Progress", ageDays:21, title:"Example ticket E", url:"https://jira.example/browse/PROJ-105" },
-      { key:"PROJ-106", status:"Review",      ageDays:9,  title:"Example ticket F", url:"https://jira.example/browse/PROJ-106" },
-      { key:"PROJ-107", status:"Review",      ageDays:60, title:"Example ticket G", url:"https://jira.example/browse/PROJ-107" },
-      { key:"PROJ-108", status:"Done",        ageDays:1,  title:"Example ticket H", url:"https://jira.example/browse/PROJ-108" },
-      { key:"PROJ-109", status:"Done",        ageDays:3,  title:"Example ticket I", url:"https://jira.example/browse/PROJ-109" },
-      { key:"PROJ-110", status:"Done",        ageDays:25, title:"Example ticket J", url:"https://jira.example/browse/PROJ-110" }
-    ]
-  };
+    {# DataTables 1.13.x core + Bootstrap integration #}
+    <script src="https://cdn.jsdelivr.net/npm/datatables.net@1.13.8/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.8/js/dataTables.bootstrap5.min.js"></script>
 
-  // =========================
-  // UI
-  // =========================
-  const badge = document.getElementById("statusBadge");
-  const reloadBtn = document.getElementById("reloadBtn");
+    {# Responsive 2.5.0 (compatible DT 1.13.x) #}
+    <script src="https://cdn.jsdelivr.net/npm/datatables.net-responsive@2.5.0/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/datatables.net-responsive-bs5@2.5.0/js/responsive.bootstrap5.min.js"></script>
 
-  function setBadge(text, kind="secondary") {
-    if (!badge) return;
-    badge.className = `badge text-bg-${kind}`;
-    badge.textContent = text;
-  }
+    <script>
+        (() => {
+            const API_URL = "/sprint/{{ sprint_id }}/api/wia/";
+            const badge = document.getElementById("statusBadge");
+            const reloadBtn = document.getElementById("reloadBtn");
 
-  function ageBadgeClass(ageDays) {
-    if (ageDays < 10) return "text-bg-success";
-    if (ageDays < 20) return "text-bg-warning";
-    return "text-bg-danger";
-  }
+            function setBadge(text, kind = "secondary") {
+                if (!badge) return;
+                badge.className = `badge text-bg-${kind}`;
+                badge.textContent = text;
+            }
 
-  // =========================
-  // Fetch API
-  // =========================
-  async function loadData() {
-    setBadge("Chargement…", "secondary");
-    try {
-      const res = await fetch(API_URL, { headers: { "Accept": "application/json" } });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
+            function ageBadgeClass(ageDays) {
+                if (ageDays < 10) return "text-bg-success";
+                if (ageDays < 20) return "text-bg-warning";
+                return "text-bg-danger";
+            }
 
-      if (!data || !Array.isArray(data.items)) throw new Error("Payload invalide (items manquant)");
-      if (!Array.isArray(data.statuses) || data.statuses.length === 0) {
-        data.statuses = [...new Set(data.items.map(i => i.status))];
-      }
+            async function loadData() {
+                setBadge("Chargement…", "secondary");
+                try {
+                    const res = await fetch(API_URL, {headers: {"Accept": "application/json"}});
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const data = await res.json();
 
-      setBadge("OK (API)", "success");
-      return data;
-    } catch (e) {
-      console.warn("API load failed, using fallback:", e);
-      setBadge("Fallback (local)", "warning");
-      return FALLBACK;
-    }
-  }
+                    if (!data || !Array.isArray(data.items)) throw new Error("Payload invalide (items manquant)");
+                    if (!Array.isArray(data.statuses) || data.statuses.length === 0) {
+                        data.statuses = [...new Set(data.items.map(i => i.status))];
+                    }
 
-  // =========================
-  // Tooltip externe cliquable (HTML)
-  // =========================
-  const tooltipEl = document.getElementById("chartTooltip");
-  const ttKey = document.getElementById("ttKey");
-  const ttTitle = document.getElementById("ttTitle");
-  const ttStatus = document.getElementById("ttStatus");
-  const ttAge = document.getElementById("ttAge");
-  const ttLink = document.getElementById("ttLink");
+                    setBadge("OK (API)", "success");
+                    return data;
+                } catch (e) {
+                    console.warn("API load failed:", e);
+                    setBadge("Erreur API", "danger");
+                    throw e;
+                }
+            }
 
-  function hideTooltip() {
-    if (tooltipEl) tooltipEl.style.display = "none";
-  }
+            // ===== Tooltip HTML (Chart.js) =====
+            const tooltipEl = document.getElementById("chartTooltip");
+            const ttKey = document.getElementById("ttKey");
+            const ttTitle = document.getElementById("ttTitle");
+            const ttStatus = document.getElementById("ttStatus");
+            const ttAge = document.getElementById("ttAge");
+            // const ttCycleTime = document.getElementById("ttCycleTime");
+            const ttLink = document.getElementById("ttLink");
 
-  function externalTooltipHandler(context) {
-    const { chart, tooltip } = context;
+            function hideTooltip() {
+                if (tooltipEl) tooltipEl.style.display = "none";
+            }
 
-    if (!tooltipEl) return;
+            function externalTooltipHandler(context) {
+                const {chart, tooltip} = context;
+                if (!tooltipEl) return;
 
-    if (tooltip.opacity === 0) {
-      hideTooltip();
-      return;
-    }
+                if (tooltip.opacity === 0) {
+                    hideTooltip();
+                    return;
+                }
 
-    const point = tooltip.dataPoints?.[0];
-    if (!point || point.dataset.type !== "scatter") {
-      hideTooltip();
-      return;
-    }
+                const point = tooltip.dataPoints?.[0];
+                if (!point || point.dataset.type !== "scatter") {
+                    hideTooltip();
+                    return;
+                }
 
-    const raw = point.raw || {};
-    if (ttKey) ttKey.textContent = raw.key ?? "—";
-    if (ttTitle) ttTitle.textContent = raw.title ?? "";
-    if (ttStatus) ttStatus.textContent = raw.status ?? "—";
+                const raw = point.raw || {};
+                ttKey.textContent = raw.key ?? "—";
+                ttTitle.textContent = raw.title ?? "";
+                ttStatus.textContent = raw.status ?? "—";
 
-    const age = raw.y ?? raw.ageDays ?? "?";
-    if (ttAge) {
-      ttAge.textContent = `${age} j`;
-      ttAge.className = `badge badge-age ${ageBadgeClass(Number(age) || 999)}`;
-    }
+                const age = raw.y ?? raw.ageDays ?? "?";
+                ttAge.textContent = `${age} j`;
+                ttAge.className = `badge badge-age ${ageBadgeClass(Number(age) || 999)}`;
+                //ttCycleTime.textContent = raw.status ?? "—";
+                const url = raw.url || "#";
+                ttLink.href = url;
+                ttLink.style.pointerEvents = (url === "#") ? "none" : "auto";
 
-    const url = raw.url || "#";
-    if (ttLink) {
-      ttLink.href = url;
-      ttLink.style.pointerEvents = (url === "#") ? "none" : "auto";
-    }
+                const rect = chart.canvas.getBoundingClientRect();
+                tooltipEl.style.left = (window.scrollX + rect.left + tooltip.caretX) + "px";
+                tooltipEl.style.top = (window.scrollY + rect.top + tooltip.caretY) + "px";
+                tooltipEl.style.display = "block";
+            }
 
-    const rect = chart.canvas.getBoundingClientRect();
-    tooltipEl.style.left = (window.scrollX + rect.left + tooltip.caretX) + "px";
-    tooltipEl.style.top  = (window.scrollY + rect.top + tooltip.caretY) + "px";
-    tooltipEl.style.display = "block";
-  }
+            // ===== Count plugin =====
+            const COUNT_STATE = {statuses: [], counts: {}};
+            const CountPlugin = {
+                id: "countPlugin",
+                afterDatasetsDraw(chart) {
+                    const statuses = COUNT_STATE.statuses || [];
+                    const counts = COUNT_STATE.counts || {};
+                    if (!statuses.length) return;
 
-  // =========================
-  // Plugin count (stable)
-  // =========================
-  const COUNT_STATE = { statuses: [], counts: {} };
+                    const {ctx, scales: {x}, chartArea} = chart;
 
-  const CountPlugin = {
-    id: "countPlugin",
-    afterDatasetsDraw(chart) {
-      const statuses = COUNT_STATE.statuses || [];
-      const counts = COUNT_STATE.counts || {};
-      if (!statuses.length) return;
+                    ctx.save();
+                    ctx.font = "12px system-ui";
+                    ctx.fillStyle = "#495057";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "top";
 
-      const { ctx, scales: { x }, chartArea } = chart;
+                    const yTopInside = chartArea.top + 6;
 
-      ctx.save();
-      ctx.font = "12px system-ui";
-      ctx.fillStyle = "#495057";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "top";
+                    statuses.forEach((s, i) => {
+                        const xPos = x.getPixelForValue(i);
+                        const n = counts[s] ?? 0;
+                        ctx.fillText(`${n} item${n > 1 ? "s" : ""}`, xPos, yTopInside);
+                    });
 
-      const yTopInside = chartArea.top + 6;
+                    ctx.restore();
+                }
+            };
+            Chart.register(CountPlugin);
 
-      statuses.forEach((s, i) => {
-        const xPos = x.getPixelForValue(i);
-        const n = counts[s] ?? 0;
-        ctx.fillText(`${n} item${n > 1 ? "s" : ""}`, xPos, yTopInside);
-      });
+            function buildChartPayload(apiData) {
+                const items = apiData.items || [];
+                const statuses = apiData.statuses || [...new Set(items.map(i => i.status))];
+                const statusIndex = Object.fromEntries(statuses.map((s, i) => [s, i]));
 
-      ctx.restore();
-    }
-  };
+                const counts = Object.fromEntries(statuses.map(s => [s, 0]));
+                items.forEach(i => {
+                    if (i.status in counts) counts[i.status]++;
+                });
 
-  // Enregistrer le plugin UNE fois
-  Chart.register(CountPlugin);
+                const maxItemAge = items.length ? Math.max(...items.map(i => Number(i.ageDays ?? 0))) : 0;
+                const MAX_Y = maxItemAge + 10;
 
-  // =========================
-  // Build payload
-  // =========================
-  function buildChartPayload(apiData) {
-    const items = apiData.items || [];
-    const statuses = apiData.statuses || [...new Set(items.map(i => i.status))];
-    const statusIndex = Object.fromEntries(statuses.map((s, i) => [s, i]));
+                function makeBarPoints(height) {
+                    return statuses.map((_, i) => ({x: i, y: height}));
+                }
 
-    const counts = Object.fromEntries(statuses.map(s => [s, 0]));
-    items.forEach(i => { if (i.status in counts) counts[i.status]++; });
+                const scatterData = items
+                    .filter(it => statusIndex[it.status] !== undefined)
+                    .map(it => ({
+                        x: statusIndex[it.status],
+                        y: Number(it.ageDays ?? 0),
+                        key: it.key,
+                        status: it.status,
+                        title: it.title ?? "",
+                        url: it.url ?? ""
+                    }));
 
-    const maxItemAge = items.length ? Math.max(...items.map(i => Number(i.ageDays ?? 0))) : 0;
-    const MAX_Y = maxItemAge + 10;
+                return {
+                    statuses,
+                    counts,
+                    MAX_Y,
+                    datasets: [
+                        {
+                            type: "bar",
+                            label: "0–10",
+                            data: makeBarPoints(10),
+                            backgroundColor: "rgba(46,204,113,0.35)",
+                            borderWidth: 0,
+                            stack: "zones",
+                            order: 2,
+                            barThickness: 45
+                        },
+                        {
+                            type: "bar",
+                            label: "10–20",
+                            data: makeBarPoints(10),
+                            backgroundColor: "rgba(243,156,18,0.35)",
+                            borderWidth: 0,
+                            stack: "zones",
+                            order: 2,
+                            barThickness: 45
+                        },
+                        {
+                            type: "bar",
+                            label: "20–50",
+                            data: makeBarPoints(30),
+                            backgroundColor: "rgba(231,76,60,0.35)",
+                            borderWidth: 0,
+                            stack: "zones",
+                            order: 2,
+                            barThickness: 45
+                        },
+                        {
+                            type: "scatter",
+                            label: "Items",
+                            data: scatterData,
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            backgroundColor: "#111",
+                            borderColor: "#111",
+                            order: 1
+                        }
+                    ]
+                };
+            }
 
-    function makeBarPoints(height) {
-      return statuses.map((_, i) => ({ x: i, y: height }));
-    }
+            // ===== DataTable (DT 1.13.x) =====
+            let dt = null;
 
-    const scatterData = items.map(it => ({
-      x: statusIndex[it.status],
-      y: Number(it.ageDays ?? 0),
-      key: it.key,
-      status: it.status,
-      title: it.title ?? "",
-      url: it.url ?? ""
-    }));
+            function renderTable(items) {
+                const sorted = [...items].sort((a, b) => (Number(b.ageDays || 0) - Number(a.ageDays || 0)));
 
-    const greenH = 10;
-    const orangeH = 10;
-    const redH = 30;
+                if (dt) {
+                    dt.clear();
+                    dt.rows.add(sorted);
+                    dt.draw();
+                    return;
+                }
 
-    return {
-      statuses,
-      counts,
-      MAX_Y,
-      datasets: [
-        { type:"bar", label:"0–10", data:makeBarPoints(greenH),  backgroundColor:"rgba(46,204,113,0.35)", borderWidth:0, stack:"zones", order:2, barThickness:45 },
-        { type:"bar", label:"10–20", data:makeBarPoints(orangeH), backgroundColor:"rgba(243,156,18,0.35)", borderWidth:0, stack:"zones", order:2, barThickness:45 },
-        { type:"bar", label:"20–50", data:makeBarPoints(redH),    backgroundColor:"rgba(231,76,60,0.35)", borderWidth:0, stack:"zones", order:2, barThickness:45 },
-        { type:"scatter", label:"Items", data:scatterData, pointRadius:5, pointHoverRadius:7, backgroundColor:"#111", borderColor:"#111", order:1 }
-      ]
-    };
-  }
+                dt = $("#wiaTable").DataTable({
+                    data: sorted,
+                    responsive: true,
+                    pageLength: 25,
+                    lengthMenu: [10, 25, 50, 100],
+                    order: [[3, "desc"]],
+                    columns: [
+                        {data: "key"},
+                        {data: "title"},
+                        {data: "status"},
+                        {
+                            data: "ageDays",
+                            render: (data) => `<span class="badge ${ageBadgeClass(Number(data) || 0)}">${Number(data) || 0}</span>`
+                        },
+                        {data: "cycleTime"},
+                        {
+                            data: "url",
+                            orderable: false,
+                            searchable: false,
+                            className: "text-end",
+                            render: (data) => `
+            <a class="btn btn-sm btn-outline-primary" href="${data || '#'}" target="_blank" rel="noopener noreferrer">
+              Ouvrir
+            </a>`
+                        }
+                    ]
+                });
+            }
 
-  // =========================
-  // Render
-  // =========================
-  let chart;
+            // ===== Render both =====
+            let chart = null;
 
-  async function render() {
-    hideTooltip();
+            async function renderAll() {
+                hideTooltip();
+                const apiData = await loadData();
 
-    const apiData = await loadData();
-    const payload = buildChartPayload(apiData);
+                renderTable(apiData.items || []);
 
-    // mettre à jour l'état du plugin count
-    COUNT_STATE.statuses = payload.statuses;
-    COUNT_STATE.counts = payload.counts;
+                const payload = buildChartPayload(apiData);
+                COUNT_STATE.statuses = payload.statuses;
+                COUNT_STATE.counts = payload.counts;
 
-    const ctx = document.getElementById("ageChart");
-    if (!ctx) return;
+                const ctx = document.getElementById("ageChart");
+                if (!ctx) return;
 
-    if (chart) chart.destroy();
+                if (chart) chart.destroy();
 
-    chart = new Chart(ctx, {
-      data: { datasets: payload.datasets },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        layout: { padding: { top: 24 } },
-        interaction: { mode: "nearest", intersect: true },
-        plugins: {
-          legend: { position: "bottom" },
-          tooltip: { enabled: false, external: externalTooltipHandler }
-        },
-        onClick: (evt) => {
-          const pts = chart.getElementsAtEventForMode(evt, "nearest", { intersect: true }, true);
-          if (!pts.length) return;
+                chart = new Chart(ctx, {
+                    data: {datasets: payload.datasets},
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        layout: {padding: {top: 24}},
+                        interaction: {mode: "nearest", intersect: true},
+                        plugins: {
+                            legend: {position: "bottom"},
+                            tooltip: {enabled: false, external: externalTooltipHandler}
+                        },
+                        onClick: (evt) => {
+                            const pts = chart.getElementsAtEventForMode(evt, "nearest", {intersect: true}, true);
+                            if (!pts.length) return;
+                            const el = pts[0];
+                            const ds = chart.data.datasets[el.datasetIndex];
+                            if (ds.type !== "scatter") return;
+                            const raw = ds.data[el.index];
+                            if (raw?.url) window.open(raw.url, "_blank", "noopener,noreferrer");
+                        },
+                        scales: {
+                            x: {
+                                type: "linear",
+                                min: -0.6,
+                                max: payload.statuses.length - 0.4,
+                                ticks: {stepSize: 1, callback: (value) => payload.statuses[value] ?? ""},
+                                grid: {display: false}
+                            },
+                            y: {
+                                stacked: true,
+                                beginAtZero: true,
+                                max: payload.MAX_Y,
+                                title: {display: true, text: "Âge des items (jours)"}
+                            }
+                        }
+                    }
+                });
+            }
 
-          const el = pts[0];
-          const ds = chart.data.datasets[el.datasetIndex];
-          if (ds.type !== "scatter") return;
-
-          const raw = ds.data[el.index];
-          if (raw?.url) window.open(raw.url, "_blank", "noopener,noreferrer");
-        },
-        scales: {
-          x: {
-            type: "linear",
-            min: -0.6,
-            max: payload.statuses.length - 0.4,
-            ticks: {
-              stepSize: 1,
-              callback: (value) => payload.statuses[value] ?? ""
-            },
-            grid: { display: false }
-          },
-          y: {
-            stacked: true,
-            beginAtZero: true,
-            max: payload.MAX_Y,
-            title: { display: true, text: "Âge des items (jours)" }
-          }
-        }
-      }
-    });
-  }
-
-  if (reloadBtn) reloadBtn.addEventListener("click", render);
-  render();
-
-})();
-</script>
+            if (reloadBtn) reloadBtn.addEventListener("click", renderAll);
+            renderAll();
+        })();
+    </script>
 {% endblock %}
