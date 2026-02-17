@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 from jiramodule.models import JiraConfiguration, JiraManager
+from jiramodule.status import CANONICAL_ORDER, STATUS_EXCLUDED
 from .report import create_xlsx_bytes
 
 
@@ -20,13 +21,12 @@ class SprintListView(LoginRequiredMixin, ListView):
             user=self.request.user,
             current=True)
 
-
         # 2. connexion Jira
         jm = JiraManager(jc)
         jm.connect()
 
         # 3. récupération des sprints
-        #sprints = jm.list_sprints_for_current_board("active,future, closed")
+        # sprints = jm.list_sprints_for_current_board("active,future, closed")
 
         selected_states = self.request.GET.getlist("state")
         if not selected_states:
@@ -34,7 +34,6 @@ class SprintListView(LoginRequiredMixin, ListView):
 
         states = ",".join(selected_states)
         sprints = jm.list_sprints_for_current_board(states)
-
 
         # 4. tri (souvent pratique)
         return sorted(
@@ -71,8 +70,9 @@ class SprintDetailView(LoginRequiredMixin, TemplateView):
         jira.connect()
         ctx["sprint"] = jira.get_sprint(sprint_id)
         ctx["issues"] = jira.get_sprint_issues(sprint_id, jql_extra=jira.JIRA_ONLY_STANDARD_TYPES)
-        ctx["jira_sprint_url"] =  jira.get_url_jql(f"sprint={sprint_id}")
+        ctx["jira_sprint_url"] = jira.get_url_jql(f"sprint={sprint_id}")
         return ctx
+
 
 class SprintKanbanView(LoginRequiredMixin, TemplateView):
     template_name = "sprint/sprint_kanban.html"
@@ -90,8 +90,9 @@ class SprintKanbanView(LoginRequiredMixin, TemplateView):
         jira = JiraManager(cfg)
         jira.connect()
         ctx["sprint"] = jira.get_sprint(sprint_id)
-        #ctx["issues"] = jira.get_sprint_issues(sprint_id)
+        # ctx["issues"] = jira.get_sprint_issues(sprint_id)
         return ctx
+
 
 class SprintReportView(LoginRequiredMixin, TemplateView):
     template_name = "sprint/sprint_report.html"
@@ -114,7 +115,7 @@ class SprintReportView(LoginRequiredMixin, TemplateView):
         for name, data in sorted(jira.get_dict_statuses().items(), key=lambda item: item[1]["order"]):
             statuses = ",".join([f'"{s["name"]}"' for s in data['statuses']])
             jql = f"sprint = {sprint_id} and status in ({statuses}) and {jira.JIRA_ONLY_STANDARD_TYPES} ORDER BY status ASC"
-            d = {"name": name, "jql":jql, "url_jql": jira.get_url_jql(jql)}
+            d = {"name": name, "jql": jql, "url_jql": jira.get_url_jql(jql)}
             ctx["statuses"].append(d)
 
         fastlane_jql = f"sprint = {sprint_id} and labels in ('fastlane', 'Fastlane') and {jira.JIRA_ONLY_STANDARD_TYPES} ORDER BY status ASC"
@@ -124,11 +125,9 @@ class SprintReportView(LoginRequiredMixin, TemplateView):
         return ctx
 
 
-
 class SprintXLSExportView(View):
 
     def get(self, request, sprint_id):
-
         # Connexion Jira
         cfg = JiraConfiguration.objects.get(user=request.user, current=True)
         jira = JiraManager(cfg)
@@ -146,7 +145,7 @@ class SprintXLSExportView(View):
         return response
 
 
-def get_api_sprint_kanban_issues(request, sprint_id:int)->JsonResponse:
+def get_api_sprint_kanban_issues(request, sprint_id: int) -> JsonResponse:
     cfg = JiraConfiguration.objects.get(user=request.user, current=True)
     jira = JiraManager(cfg)
     jira.connect()
@@ -158,24 +157,79 @@ def get_api_sprint_kanban_issues(request, sprint_id:int)->JsonResponse:
         if state in data_issues.keys():
             data_issues[state].append(i)
         else:
-            data_issues[state] = [i,]
+            data_issues[state] = [i, ]
     data = []
     for state, list_issues in data_issues.items():
         data.append({"name": state, "issues": list_issues})
-    # data = [
-    #     {
-    #         "name": "To Do",
-    #         "issues": [
-    #             {"key": "BUS-123", "name": "Fix login loop", "assignee": "Renaud"},
-    #             {"key": "BUS-124", "name": "Add export XLS", "assignee": "Marie"},
-    #         ],
-    #     },
-    #     {
-    #         "name": "In Progress",
-    #         "issues": [
-    #             {"key": "BUS-130", "name": "Refactor API client", "assignee": "—"},
-    #         ],
-    #     },
-    # ]
     print(data)
     return JsonResponse(data, safe=False)
+
+
+class SprintWiaView(LoginRequiredMixin, TemplateView):
+    template_name = "sprint/sprint_wia.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        sprint_id = kwargs.get("sprint_id")
+
+        cfg = get_object_or_404(
+            JiraConfiguration,
+            user=self.request.user,
+            current=True
+        )
+
+        jira = JiraManager(cfg)
+        jira.connect()
+        ctx["sprint"] = jira.get_sprint(sprint_id)
+        # ctx["issues"] = jira.get_sprint_issues(sprint_id)
+        return ctx
+
+
+from django.http import JsonResponse, Http404
+from django.views.decorators.http import require_GET
+
+
+# CANONICAL_ORDER = [...]  # ta liste complète ordonnée PBI lifecycle
+
+@require_GET
+def get_api_sprint_wia_issues(request, sprint_id: int) -> JsonResponse:
+    try:
+        cfg = JiraConfiguration.objects.get(user=request.user, current=True)
+    except JiraConfiguration.DoesNotExist:
+        raise Http404("No current Jira configuration for this user.")
+
+    jira = JiraManager(cfg)
+    jira.connect()
+
+    mapped_items: list[dict] = []
+
+    for i in jira.get_sprint_issues(
+            sprint_id,
+            jql_extra=jira.JIRA_ONLY_STANDARD_TYPES,
+            full=True
+    ):
+        status = (i.get("state") or "").strip() or "Unknown"
+        if status not in STATUS_EXCLUDED:
+            # current_wip_age_hours peut être float / int / None selon la source
+            age_hours = i.get("kanban_metrics", {}).get("current_wip_age_hours") or 0
+            try:
+                age_hours = float(age_hours)
+            except (TypeError, ValueError):
+                age_hours = 0
+
+            # 8h = 1 jour (comme tu fais), on force >= 0
+            age_days = max(0, int(age_hours // 8))
+
+            mapped_items.append({
+                "key": i.get("key"),
+                "status": status,
+                "ageDays": age_days,
+                "title": i.get("summary") or "",
+                "url": i.get("url") or "",
+            })
+    present_statuses = {it["status"] for it in mapped_items}
+    ordered_known = [s for s in CANONICAL_ORDER if s in present_statuses]
+    unknown = sorted(present_statuses - set(CANONICAL_ORDER))
+    statuses = ordered_known + unknown
+    data = {"statuses": statuses, "items": mapped_items}
+    return JsonResponse(data)

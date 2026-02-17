@@ -2,16 +2,7 @@
 
 {% block content %}
     <div class="container">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <a href="{% url 'sprint-detail' sprint.id %}">Retour</a>
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <!-- Titre -->
-                <h2 class="mb-0">
-                    Sprint {{ sprint.id }} – {{ sprint.name }} - Report
-                </h2>
-
-            </div>
-        </div>
+        {% include "sprint/sprint_header.html" %}
         <table id="StatusesTable" class="table table-striped table-bordered table-hover mt-3">
             <thead>
             <tr>

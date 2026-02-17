@@ -285,7 +285,7 @@ class JiraManager:
         )
         return issues
 
-    def get_sprint_issues(self, sprint_id: int, *, jql_extra: str = "", max_results: int = 1000) -> List[
+    def get_sprint_issues(self, sprint_id: int, *, jql_extra: str = "", max_results: int = 1000, full=False) -> List[
         Dict[str, Any]]:
         """
         Get issues in a sprint via JQL.
@@ -295,7 +295,10 @@ class JiraManager:
             jql = f"({jql}) AND ({jql_extra.strip()})"
 
         issues = self._search_issues(jql)
-        return [self._ticket_info(i.key) for i in issues]
+        if full:
+            return [self._ticket_info_detail(i.key) for i in issues]
+        else:
+            return [self._ticket_info(i.key) for i in issues]
 
     def run_jql(self, jql: str, *, max_results: int = 1000, full=True) -> List[Dict[str, Any]]:
         """

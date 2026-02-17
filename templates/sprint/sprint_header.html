@@ -1,0 +1,34 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <!-- Titre -->
+    <a href="{% url 'sprint-list' %}">Retour</a>
+    <h2 class="mb-0">
+        Sprint {{ sprint.id }} – {{ sprint.name }}
+    </h2>
+    <!-- Boutons -->
+
+    <div class="btn-group">
+        <a class="btn btn-outline-secondary" role="button" aria-pressed="true"
+           href="{% url 'sprint-kanban' sprint.id %}">
+            <i class="fa-solid fa-table-columns"></i>
+        </a>
+
+        <a class="btn btn-outline-secondary" role="button" aria-pressed="true"
+           href="{% url 'sprint-report' sprint.id %}">
+            <i class="fa-solid fa-table"></i>
+        </a>
+        <a class="btn btn-outline-secondary" role="button" aria-pressed="true"
+           href="{% url 'sprint-wia' sprint.id %}">
+            <i class="fa-solid fa-chart-simple"></i>
+        </a>
+        <a class="btn btn-outline-secondary" role="button" aria-pressed="true"
+           href="{% url 'sprint-export' sprint.id %}">
+            <i class="fa-regular fa-file-excel"></i>
+        </a>
+
+        <a class="btn btn-outline-secondary" role="button" aria-pressed="true"
+           href="{{ jira_sprint_url }}" target="_blank" rel="noopener">
+            <i class="fa-brands fa-jira"></i>
+        </a>
+
+    </div>
+</div>
