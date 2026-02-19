@@ -35,15 +35,14 @@
                 <th>Type</th>
                 <th>État</th>
                 <th>Assigné</th>
+                <th>Jira</th>
             </tr>
             </thead>
             <tbody>
             {% for issue in issues %}
                 <tr>
                     <td>
-                        <a href="{{ issue.url }}" target="_blank">
-                            {{ issue.key }}
-                        </a>
+                        <a href='{% url "issue-detail" issue.key %}'>{{ issue.key }}</a>
                     </td>
                     <td>{{ issue.summary }}</td>
                     <td>{{ issue.issueType }}</td>
@@ -52,6 +51,9 @@
                     <!-- <td>{{ issue.estimation.story_points|default:"—" }}</td>-->
                     <!-- <td>{{ issue.remaining_hours|default:"—" }}</td>-->
                     <!-- <td>{{ issue.spent_hours|default:"—" }}</td>-->
+                    <td><a class="btn btn-sm btn-outline-primary" href="{{ issue.url }}" target="_blank" rel="noopener noreferrer">
+              <i class="fa-brands fa-jira"></i>
+            </a>`</td>
                 </tr>
             {% endfor %}
             </tbody>

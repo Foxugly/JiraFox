@@ -25,4 +25,5 @@ urlpatterns = [
     path('accounts/', include('allauth.urls')),
     path('jira/', include('jiramodule.urls')),
     path('sprint/', include('sprint.urls')),
+    path('issue/', include('issue.urls')),
 ]

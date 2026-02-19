@@ -4,7 +4,8 @@ from django.views.generic import ListView, TemplateView
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.mixins import LoginRequiredMixin
 
-from jiramodule.models import JiraConfiguration, JiraManager
+from jiramodule.models import JiraConfiguration
+from jiramodule.services.jira_client import JiraManager
 from jiramodule.status import CANONICAL_ORDER, STATUS_EXCLUDED
 from .report import create_xlsx_bytes
 
@@ -213,6 +214,8 @@ def get_api_sprint_wia_issues(request, sprint_id: int) -> JsonResponse:
             # current_wip_age_hours peut être float / int / None selon la source
             age_hours = i.get("kanban_metrics", {}).get("current_wip_age_hours") or 0
             cycle_time_hours = i.get("kanban_metrics", {}).get("cycle_time_hours") or 0
+            first_in_progress = i.get("kanban_metrics", {}).get("first_in_progress") or 0
+            first_in_progress_display = i.get("kanban_metrics", {}).get("first_in_progress_display") or 0
             try:
                 age_hours = float(age_hours)
             except (TypeError, ValueError):
@@ -230,6 +233,8 @@ def get_api_sprint_wia_issues(request, sprint_id: int) -> JsonResponse:
                 "status": status,
                 "ageDays": age_days,
                 "cycleTime" : cycle_time_days,
+                "first_in_progress": first_in_progress,
+                "first_in_progress_display": first_in_progress_display,
                 "title": i.get("summary") or "",
                 "url": i.get("url") or "",
             })

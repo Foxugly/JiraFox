@@ -5,10 +5,13 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_POST
-from typing import Any, Dict, List, Optional, Tuple
 from .forms import JiraConfigurationForm
-from .models import JiraConfiguration, JiraManager
+from .models import JiraConfiguration
+
 import logging
+
+from .services.jira_client import JiraManager
+
 logger = logging.getLogger(__name__)
 
 def _user_has_config(user, config: JiraConfiguration) -> bool:

@@ -121,6 +121,7 @@
                     <th>Titre</th>
                     <th>Statut</th>
                     <th>Âge (jours)</th>
+                    <th>First In Progress</th>
                     <th>Cycle Time (jours)</th>
                     <th class="text-end">Lien</th>
                 </tr>
@@ -142,7 +143,9 @@
     {# Responsive 2.5.0 (compatible DT 1.13.x) #}
     <script src="https://cdn.jsdelivr.net/npm/datatables.net-responsive@2.5.0/js/dataTables.responsive.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/datatables.net-responsive-bs5@2.5.0/js/responsive.bootstrap5.min.js"></script>
-
+    <script>
+    const ISSUE_DETAIL_URL_TEMPLATE = "{% url 'issue-detail' jira_key='__KEY__' %}";
+    </script>
     <script>
         (() => {
             const API_URL = "/sprint/{{ sprint_id }}/api/wia/";
@@ -348,7 +351,6 @@
                     dt.draw();
                     return;
                 }
-
                 dt = $("#wiaTable").DataTable({
                     data: sorted,
                     responsive: true,
@@ -356,14 +358,45 @@
                     lengthMenu: [10, 25, 50, 100],
                     order: [[3, "desc"]],
                     columns: [
-                        {data: "key"},
+                        {
+                            data: "key",
+                            render: (data, type) => {
+                                if (type !== "display") return data;
+                                const href = ISSUE_DETAIL_URL_TEMPLATE.replace("__KEY__", encodeURIComponent(data));
+                                return `<a href="${href}" class="fw-semibold text-decoration-none">${data}</a>`;
+                            }
+                        },
                         {data: "title"},
                         {data: "status"},
                         {
                             data: "ageDays",
                             render: (data) => `<span class="badge ${ageBadgeClass(Number(data) || 0)}">${Number(data) || 0}</span>`
                         },
-                        {data: "cycleTime"},
+                        {
+                            data: "cycleTime",
+                            render: (data) => `<span class="badge ${ageBadgeClass(Number(data) || 0)}">${Number(data) || 0}</span>`
+                        },
+                        {
+                            data: "first_in_progress",
+                            render: function (data, type, row) {
+
+                                // Cas null / 0 / "" / undefined
+                                if (!data) {
+                                    if (type === "sort") return ""; // vide => tri en bas
+                                    return "";
+                                }
+
+                                if (type === "display" || type === "filter") {
+                                    return row.first_in_progress_display || "";
+                                }
+
+                                if (type === "sort") {
+                                    return data; // ISO => tri correct
+                                }
+
+                                return data;
+                            }
+                        },
                         {
                             data: "url",
                             orderable: false,
@@ -371,72 +404,75 @@
                             className: "text-end",
                             render: (data) => `
             <a class="btn btn-sm btn-outline-primary" href="${data || '#'}" target="_blank" rel="noopener noreferrer">
-              Ouvrir
+              <i class="fa-brands fa-jira"></i>
             </a>`
                         }
                     ]
                 });
             }
 
-            // ===== Render both =====
-            let chart = null;
+                // ===== Render both =====
+                let chart = null;
 
-            async function renderAll() {
-                hideTooltip();
-                const apiData = await loadData();
+                async function renderAll() {
+                    hideTooltip();
+                    const apiData = await loadData();
 
-                renderTable(apiData.items || []);
+                    renderTable(apiData.items || []);
 
-                const payload = buildChartPayload(apiData);
-                COUNT_STATE.statuses = payload.statuses;
-                COUNT_STATE.counts = payload.counts;
+                    const payload = buildChartPayload(apiData);
+                    COUNT_STATE.statuses = payload.statuses;
+                    COUNT_STATE.counts = payload.counts;
 
-                const ctx = document.getElementById("ageChart");
-                if (!ctx) return;
+                    const ctx = document.getElementById("ageChart");
+                    if (!ctx) return;
 
-                if (chart) chart.destroy();
+                    if (chart) chart.destroy();
 
-                chart = new Chart(ctx, {
-                    data: {datasets: payload.datasets},
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        layout: {padding: {top: 24}},
-                        interaction: {mode: "nearest", intersect: true},
-                        plugins: {
-                            legend: {position: "bottom"},
-                            tooltip: {enabled: false, external: externalTooltipHandler}
-                        },
-                        onClick: (evt) => {
-                            const pts = chart.getElementsAtEventForMode(evt, "nearest", {intersect: true}, true);
-                            if (!pts.length) return;
-                            const el = pts[0];
-                            const ds = chart.data.datasets[el.datasetIndex];
-                            if (ds.type !== "scatter") return;
-                            const raw = ds.data[el.index];
-                            if (raw?.url) window.open(raw.url, "_blank", "noopener,noreferrer");
-                        },
-                        scales: {
-                            x: {
-                                type: "linear",
-                                min: -0.6,
-                                max: payload.statuses.length - 0.4,
-                                ticks: {stepSize: 1, callback: (value) => payload.statuses[value] ?? ""},
-                                grid: {display: false}
+                    chart = new Chart(ctx, {
+                        data: {datasets: payload.datasets},
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            layout: {padding: {top: 24}},
+                            interaction: {mode: "nearest", intersect: true},
+                            plugins: {
+                                legend: {position: "bottom"},
+                                tooltip: {enabled: false, external: externalTooltipHandler}
                             },
-                            y: {
-                                stacked: true,
-                                beginAtZero: true,
-                                max: payload.MAX_Y,
-                                title: {display: true, text: "Âge des items (jours)"}
+                            onClick: (evt) => {
+                                const pts = chart.getElementsAtEventForMode(evt, "nearest", {intersect: true}, true);
+                                if (!pts.length) return;
+                                const el = pts[0];
+                                const ds = chart.data.datasets[el.datasetIndex];
+                                if (ds.type !== "scatter") return;
+                                const raw = ds.data[el.index];
+                                if (raw?.url) window.open(raw.url, "_blank", "noopener,noreferrer");
+                            },
+                            scales: {
+                                x: {
+                                    type: "linear",
+                                    min: -0.6,
+                                    max: payload.statuses.length - 0.4,
+                                    ticks: {stepSize: 1, callback: (value) => payload.statuses[value] ?? ""},
+                                    grid: {display: false}
+                                },
+                                y: {
+                                    stacked: true,
+                                    beginAtZero: true,
+                                    max: payload.MAX_Y,
+                                    title: {display: true, text: "Âge des items (jours)"}
+                                }
                             }
                         }
-                    }
-                });
+                    });
+                }
+
+                if (reloadBtn) reloadBtn.addEventListener("click", renderAll);
+                renderAll();
             }
 
-            if (reloadBtn) reloadBtn.addEventListener("click", renderAll);
-            renderAll();
-        })();
+        )
+            ();
     </script>
 {% endblock %}
