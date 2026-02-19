@@ -9,25 +9,25 @@
     <div class="btn-group">
         <a class="btn btn-outline-secondary" role="button" aria-pressed="true"
            href="{% url 'sprint-kanban' sprint.id %}">
-            <i class="fa-solid fa-table-columns"></i>
+            <i class="fa-solid fa-table-columns text-danger"></i>
         </a>
 
         <a class="btn btn-outline-secondary" role="button" aria-pressed="true"
            href="{% url 'sprint-report' sprint.id %}">
-            <i class="fa-solid fa-table"></i>
+            <i class="fa-solid fa-table text-warning"></i>
         </a>
         <a class="btn btn-outline-secondary" role="button" aria-pressed="true"
            href="{% url 'sprint-wia' sprint.id %}">
-            <i class="fa-solid fa-chart-simple"></i>
+            <i class="fa-solid fa-chart-simple text-info"></i>
         </a>
         <a class="btn btn-outline-secondary" role="button" aria-pressed="true"
            href="{% url 'sprint-export' sprint.id %}">
-            <i class="fa-regular fa-file-excel"></i>
+            <i class="fa-regular fa-file-excel text-success"></i>
         </a>
 
         <a class="btn btn-outline-secondary" role="button" aria-pressed="true"
            href="{{ jira_sprint_url }}" target="_blank" rel="noopener">
-            <i class="fa-brands fa-jira"></i>
+            <i class="fa-brands fa-jira text-primary"></i>
         </a>
 
     </div>
