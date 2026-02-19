@@ -144,14 +144,17 @@ class JiraManager:
                 "endDate": getattr(s, "endDate", None),
                 "completeDate": getattr(s, "completeDate", None),
                 "originBoardId": getattr(s, "originBoardId", None),
+                "url": self.get_url_jql(f"sprint={s.id}"),
             })
         return out
 
-    def get_current_sprint(self, board_id: int, max_results: int = 50) -> Optional[Dict[str, Any]]:
+    def get_current_sprint(self, board_id: int=0, max_results: int = 50) -> Optional[Dict[str, Any]]:
         """
         Find the next sprint on a board with id strictly greater than current_sprint_id.
         Returns None if not found.
         """
+        if board_id == 0:
+            board_id = self.cfg.jira_board_id
         sprints = self.list_sprints(board_id, state="active", max_results=max_results)
         candidates = [s for s in sprints if isinstance(s.get("id"), int)]
         if not candidates:

@@ -72,6 +72,8 @@
     </style>
 {% endblock %}
 
+{% block title %}JiraFox - Sprint {{ sprint.name }} - Work Item Age{% endblock %}
+
 {% block content %}
     {% include "sprint/sprint_header.html" %}
 
@@ -264,7 +266,8 @@
 
             function buildChartPayload(apiData) {
                 const items = apiData.items || [];
-                const statuses = apiData.statuses || [...new Set(items.map(i => i.status))];
+                //const statuses = apiData.statuses || [...new Set(items.map(i => i.status))];
+                const statuses = Array.isArray(apiData.statuses) && apiData.statuses.length ? apiData.statuses : [...new Set(items.map(i => i.status))];
                 const statusIndex = Object.fromEntries(statuses.map((s, i) => [s, i]));
 
                 const counts = Object.fromEntries(statuses.map(s => [s, 0]));

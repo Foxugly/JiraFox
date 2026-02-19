@@ -57,6 +57,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -81,6 +82,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                     # `allauth` needs this from django
                 'django.template.context_processors.request',
+                "django.template.context_processors.i18n",
             ],
             'libraries': {
                 'datetime_filters': 'templatetags.datetime_filters',
@@ -120,7 +122,12 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "fr"
+LANGUAGES = [
+    ("fr", "Français"),
+    ("nl", "Nederlands"),
+    ("en", "English"),
+]
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True

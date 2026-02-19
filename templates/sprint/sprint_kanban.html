@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% block title %}JiraFox - Sprint {{ sprint.name }} - Kanban{% endblock %}
+
 {% block content %}
     <div class="container-fluid py-3">
         {% include "sprint/sprint_header.html" %}

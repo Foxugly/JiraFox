@@ -1,73 +1,105 @@
+{% load i18n %}
+{% get_current_language as CURRENT_LANG %}
 <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="{% url 'home' %}">JiraFox</a>
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{% url 'home' %}">JiraFox</a>
 
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
-      <span class="navbar-toggler-icon"></span>
-    </button>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
-    <div class="collapse navbar-collapse" id="navbarMain">
-      <!-- Liens à gauche -->
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'home' %}">Accueil</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'sprint-list' %}">Sprint</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">A propos</a>
-        </li>
-      </ul>
-
-      <!-- Auth à droite -->
-      <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-        {% if user.is_authenticated %}
-          <li class="nav-item dropdown">
-            <a
-              class="nav-link dropdown-toggle"
-              href="#"
-              role="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-            >
-              {{ user.username }}
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end">
-              <li>
-                <a class="dropdown-item" href="{% url 'settings' %}">
-                  Settings
-                </a>
-              </li>
-                <li>
-                <a class="dropdown-item" href="{% url 'jira_config_list' %}">
-                  Jira
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item" href="{% url 'account_reset_password' %}">
-                  Changer de mot de passe
-                </a>
-              </li>
-              <li><hr class="dropdown-divider"></li>
-              <li>
-                <form method="post" action="{% url 'account_logout' %}">
-                  {% csrf_token %}
-                  <button class="dropdown-item text-danger" type="submit">
-                    Se déconnecter
-                  </button>
-                </form>
-              </li>
+        <div class="collapse navbar-collapse" id="navbarMain">
+            <!-- Liens à gauche -->
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'home' %}">{% trans "Home" %}</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'sprint-list' %}">{% trans "Sprint" %}</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">{% trans "About" %}</a>
+                </li>
             </ul>
-          </li>
-        {% else %}
-          <li class="nav-item">
-            <a class="btn btn-outline-light" href="{% url 'account_login' %}">
-              Se connecter
-            </a>
-          </li>
-        {% endif %}
-      </ul>
+
+            <!-- Auth à droite -->
+            <ul class="navbar-nav ms-auto align-items-center gap-2">
+                <li class="nav-item">
+                    <form action="{% url 'set_language' %}" method="post" class="d-flex align-items-center">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <div class="btn-group btn-group-sm" role="group" aria-label="Language switch">
+                            <input type="radio" class="btn-check" name="language" id="lang-fr"
+                                   value="fr"
+                                   {% if CURRENT_LANG == "fr" %}checked{% endif %}
+                                   onchange="this.form.submit()">
+                            <label class="btn {% if CURRENT_LANG == 'fr' %}btn-primary{% else %}btn-outline-secondary{% endif %}"
+                                   for="lang-fr">FR</label>
+
+                            <input type="radio" class="btn-check" name="language" id="lang-nl"
+                                   value="nl"
+                                   {% if CURRENT_LANG == "nl" %}checked{% endif %}
+                                   onchange="this.form.submit()">
+                            <label class="btn {% if CURRENT_LANG == 'nl' %}btn-primary{% else %}btn-outline-secondary{% endif %}"
+                                   for="lang-nl">NL</label>
+
+                            <input type="radio" class="btn-check" name="language" id="lang-en"
+                                   value="en"
+                                   {% if CURRENT_LANG == "en" %}checked{% endif %}
+                                   onchange="this.form.submit()">
+                            <label class="btn {% if CURRENT_LANG == 'en' %}btn-primary{% else %}btn-outline-secondary{% endif %}"
+                                   for="lang-en">EN</label>
+                        </div>
+                    </form>
+                </li>
+                {% if user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a
+                                class="nav-link dropdown-toggle"
+                                href="#"
+                                role="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                        >
+                            {{ user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'settings' %}">
+                                    <i class="fa-solid fa-user-gear"></i> {% trans "Settings" %}
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'jira_config_list' %}">
+                                    <i class="fa-brands fa-jira"></i> Jira
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'account_reset_password' %}">
+                                    <i class="fa-solid fa-key"></i> {% trans "Change password" %}
+                                </a>
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <form method="post" action="{% url 'account_logout' %}">
+                                    {% csrf_token %}
+                                    <button class="dropdown-item text-danger" type="submit">
+                                        <i class="fa-solid fa-right-from-bracket"></i> {% trans "Log out" %}
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="btn btn-outline-primary btn-sm" href="{% url 'account_login' %}">
+                            <i class="fa-solid fa-right-to-bracket"></i> {% trans "Log in" %}
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
     </div>
-  </div>
 </nav>

@@ -1,13 +1,22 @@
-from django.http import HttpResponse, request, JsonResponse
-from django.views import View
-from django.views.generic import ListView, TemplateView
-from django.shortcuts import get_object_or_404
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponse, JsonResponse, Http404
+from django.shortcuts import get_object_or_404
+from django.views import View
+from django.views.decorators.http import require_GET
+from django.views.generic import ListView, TemplateView
 
 from jiramodule.models import JiraConfiguration
 from jiramodule.services.jira_client import JiraManager
 from jiramodule.status import CANONICAL_ORDER, STATUS_EXCLUDED
 from .report import create_xlsx_bytes
+
+
+def _to_float(v, default=0.0) -> float:
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return float(default)
 
 
 class SprintListView(LoginRequiredMixin, ListView):
@@ -70,9 +79,40 @@ class SprintDetailView(LoginRequiredMixin, TemplateView):
         jira = JiraManager(cfg)
         jira.connect()
         ctx["sprint"] = jira.get_sprint(sprint_id)
-        ctx["issues"] = jira.get_sprint_issues(sprint_id, jql_extra=jira.JIRA_ONLY_STANDARD_TYPES)
         ctx["jira_sprint_url"] = jira.get_url_jql(f"sprint={sprint_id}")
         return ctx
+
+
+@require_GET
+@login_required
+def get_api_sprint_issues(request, sprint_id: int) -> JsonResponse:
+    try:
+        cfg = JiraConfiguration.objects.get(user=request.user, current=True)
+    except JiraConfiguration.DoesNotExist:
+        raise Http404("No current Jira configuration for this user.")
+
+    jira = JiraManager(cfg)
+    jira.connect()
+
+    issues = jira.get_sprint_issues(
+        sprint_id,
+        jql_extra=jira.JIRA_ONLY_STANDARD_TYPES,
+        full=True,
+    )
+
+    items = []
+    for i in issues:
+        items.append({
+            "key": i.get("key"),
+            "summary": i.get("summary") or "",
+            "issueType": i.get("issueType") or "",
+            "state": (i.get("state") or "").strip() or "Unknown",
+            "assignee": ((i.get("assignee") or {}) or {}).get("displayName") or "",
+            "url": i.get("url") or "",
+        })
+
+    # DataTables: tu peux renvoyer juste items, ou {data: items}
+    return JsonResponse({"items": items})
 
 
 class SprintKanbanView(LoginRequiredMixin, TemplateView):
@@ -146,6 +186,8 @@ class SprintXLSExportView(View):
         return response
 
 
+@require_GET
+@login_required
 def get_api_sprint_kanban_issues(request, sprint_id: int) -> JsonResponse:
     cfg = JiraConfiguration.objects.get(user=request.user, current=True)
     jira = JiraManager(cfg)
@@ -186,13 +228,50 @@ class SprintWiaView(LoginRequiredMixin, TemplateView):
         return ctx
 
 
-from django.http import JsonResponse, Http404
-from django.views.decorators.http import require_GET
+def build_wia_data(jira, sprint_id: int) -> dict:
+    mapped_items: list[dict] = []
 
+    issues = jira.get_sprint_issues(
+        sprint_id,
+        jql_extra=jira.JIRA_ONLY_STANDARD_TYPES,
+        full=True,
+    )
 
-# CANONICAL_ORDER = [...]  # ta liste complète ordonnée PBI lifecycle
+    for i in issues:
+        status = (i.get("state") or "").strip() or "Unknown"
+        if status in STATUS_EXCLUDED:
+            continue
+
+        km = i.get("kanban_metrics") or {}
+        age_hours = _to_float(km.get("current_wip_age_hours"), 0.0)
+        cycle_hours = _to_float(km.get("cycle_time_hours"), 0.0)
+
+        age_days = max(0, int(age_hours // 8))
+        cycle_days = max(0, int(cycle_hours // 8))
+
+        mapped_items.append({
+            "key": i.get("key"),
+            "status": status,
+            "ageDays": age_days,
+            "cycleTime": cycle_days,
+            "first_in_progress": km.get("first_in_progress") or None,
+            "first_in_progress_display": km.get("first_in_progress_display") or "",
+            "title": i.get("summary") or "",
+            "url": i.get("url") or "",
+        })
+
+    present_statuses = {it["status"] for it in mapped_items}
+    ordered_known = [s for s in CANONICAL_ORDER if s in present_statuses]
+    unknown = sorted(present_statuses - set(CANONICAL_ORDER))
+
+    return {
+        "statuses": ordered_known + unknown,
+        "items": mapped_items,
+    }
+
 
 @require_GET
+@login_required
 def get_api_sprint_wia_issues(request, sprint_id: int) -> JsonResponse:
     try:
         cfg = JiraConfiguration.objects.get(user=request.user, current=True)
@@ -202,45 +281,6 @@ def get_api_sprint_wia_issues(request, sprint_id: int) -> JsonResponse:
     jira = JiraManager(cfg)
     jira.connect()
 
-    mapped_items: list[dict] = []
+    data = build_wia_data(jira, sprint_id)
 
-    for i in jira.get_sprint_issues(
-            sprint_id,
-            jql_extra=jira.JIRA_ONLY_STANDARD_TYPES,
-            full=True
-    ):
-        status = (i.get("state") or "").strip() or "Unknown"
-        if status not in STATUS_EXCLUDED:
-            # current_wip_age_hours peut être float / int / None selon la source
-            age_hours = i.get("kanban_metrics", {}).get("current_wip_age_hours") or 0
-            cycle_time_hours = i.get("kanban_metrics", {}).get("cycle_time_hours") or 0
-            first_in_progress = i.get("kanban_metrics", {}).get("first_in_progress") or 0
-            first_in_progress_display = i.get("kanban_metrics", {}).get("first_in_progress_display") or 0
-            try:
-                age_hours = float(age_hours)
-            except (TypeError, ValueError):
-                age_hours = 0
-            try:
-                cycle_time_hours = float(cycle_time_hours)
-            except (TypeError, ValueError):
-                cycle_time_hours = 0
-            # 8h = 1 jour (comme tu fais), on force >= 0
-            age_days = max(0, int(age_hours // 8))
-            cycle_time_days = max(0, int(cycle_time_hours // 8))
-
-            mapped_items.append({
-                "key": i.get("key"),
-                "status": status,
-                "ageDays": age_days,
-                "cycleTime" : cycle_time_days,
-                "first_in_progress": first_in_progress,
-                "first_in_progress_display": first_in_progress_display,
-                "title": i.get("summary") or "",
-                "url": i.get("url") or "",
-            })
-    present_statuses = {it["status"] for it in mapped_items}
-    ordered_known = [s for s in CANONICAL_ORDER if s in present_statuses]
-    unknown = sorted(present_statuses - set(CANONICAL_ORDER))
-    statuses = ordered_known + unknown
-    data = {"statuses": statuses, "items": mapped_items}
     return JsonResponse(data)
