@@ -1,12 +1,7 @@
 import urllib.parse
-from datetime import datetime, time, timedelta
-from typing import Optional, Tuple, List, Any, Dict
+from typing import Optional, List, Any, Dict
+from django.core.cache import cache
 
-from django.conf import settings
-from django.contrib.auth.models import AbstractUser
-from django.db import models, transaction
-from django.utils import timezone
-from django.utils.formats import date_format
 from jira import JIRA
 from .kanban_metrics import KanbanMetricsService
 from ..models import JiraConfiguration
@@ -14,14 +9,6 @@ from ..utils.datetime_utils import _to_hours
 
 
 class JiraManager:
-    """
-    Jira Server/DC helper using token auth (Authorization: Bearer <token>).
-    Requires: pip install jira
-
-    Notes:
-    - Agile endpoints (boards/sprints) require Jira Software (GreenHopper).
-    - 'Story points' depends on your custom field; we auto-detect by name.
-    """
     JIRA_ONLY_STANDARD_TYPES = "issuetype in standardIssueTypes()"
     dict_statuses = {'Done': {'order': 2, 'statuses': []}, 'To Do': {'order': 0, 'statuses': []},
                      'In Progress': {'order': 1, 'statuses': []}}
@@ -52,13 +39,8 @@ class JiraManager:
             "verify": True,  # ou False si tu es en self-signed, mais évite si possible
             "timeout": 30,
         }
-
         self._jira = JIRA(options=options, token_auth=self.cfg.jira_token)
-
-        # force a call
         _ = self._jira.myself()
-
-        # cache story points field id if present
         self._story_points_field_id = self._detect_story_points_field_id()
 
     def server_info(self) -> dict[str, Any]:
@@ -84,9 +66,6 @@ class JiraManager:
         )
 
     def list_statuses(self) -> List[Dict[str, Any]]:
-        """
-        "liste des états" -> all statuses available in Jira instance.
-        """
         out: List[Dict[str, Any]] = []
         for st in self.jira.statuses():
             out.append({
@@ -162,11 +141,9 @@ class JiraManager:
         return min(candidates, key=lambda s: s["id"])
 
     def get_next_sprint(self, board_id: int, max_results: int = 50) -> Optional[Dict[str, Any]]:
-        """
-        Find the next sprint on a board with id strictly greater than current_sprint_id.
-        Returns None if not found.
-        """
         current_sprint = self.get_current_sprint(board_id)
+        if not current_sprint:
+            return None
         current_sprint_id = int(current_sprint.get("id"))
         sprints = self.list_sprints(board_id, state="future", max_results=max_results)
         candidates = [s for s in sprints if isinstance(s.get("id"), int) and s["id"] > current_sprint_id]
@@ -198,6 +175,18 @@ class JiraManager:
             fields="summary,status,assignee,timetracking,created,updated,resolutiondate,issuetype,project",
         )
         return issues
+
+    def get_cached_sprint_issues(self, sprint_id, jql_extra=JIRA_ONLY_STANDARD_TYPES, full=True):
+        key = f"sprint_issues:{self.cfg.user.id}:{sprint_id}"
+        data = cache.get(key)
+        if data is None:
+            data = self.get_sprint_issues(
+                sprint_id,
+                jql_extra=jql_extra,
+                full=full,
+            )
+            cache.set(key, data, 60)
+        return data
 
     def get_sprint_issues(self, sprint_id: int, *, jql_extra: str = "", max_results: int = 1000, full=False) -> List[
         Dict[str, Any]]:
@@ -242,7 +231,7 @@ class JiraManager:
         Return sprint info + tickets with requested ticket fields.
         """
         sprint = self.get_sprint(sprint_id)
-        tickets = self.get_sprint_issues(sprint_id, jql_extra=jql_extra, max_results=max_results)
+        tickets = self.get_cached_sprint_issues(sprint_id, jql_extra=jql_extra, max_results=max_results)
         return {"sprint": sprint, "tickets": tickets}
 
     # ---------------------------
@@ -371,3 +360,7 @@ class JiraManager:
             return float(v)
         except Exception:
             return None
+
+    def throughput_7d(self):
+        q = f"project = {self.cfg.jira_project_id} AND issuetype in standardIssueTypes() AND status = Done AND resolved >= -7d ORDER BY resolved DESC"
+        return self.run_jql(q, full=False)

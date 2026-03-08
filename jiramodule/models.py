@@ -1,13 +1,10 @@
-import urllib.parse
-from datetime import datetime, time, timedelta
-from typing import Optional, Tuple, List, Any, Dict
-
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models, transaction
 from django.utils import timezone
-from django.utils.formats import date_format
-from jira import JIRA
+
+
+from team.models import Team
 
 
 class JiraConfiguration(models.Model):
@@ -47,6 +44,8 @@ class JiraConfiguration(models.Model):
         max_length=50,
         blank=True,
     )
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="jira_configs", null=True, blank=True)
+
     is_active = models.BooleanField(default=False)
     current = models.BooleanField(default=False)
     last_test_ok = models.BooleanField(default=False, db_index=True)
@@ -69,17 +68,21 @@ class JiraConfiguration(models.Model):
         self.save(update_fields=["last_test_ok", "last_tested_at", "last_test_error"])
 
     def save(self, *args, **kwargs):
-        user = kwargs.pop("user", None)
+        """
+        Permet à l'admin Django d'enregistrer l'objet correctement.
+        On ne bloque la création que si on est en dehors de l'admin
+        ET que user n'est pas défini.
+        """
+        # Cas où l'objet existe déjà → OK
+        if self.pk is not None:
+            return super().save(*args, **kwargs)
 
-        if self.pk is None:
-            # création
-            if self.user_id is None:
-                if user is None:
-                    raise ValueError(
-                        "JiraConfiguration.save() requires a user on creation"
-                    )
-                self.user = user
+        # Cas création, user déjà fourni → OK
+        if self.user_id is not None:
+            return super().save(*args, **kwargs)
 
-        super().save(*args, **kwargs)
+        # Si user n'est pas encore défini, on est probablement dans l'admin.
+        # L'admin va remplir le champ dans save_model().
+        return super().save(*args, **kwargs)
 
 

@@ -1,14 +1,12 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponse, JsonResponse, Http404
-from django.shortcuts import get_object_or_404
+from django.http import HttpResponse, JsonResponse
 from django.views import View
 from django.views.decorators.http import require_GET
 from django.views.generic import ListView, TemplateView
-
-from jiramodule.models import JiraConfiguration
-from jiramodule.services.jira_client import JiraManager
+from jiramodule.services.jira_config_service import get_connected_jira_for_user
 from jiramodule.status import CANONICAL_ORDER, STATUS_EXCLUDED
+from team.models import TeamDev
 from .report import create_xlsx_bytes
 
 
@@ -25,27 +23,12 @@ class SprintListView(LoginRequiredMixin, ListView):
     paginate_by = 10  # Bootstrap friendly
 
     def get_queryset(self):
-        # 1. config Jira courante pour l’utilisateur
-        jc = get_object_or_404(
-            JiraConfiguration,
-            user=self.request.user,
-            current=True)
-
-        # 2. connexion Jira
-        jm = JiraManager(jc)
-        jm.connect()
-
-        # 3. récupération des sprints
-        # sprints = jm.list_sprints_for_current_board("active,future, closed")
-
+        jira = get_connected_jira_for_user(self.request.user)
         selected_states = self.request.GET.getlist("state")
         if not selected_states:
             selected_states = ["active", "future"]
-
         states = ",".join(selected_states)
-        sprints = jm.list_sprints_for_current_board(states)
-
-        # 4. tri (souvent pratique)
+        sprints = jira.list_sprints_for_current_board(states)
         return sorted(
             sprints,
             key=lambda s: (s.get("state"), s.get("startDate") or ""),
@@ -53,48 +36,29 @@ class SprintListView(LoginRequiredMixin, ListView):
         )
 
     def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx["board_id"] = (
-            JiraConfiguration.objects
-            .filter(user=self.request.user, current=True)
-            .values_list("jira_board_id", flat=True)
-            .first()
-        )
-        return ctx
-
+        context = super().get_context_data(**kwargs)
+        jira = get_connected_jira_for_user(self.request.user)
+        context["board_id"] = jira.cfg.jira_board_id
+        return context
 
 class SprintDetailView(LoginRequiredMixin, TemplateView):
     template_name = "sprint/sprint_detail.html"
 
     def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        sprint_id = kwargs.get("sprint_id")
-
-        cfg = get_object_or_404(
-            JiraConfiguration,
-            user=self.request.user,
-            current=True
-        )
-
-        jira = JiraManager(cfg)
-        jira.connect()
-        ctx["sprint"] = jira.get_sprint(sprint_id)
-        ctx["jira_sprint_url"] = jira.get_url_jql(f"sprint={sprint_id}")
-        return ctx
+        context = super().get_context_data(**kwargs)
+        sprint_id = kwargs["sprint_id"]
+        jira = get_connected_jira_for_user(self.request.user)
+        context["sprint"] = jira.get_sprint(sprint_id)
+        context["jira_sprint_url"] = jira.get_url_jql(f"sprint={sprint_id}")
+        return context
 
 
 @require_GET
 @login_required
 def get_api_sprint_issues(request, sprint_id: int) -> JsonResponse:
-    try:
-        cfg = JiraConfiguration.objects.get(user=request.user, current=True)
-    except JiraConfiguration.DoesNotExist:
-        raise Http404("No current Jira configuration for this user.")
+    jira = get_connected_jira_for_user(request.user)
 
-    jira = JiraManager(cfg)
-    jira.connect()
-
-    issues = jira.get_sprint_issues(
+    issues = jira.get_cached_sprint_issues(
         sprint_id,
         jql_extra=jira.JIRA_ONLY_STANDARD_TYPES,
         full=True,
@@ -110,8 +74,6 @@ def get_api_sprint_issues(request, sprint_id: int) -> JsonResponse:
             "assignee": ((i.get("assignee") or {}) or {}).get("displayName") or "",
             "url": i.get("url") or "",
         })
-
-    # DataTables: tu peux renvoyer juste items, ou {data: items}
     return JsonResponse({"items": items})
 
 
@@ -119,65 +81,65 @@ class SprintKanbanView(LoginRequiredMixin, TemplateView):
     template_name = "sprint/sprint_kanban.html"
 
     def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        sprint_id = kwargs.get("sprint_id")
+        context = super().get_context_data(**kwargs)
+        sprint_id = kwargs["sprint_id"]
 
-        cfg = get_object_or_404(
-            JiraConfiguration,
-            user=self.request.user,
-            current=True
-        )
-
-        jira = JiraManager(cfg)
-        jira.connect()
-        ctx["sprint"] = jira.get_sprint(sprint_id)
+        jira = get_connected_jira_for_user(self.request.user)
+        context["sprint"] = jira.get_sprint(sprint_id)
         # ctx["issues"] = jira.get_sprint_issues(sprint_id)
-        return ctx
+        return context
 
 
 class SprintReportView(LoginRequiredMixin, TemplateView):
     template_name = "sprint/sprint_report.html"
 
     def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        sprint_id = kwargs.get("sprint_id")
-
-        cfg = get_object_or_404(
-            JiraConfiguration,
-            user=self.request.user,
-            current=True
-        )
-
-        jira = JiraManager(cfg)
-        jira.connect()
-        ################ STATUSES ################
-        ctx["statuses"] = []
-
+        context = super().get_context_data(**kwargs)
+        sprint_id = kwargs["sprint_id"]
+        jira  = get_connected_jira_for_user(self.request.user)
+        context["statuses"] = []
         for name, data in sorted(jira.get_dict_statuses().items(), key=lambda item: item[1]["order"]):
             statuses = ",".join([f'"{s["name"]}"' for s in data['statuses']])
             jql = f"sprint = {sprint_id} and status in ({statuses}) and {jira.JIRA_ONLY_STANDARD_TYPES} ORDER BY status ASC"
             d = {"name": name, "jql": jql, "url_jql": jira.get_url_jql(jql)}
-            ctx["statuses"].append(d)
+            context["statuses"].append(d)
 
         fastlane_jql = f"sprint = {sprint_id} and labels in ('fastlane', 'Fastlane') and {jira.JIRA_ONLY_STANDARD_TYPES} ORDER BY status ASC"
         d = {"name": "Fastlane", "jql": fastlane_jql, "url_jql": jira.get_url_jql(fastlane_jql)}
-        ctx["statuses"].append(d)
-        ctx["sprint"] = jira.get_sprint(sprint_id)
-        return ctx
+        context["statuses"].append(d)
+        context["sprint"] = jira.get_sprint(sprint_id)
+        return context
+
+
+class SprintDetailXLSExportView(LoginRequiredMixin, TemplateView):
+    template_name = "sprint/sprint_xls_report.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        sprint_id = kwargs.get("sprint_id")
+        jira = get_connected_jira_for_user(self.request.user)
+        team = jira.cfg.team
+        context["team"] = team
+        context["sprint"] = jira.get_sprint(sprint_id)
+        context["teamdevs"] = TeamDev.objects.filter(team=team).select_related("dev").order_by("order", "id")
+        # Champs affichés en lignes
+        context["dev_fields"] = [
+            ("workload", "Workload"),
+            ("holidays", "Holidays"),
+            ("fastlane", "Fastlane"),
+            ("project_meetings", "Project meetings"),
+            ("other_meetings", "Other meetings"),
+        ]
+
+        return context
 
 
 class SprintXLSExportView(View):
 
     def get(self, request, sprint_id):
-        # Connexion Jira
-        cfg = JiraConfiguration.objects.get(user=request.user, current=True)
-        jira = JiraManager(cfg)
-        jira.connect()
-
+        jira = get_connected_jira_for_user(request.user)
         content = create_xlsx_bytes(jira, sprint_id)
-
         # Prépare la réponse HTTP
-
         response = HttpResponse(
             content,
             content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -189,14 +151,10 @@ class SprintXLSExportView(View):
 @require_GET
 @login_required
 def get_api_sprint_kanban_issues(request, sprint_id: int) -> JsonResponse:
-    cfg = JiraConfiguration.objects.get(user=request.user, current=True)
-    jira = JiraManager(cfg)
-    jira.connect()
+    jira = get_connected_jira_for_user(request.user)
     data_issues = {}
-    for i in jira.get_sprint_issues(sprint_id, jql_extra=jira.JIRA_ONLY_STANDARD_TYPES):
-        print(i)
+    for i in jira.get_cached_sprint_issues(sprint_id, jql_extra=jira.JIRA_ONLY_STANDARD_TYPES):
         state = i["state"]
-        print(state)
         if state in data_issues.keys():
             data_issues[state].append(i)
         else:
@@ -204,7 +162,6 @@ def get_api_sprint_kanban_issues(request, sprint_id: int) -> JsonResponse:
     data = []
     for state, list_issues in data_issues.items():
         data.append({"name": state, "issues": list_issues})
-    print(data)
     return JsonResponse(data, safe=False)
 
 
@@ -212,26 +169,18 @@ class SprintWiaView(LoginRequiredMixin, TemplateView):
     template_name = "sprint/sprint_wia.html"
 
     def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         sprint_id = kwargs.get("sprint_id")
 
-        cfg = get_object_or_404(
-            JiraConfiguration,
-            user=self.request.user,
-            current=True
-        )
-
-        jira = JiraManager(cfg)
-        jira.connect()
-        ctx["sprint"] = jira.get_sprint(sprint_id)
-        # ctx["issues"] = jira.get_sprint_issues(sprint_id)
-        return ctx
+        jira = get_connected_jira_for_user(self.request.user)
+        context["sprint"] = jira.get_sprint(sprint_id)
+        return context
 
 
 def build_wia_data(jira, sprint_id: int) -> dict:
     mapped_items: list[dict] = []
 
-    issues = jira.get_sprint_issues(
+    issues = jira.get_cached_sprint_issues(
         sprint_id,
         jql_extra=jira.JIRA_ONLY_STANDARD_TYPES,
         full=True,
@@ -273,14 +222,6 @@ def build_wia_data(jira, sprint_id: int) -> dict:
 @require_GET
 @login_required
 def get_api_sprint_wia_issues(request, sprint_id: int) -> JsonResponse:
-    try:
-        cfg = JiraConfiguration.objects.get(user=request.user, current=True)
-    except JiraConfiguration.DoesNotExist:
-        raise Http404("No current Jira configuration for this user.")
-
-    jira = JiraManager(cfg)
-    jira.connect()
-
+    jira = get_connected_jira_for_user(request.user)
     data = build_wia_data(jira, sprint_id)
-
     return JsonResponse(data)

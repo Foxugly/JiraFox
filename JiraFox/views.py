@@ -3,6 +3,7 @@ from collections import defaultdict
 from statistics import median
 
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse, Http404
 from django.shortcuts import render
 from django.views import View
@@ -10,21 +11,17 @@ from django.views.decorators.http import require_GET
 
 from jiramodule.models import JiraConfiguration
 from jiramodule.services.jira_client import JiraManager
+from jiramodule.services.jira_config_service import get_connected_jira_for_user
 from sprint.views import build_wia_data
 
 
 @require_GET
 @login_required
 def dashboard_summary_api(request):
-    try:
-        cfg = JiraConfiguration.objects.get(user=request.user, current=True)
-    except JiraConfiguration.DoesNotExist:
-        raise Http404("No current Jira configuration for this user.")
-    jira = JiraManager(cfg)
-    jira.connect()
+    jira = get_connected_jira_for_user(request.user)
 
-    sprint = jira.get_current_sprint(cfg.jira_board_id)
-    issues = jira.get_sprint_issues(
+    sprint = jira.get_current_sprint(jira.cfg.jira_board_id)
+    issues = jira.get_cached_sprint_issues(
         sprint["id"],
         jql_extra=jira.JIRA_ONLY_STANDARD_TYPES,
         full=True
@@ -51,14 +48,29 @@ def dashboard_summary_api(request):
         for i in issues
         if i["kanban_metrics"]["lead_time_days"]
     ]
+    throughput_7d = len(jira.throughput_7d())
+
+    flow_eff_pct = None
+
+    if cycle_times and lead_times:
+        median_cycle = median(cycle_times)
+        median_lead = median(lead_times)
+
+        if median_lead > 0:
+            flow_eff_pct = round((median_cycle / median_lead) * 100, 1)
+
+    aging_wip_pct = None
+    if wip_items:
+        aging_wip_pct = round((len(aging_wip) / len(wip_items)) * 100, 1)
 
     kpis = {
         "wip": len(wip_items),
         "aging_wip": len(aging_wip),
         "cycle_p50_days": round(median(cycle_times), 1) if cycle_times else None,
         "lead_p50_days": round(median(lead_times), 1) if lead_times else None,
-        "throughput_7d": 0,  # à améliorer si tu veux calcul réel
-        "flow_eff_pct": None,
+        "throughput_7d": throughput_7d,
+        "flow_eff_pct": flow_eff_pct,
+        "aging_wip_pct" : aging_wip_pct
     }
 
     # -----------------------
@@ -102,12 +114,10 @@ def dashboard_summary_api(request):
 @require_GET
 @login_required
 def dashboard_items_api(request):
-    cfg = JiraConfiguration.objects.get(user=request.user, current=True)
-    jira = JiraManager(cfg)
-    jira.connect()
+    jira = get_connected_jira_for_user(request.user)
 
-    sprint = jira.get_current_sprint(cfg.jira_board_id)
-    issues = jira.get_sprint_issues(
+    sprint = jira.get_current_sprint(jira.cfg.jira_board_id)
+    issues = jira.get_cached_sprint_issues(
         sprint["id"],
         jql_extra=jira.JIRA_ONLY_STANDARD_TYPES,
         full=True
@@ -129,26 +139,22 @@ def dashboard_items_api(request):
     return JsonResponse({"items": items})
 
 
-class HomeView(View):
-    template_name = "home.html"
+
+class DashboardView(LoginRequiredMixin, View):
+    template_name = "dashboard.html"
 
     def get(self, request):
-
-        try:
-            cfg = JiraConfiguration.objects.get(user=request.user, current=True)
-        except JiraConfiguration.DoesNotExist:
-            raise Http404("No Jira configuration found.")
-
-        jira = JiraManager(cfg)
-        jira.connect()
-
+        jira = get_connected_jira_for_user(request.user)
         sprint = jira.get_current_sprint()
-
         if not sprint:
             raise Http404("Sprint not found")
-
         context = {
             "sprint": sprint,
         }
+        return render(request, self.template_name, context)
 
+class HomeView(View):
+    template_name = "home.html"
+    def get(self, request):
+        context = {}
         return render(request, self.template_name, context)

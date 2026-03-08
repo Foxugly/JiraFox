@@ -125,6 +125,7 @@ class KanbanMetricsService:
         if not points:
             # no created or no status info
             return {
+                "created" : created,
                 "lead_time_hours": lead_time_hours,
                 "cycle_time_hours": None,
                 "first_in_progress": None,
@@ -147,7 +148,7 @@ class KanbanMetricsService:
 
         time_in_status = []
         for st, hrs in sorted(time_in_status_hours.items(), key=lambda kv: kv[1], reverse=True):
-            pct = round((hrs / max_hours) * 100, 1) if max_hours else 0.0
+            pct = float(round((hrs / max_hours) * 100, 1) if max_hours else 0.0)
             time_in_status.append({
                 "status": st,
                 "hours": hrs,
@@ -172,7 +173,10 @@ class KanbanMetricsService:
         cycle_time_days = hours_to_business_days(cycle_time_hours)
         current_wip_age_days = hours_to_business_days(current_wip_age_hours)
         d = serialize_dt(first_in_progress)
+        created_dt = serialize_dt(created)
         return {
+            "created": created_dt["iso"],
+            "created_display": created_dt["display"],
             "first_in_progress": d["iso"],
             "first_in_progress_display": d["display"],
 
