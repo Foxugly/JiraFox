@@ -134,7 +134,7 @@ class SprintDetailXLSExportView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class SprintXLSExportView(View):
+class SprintXLSExportView(LoginRequiredMixin, View):
 
     def get(self, request, sprint_id):
         jira = get_connected_jira_for_user(request.user)

@@ -1,3 +1,4 @@
+import hashlib
 import urllib.parse
 from typing import Optional, List, Any, Dict
 from django.core.cache import cache
@@ -10,8 +11,6 @@ from ..utils.datetime_utils import _to_hours
 
 class JiraManager:
     JIRA_ONLY_STANDARD_TYPES = "issuetype in standardIssueTypes()"
-    dict_statuses = {'Done': {'order': 2, 'statuses': []}, 'To Do': {'order': 0, 'statuses': []},
-                     'In Progress': {'order': 1, 'statuses': []}}
 
     def __init__(self, jc: JiraConfiguration) -> None:
         self.metrics = KanbanMetricsService()
@@ -47,9 +46,18 @@ class JiraManager:
         return self._jira.server_info()
 
     def get_dict_statuses(self) -> dict:
+        dict_statuses = {
+            "Done": {"order": 2, "statuses": []},
+            "To Do": {"order": 0, "statuses": []},
+            "In Progress": {"order": 1, "statuses": []},
+        }
+
         for s in self.list_statuses():
-            self.dict_statuses[s['statusCategory']]['statuses'].append(s)
-        return self.dict_statuses
+            category = s.get("statusCategory")
+            if category in dict_statuses:
+                dict_statuses[category]["statuses"].append(s)
+
+        return dict_statuses
 
     # ---------------------------
     # Core listings
@@ -177,7 +185,9 @@ class JiraManager:
         return issues
 
     def get_cached_sprint_issues(self, sprint_id, jql_extra=JIRA_ONLY_STANDARD_TYPES, full=True):
-        key = f"sprint_issues:{self.cfg.user.id}:{sprint_id}"
+        extra = (jql_extra or "").strip()
+        extra_hash = hashlib.md5(extra.encode()).hexdigest()
+        key = f"sprint_issues:{self.cfg.user_id}:{sprint_id}:{int(full)}:{extra_hash}"
         data = cache.get(key)
         if data is None:
             data = self.get_sprint_issues(
