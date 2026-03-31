@@ -2,9 +2,7 @@
     const page = window.DASHBOARD_PAGE;
     if (!page) return;
 
-    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((element) => {
-        new bootstrap.Tooltip(element);
-    });
+    window.AppUI?.initTooltips();
 
     const badgeSummary = document.getElementById("statusSummaryBadge");
     const badgeItems = document.getElementById("statusItemsBadge");
@@ -16,6 +14,8 @@
     const ttAge = document.getElementById("ttAge");
     const ttLink = document.getElementById("ttLink");
     const i18n = page.i18n || {};
+    let tooltipHideTimeout = null;
+    let isTooltipHovered = false;
 
     function notify(message, kind, delay) {
         window.AppUI?.showToast(message, kind, delay);
@@ -45,14 +45,33 @@
     }
 
     function hideTooltip() {
+        if (tooltipHideTimeout) {
+            window.clearTimeout(tooltipHideTimeout);
+            tooltipHideTimeout = null;
+        }
         if (tooltipEl) tooltipEl.style.display = "none";
+    }
+
+    function cancelScheduledHide() {
+        if (tooltipHideTimeout) {
+            window.clearTimeout(tooltipHideTimeout);
+            tooltipHideTimeout = null;
+        }
+    }
+
+    function scheduleHideTooltip(delay) {
+        cancelScheduledHide();
+        tooltipHideTimeout = window.setTimeout(() => {
+            tooltipHideTimeout = null;
+            if (!isTooltipHovered) hideTooltip();
+        }, delay || 150);
     }
 
     function externalTooltipHandler(context) {
         const {chart, tooltip} = context;
         if (!tooltipEl) return;
         if (tooltip.opacity === 0) {
-            hideTooltip();
+            scheduleHideTooltip(180);
             return;
         }
 
@@ -67,7 +86,7 @@
         const ageNumber = safeNum(age, 999);
         const xScale = chart.scales.x;
         const yScale = chart.scales.y;
-        const rect = chart.canvas.getBoundingClientRect();
+        const wrapperEl = document.getElementById("wiaChartWrap");
 
         ttKey.textContent = raw.key ?? "-";
         ttTitle.textContent = raw.title ?? "";
@@ -76,8 +95,15 @@
         ttAge.className = `badge badge-age ${ageBadgeClass(ageNumber)}`;
         ttLink.href = raw.url || "#";
         ttLink.style.pointerEvents = raw.url ? "auto" : "none";
-        tooltipEl.style.left = `${window.scrollX + rect.left + xScale.getPixelForValue(point.parsed.x)}px`;
-        tooltipEl.style.top = `${window.scrollY + rect.top + yScale.getPixelForValue(point.parsed.y) - 200}px`;
+        cancelScheduledHide();
+
+        const pointX = xScale.getPixelForValue(point.parsed.x);
+        const pointY = yScale.getPixelForValue(point.parsed.y);
+
+        if (wrapperEl) {
+            tooltipEl.style.left = `${pointX}px`;
+            tooltipEl.style.top = `${pointY}px`;
+        }
         tooltipEl.style.display = "block";
     }
 
@@ -253,8 +279,16 @@
         });
 
         if (!canvas.dataset.tooltipBound) {
-            canvas.addEventListener("mouseleave", hideTooltip);
-            canvas.addEventListener("touchend", hideTooltip);
+            canvas.addEventListener("mouseleave", () => scheduleHideTooltip(220));
+            canvas.addEventListener("touchend", () => scheduleHideTooltip(120));
+            tooltipEl?.addEventListener("mouseenter", () => {
+                isTooltipHovered = true;
+                cancelScheduledHide();
+            });
+            tooltipEl?.addEventListener("mouseleave", () => {
+                isTooltipHovered = false;
+                scheduleHideTooltip(120);
+            });
             canvas.dataset.tooltipBound = "1";
         }
 

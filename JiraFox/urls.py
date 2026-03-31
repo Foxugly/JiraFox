@@ -16,9 +16,15 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from django.views.generic import TemplateView
-
-from JiraFox.views import dashboard_summary_api, dashboard_items_api, HomeView, DashboardView, ScriptView, AboutView
+from JiraFox.views import (
+    AboutView,
+    DashboardView,
+    HomeView,
+    ScriptView,
+    SettingsView,
+    dashboard_items_api,
+    dashboard_summary_api,
+)
 
 urlpatterns = [
     path("api/dashboard/summary/", dashboard_summary_api, name="dashboard-summary-api"),
@@ -28,7 +34,7 @@ urlpatterns = [
 
     path("script/", ScriptView.as_view(), name="script"),
     path("dashboard/", DashboardView.as_view(), name="dashboard"),
-    path("settings", TemplateView.as_view(template_name="base.html"), name="settings"),
+    path("settings/", SettingsView.as_view(), name="settings"),
     path('admin/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
     path('jira/', include('jiramodule.urls')),

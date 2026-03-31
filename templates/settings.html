@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}JiraFox - {% trans "Settings" %}{% endblock %}
+
+{% block content %}
+    {% trans "Profile and workspace settings" as settings_hero_title %}
+    {% trans "Manage your account details, preferred language and the Jira configuration currently driving the workspace." as settings_hero_description %}
+    <section class="page-shell glass-panel section-stack">
+        <div class="page-hero">
+            <div class="d-flex justify-content-start mb-3 page-hero-kicker-row">
+                <span class="page-kicker">
+                    <i class="fa-solid fa-user-gear"></i>
+                    {% trans "Settings" %}
+                </span>
+            </div>
+            {% include "includes/page_hero_copy.html" with hero_title=settings_hero_title hero_description=settings_hero_description %}
+        </div>
+
+        <div class="row g-3">
+            <div class="col-12 col-xl-7">
+                <div class="utility-panel h-100">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div>
+                            <h2 class="h4 mb-1">{% trans "User profile" %}</h2>
+                            <p class="inline-note mb-0">{% trans "These values are used for your account and interface preferences." %}</p>
+                        </div>
+                    </div>
+
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <label for="{{ form.first_name.id_for_label }}" class="form-label">{% trans "First name" %}</label>
+                                <input type="text" name="{{ form.first_name.html_name }}" id="{{ form.first_name.id_for_label }}"
+                                       value="{{ form.first_name.value|default_if_none:'' }}"
+                                       class="form-control {% if form.first_name.errors %}is-invalid{% endif %}">
+                                {% if form.first_name.errors %}
+                                    <div class="invalid-feedback">{{ form.first_name.errors|striptags }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="{{ form.last_name.id_for_label }}" class="form-label">{% trans "Last name" %}</label>
+                                <input type="text" name="{{ form.last_name.html_name }}" id="{{ form.last_name.id_for_label }}"
+                                       value="{{ form.last_name.value|default_if_none:'' }}"
+                                       class="form-control {% if form.last_name.errors %}is-invalid{% endif %}">
+                                {% if form.last_name.errors %}
+                                    <div class="invalid-feedback">{{ form.last_name.errors|striptags }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12">
+                                <label for="{{ form.email.id_for_label }}" class="form-label">{% trans "Email" %}</label>
+                                <input type="email" name="{{ form.email.html_name }}" id="{{ form.email.id_for_label }}"
+                                       value="{{ form.email.value|default_if_none:'' }}"
+                                       class="form-control {% if form.email.errors %}is-invalid{% endif %}" required>
+                                {% if form.email.errors %}
+                                    <div class="invalid-feedback">{{ form.email.errors|striptags }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="{{ form.language.id_for_label }}" class="form-label">{% trans "Interface language" %}</label>
+                                <select name="{{ form.language.html_name }}" id="{{ form.language.id_for_label }}"
+                                        class="form-select {% if form.language.errors %}is-invalid{% endif %}">
+                                    {% for value, label in form.fields.language.choices %}
+                                        <option value="{{ value }}" {% if form.language.value == value %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                                {% if form.language.errors %}
+                                    <div class="invalid-feedback">{{ form.language.errors|striptags }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 d-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fa-solid fa-floppy-disk me-2"></i>{% trans "Save settings" %}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-12 col-xl-5">
+                <div class="utility-panel mb-3">
+                    <h2 class="h4 mb-3">{% trans "Security" %}</h2>
+                    <div class="d-flex justify-content-between align-items-center gap-3">
+                        <div>
+                            <div class="fw-semibold">{% trans "Password management" %}</div>
+                            <div class="inline-note">{% trans "Update your password from an authenticated session." %}</div>
+                        </div>
+                        <a class="btn btn-outline-primary btn-sm" href="{% url 'account_change_password' %}">
+                            <i class="fa-solid fa-key me-2"></i>{% trans "Change password" %}
+                        </a>
+                    </div>
+                </div>
+
+                <div class="utility-panel h-100">
+                    <h2 class="h4 mb-3">{% trans "Current Jira configuration" %}</h2>
+                    {% if current_jira_config %}
+                        <div class="vstack gap-2">
+                            <div class="d-flex justify-content-between gap-3"><span class="inline-note">{% trans "URL" %}</span><strong class="text-break">{{ current_jira_config.jira_url|default:"-" }}</strong></div>
+                            <div class="d-flex justify-content-between gap-3"><span class="inline-note">{% trans "Board" %}</span><strong>{{ current_jira_config.jira_board_id|default:"-" }}</strong></div>
+                            <div class="d-flex justify-content-between gap-3"><span class="inline-note">{% trans "Project" %}</span><strong>{{ current_jira_config.jira_project_id|default:"-" }}</strong></div>
+                            <div class="d-flex justify-content-between gap-3"><span class="inline-note">{% trans "Team" %}</span><strong>{{ current_jira_config.team.name|default:"-" }}</strong></div>
+                        </div>
+                        <a class="btn btn-outline-secondary btn-sm mt-4" href="{% url 'jira_config_list' %}">
+                            <i class="fa-brands fa-jira me-2"></i>{% trans "Manage Jira connections" %}
+                        </a>
+                    {% else %}
+                        <p class="text-secondary mb-3">{% trans "No current Jira configuration is active for this account." %}</p>
+                        <a class="btn btn-primary btn-sm" href="{% url 'jira_config_list' %}">
+                            <i class="fa-solid fa-plus me-2"></i>{% trans "Create a Jira connection" %}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

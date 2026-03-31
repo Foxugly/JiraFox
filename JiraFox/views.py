@@ -1,10 +1,15 @@
+from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import Http404, JsonResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
+from django.utils import translation
+from django.utils.translation import gettext as _
 from django.views import View
 from django.views.decorators.http import require_GET
 
+from JiraFox.forms import UserSettingsForm
 from JiraFox.services.dashboard import (
     build_dashboard_bottlenecks,
     build_dashboard_items,
@@ -75,6 +80,41 @@ class AboutView(View):
 
     def get(self, request):
         return render(request, self.template_name, {})
+
+
+class SettingsView(LoginRequiredMixin, View):
+    template_name = "settings.html"
+
+    def get(self, request):
+        form = UserSettingsForm(user=request.user)
+        current_jira_config = request.user.jira_configs.filter(current=True).select_related("team").first()
+        return render(
+            request,
+            self.template_name,
+            {
+                "form": form,
+                "current_jira_config": current_jira_config,
+            },
+        )
+
+    def post(self, request):
+        form = UserSettingsForm(request.POST, user=request.user)
+        current_jira_config = request.user.jira_configs.filter(current=True).select_related("team").first()
+        if form.is_valid():
+            user = form.save()
+            messages.success(request, _("Settings updated."))
+            translation.activate(user.language)
+            response = redirect("settings")
+            response.set_cookie(settings.LANGUAGE_COOKIE_NAME, user.language)
+            return response
+        return render(
+            request,
+            self.template_name,
+            {
+                "form": form,
+                "current_jira_config": current_jira_config,
+            },
+        )
 
 
 class ScriptView(LoginRequiredMixin, View):

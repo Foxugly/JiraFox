@@ -8,6 +8,8 @@
 {% block title %}JiraFox - Sprint{% endblock %}
 
 {% block content %}
+    {% trans "Sprints" as sprint_list_hero_title %}
+    {% trans "Filtrer les cycles visibles, parcourir l'historique et ouvrir directement le sprint utile." as sprint_list_hero_description %}
     <section class="page-shell glass-panel section-stack">
         <div class="page-hero">
             <div class="d-flex justify-content-start mb-3 page-hero-kicker-row">
@@ -16,12 +18,7 @@
                     {% trans "Sprint map" %}
                 </span>
             </div>
-            <div class="page-hero-copy mx-auto">
-                <h1 class="hero-title fs-1 mt-0 mb-2">{% trans "Sprints" %}</h1>
-                <p class="text-secondary mb-0">
-                    {% trans "Filtrer les cycles visibles, parcourir l'historique et ouvrir directement le sprint utile." %}
-                </p>
-            </div>
+            {% include "includes/page_hero_copy.html" with hero_title=sprint_list_hero_title hero_description=sprint_list_hero_description %}
         </div>
 
         <div class="content-panel">

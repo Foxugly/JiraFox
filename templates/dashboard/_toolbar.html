@@ -1,0 +1,28 @@
+{% load i18n %}
+<div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3">
+    <div>
+        <h1 class="h4 mb-1">
+            {% trans "Agile Dashboard" %} - Sprint : {{ sprint.name }}
+            <div class="btn-group btn-group-sm" role="group">
+                <a id="wiaOpenJiraTop" class="btn btn-sm btn-outline-primary" href="{{ sprint.url }}"
+                   target="_blank" rel="noopener noreferrer">
+                    <i class="fa-brands fa-jira me-1"></i>
+                </a>
+                <a class="btn btn-outline-secondary" href="{% url 'sprint-detail' sprint.id %}">
+                    <i class="fa-solid fa-up-right-from-square"></i>
+                </a>
+            </div>
+        </h1>
+        <div class="text-secondary">
+            {% trans "Sprint / Flow overview with Kanban metrics, aging and bottlenecks." %}
+        </div>
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+        <span id="statusSummaryBadge" class="badge text-bg-secondary">{% trans "Loading..." %}</span>
+        <span id="statusItemsBadge" class="badge text-bg-secondary">{% trans "Loading..." %}</span>
+        <button id="reloadBtn" class="btn btn-sm btn-outline-secondary" type="button">
+            {% trans "Reload" %}
+        </button>
+    </div>
+</div>

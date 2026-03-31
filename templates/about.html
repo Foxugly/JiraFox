@@ -4,6 +4,8 @@
 {% block title %}JiraFox - {% trans "About" %}{% endblock %}
 
 {% block content %}
+    {% trans "JiraFox, in short" as about_hero_title %}
+    {% trans "A Django-based cockpit focused on sprint visibility, Jira navigation, delivery flow and lightweight operational reporting." as about_hero_description %}
     <section class="page-shell glass-panel section-stack">
         <div class="page-hero">
             <div class="d-flex justify-content-start mb-3 page-hero-kicker-row">
@@ -12,12 +14,7 @@
                     {% trans "About" %}
                 </span>
             </div>
-            <div class="page-hero-copy-md mx-auto">
-                <h1 class="hero-title fs-1 mt-0 mb-2">{% trans "JiraFox, in short" %}</h1>
-                <p class="text-secondary mb-0">
-                    {% trans "A Django-based cockpit focused on sprint visibility, Jira navigation, delivery flow and lightweight operational reporting." %}
-                </p>
-            </div>
+            {% include "includes/page_hero_copy.html" with hero_copy_class="page-hero-copy-md" hero_title=about_hero_title hero_description=about_hero_description %}
         </div>
 
         <div class="row g-3">

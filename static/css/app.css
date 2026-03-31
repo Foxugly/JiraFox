@@ -574,6 +574,14 @@ a:hover {
     z-index: 1085;
 }
 
+[data-bs-toggle="tooltip"] {
+    cursor: help;
+}
+
+.tooltip {
+    z-index: 2000;
+}
+
 .mono {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
@@ -705,7 +713,7 @@ a:hover {
 #chartTooltip {
     position: absolute;
     pointer-events: auto;
-    transform: translate(-50%, -100%);
+    transform: translate(10px, calc(-100% - 8px));
     z-index: 20;
     display: none;
     min-width: 260px;

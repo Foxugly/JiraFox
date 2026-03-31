@@ -1,0 +1,76 @@
+{% load i18n %}
+<div class="row g-3 mb-3">
+    <div class="col-12 col-xl-7">
+        <div class="card p-3 h-100">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <div>
+                    <div class="text-uppercase text-secondary small">{% trans "Chart" %}</div>
+                    <div class="fw-semibold">{% trans "Work Item Age" %}</div>
+                </div>
+                <div class="btn-group btn-group-sm" role="group">
+                    <a id="wiaOpenJiraCard" class="btn btn-sm btn-outline-primary" href="{{ sprint.url }}"
+                       target="_blank" rel="noopener noreferrer">
+                        <i class="fa-brands fa-jira me-2"></i> {% trans "Open in Jira" %}
+                    </a>
+                    <a class="btn btn-outline-secondary" href="{% url 'sprint-detail' sprint.id %}">
+                        <i class="fa-solid fa-up-right-from-square"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div id="wiaChartWrap">
+                <canvas id="wiaChart"></canvas>
+                <div id="chartTooltip">
+                    <div class="tt-card">
+                        <div class="tt-title">
+                            <span id="ttKey">-</span>
+                            <span id="ttAge" class="badge text-bg-dark badge-age">-</span>
+                        </div>
+                        <div id="ttTitle" class="small mb-2 text-dark">-</div>
+                        <div class="tt-meta">
+                            <span class="me-2">{% trans "Status" %}: <strong id="ttStatus">-</strong></span>
+                        </div>
+                        <div class="tt-link">
+                            <a id="ttLink" href="#" target="_blank" rel="noopener noreferrer">{% trans "Open in Jira" %} -></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-secondary small mt-2" id="wiaHint">-</div>
+        </div>
+    </div>
+
+    <div class="col-12 col-xl-5">
+        <div class="card p-3 h-100">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <div>
+                    <div class="text-uppercase text-secondary small">{% trans "Insights" %}</div>
+                    <div class="fw-semibold">{% trans "Bottlenecks" %}</div>
+                </div>
+                <a id="bottlenecksOpenJira" class="btn btn-sm btn-outline-primary" href="#" target="_blank"
+                   rel="noopener noreferrer">
+                    <i class="fa-brands fa-jira me-2"></i> {% trans "Open in Jira" %}
+                </a>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-sm table-hover table-striped align-middle mb-0" id="bottlenecksTable">
+                    <thead>
+                    <tr>
+                        <th>{% trans "Status" %}</th>
+                        <th class="text-end">{% trans "Count" %}</th>
+                        <th class="text-end">{% trans "Avg age" %}</th>
+                        <th class="text-end">{% trans "Max age" %}</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div class="text-secondary small mt-2">
+                {% trans "Tip: thickening statuses typically indicate a bottleneck." %}
+            </div>
+        </div>
+    </div>
+</div>

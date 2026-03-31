@@ -104,3 +104,53 @@ class SprintPagesTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "sprint/sprint_list.html")
         self.assertContains(response, "Sprint 12")
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_sprint_issues_api_returns_mapped_items(self, mock_get_jira):
+        mock_get_jira.return_value = SimpleNamespace(
+            JIRA_ONLY_STANDARD_TYPES="issuetype in standardIssueTypes()",
+            get_cached_sprint_issues=lambda sprint_id, jql_extra=None, full=None: [
+                {
+                    "key": "ABC-1",
+                    "summary": "Issue title",
+                    "issueType": "Bug",
+                    "state": "In Progress",
+                    "assignee": {"displayName": "Jane Doe"},
+                    "url": "https://jira.example/browse/ABC-1",
+                }
+            ],
+        )
+
+        response = self.client.get(reverse("sprint-api-issues", args=[12]))
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["items"][0]["key"], "ABC-1")
+        self.assertEqual(payload["items"][0]["issueType"], "Bug")
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_sprint_wia_api_returns_statuses_and_items(self, mock_get_jira):
+        mock_get_jira.return_value = SimpleNamespace(
+            JIRA_ONLY_STANDARD_TYPES="issuetype in standardIssueTypes()",
+            get_cached_sprint_issues=lambda sprint_id, jql_extra=None, full=None: [
+                {
+                    "key": "ABC-1",
+                    "summary": "Issue title",
+                    "state": "In Progress",
+                    "url": "https://jira.example/browse/ABC-1",
+                    "kanban_metrics": {
+                        "current_wip_age_hours": 16,
+                        "cycle_time_hours": 8,
+                        "first_in_progress": "2026-03-01T08:00:00.000+0000",
+                        "first_in_progress_display": "01/03/2026",
+                    },
+                }
+            ],
+        )
+
+        response = self.client.get(reverse("sprint-api-wia", args=[12]))
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["statuses"], ["In Progress"])
+        self.assertEqual(payload["items"][0]["key"], "ABC-1")

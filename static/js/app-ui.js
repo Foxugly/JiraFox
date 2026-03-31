@@ -154,10 +154,34 @@
         return `https://cdn.datatables.net/plug-ins/${resolvedVersion}/i18n/${resolvedLang}.json`;
     }
 
+    function initTooltips(root) {
+        if (!window.bootstrap?.Tooltip) return [];
+
+        const scope = root || document;
+        const elements = scope.querySelectorAll('[data-bs-toggle="tooltip"]');
+
+        return Array.from(elements).map((element) => {
+            if (!element.matches("a, button, input, textarea, select, summary")) {
+                element.setAttribute("tabindex", element.getAttribute("tabindex") || "0");
+            }
+            if (!element.getAttribute("data-bs-container")) {
+                element.setAttribute("data-bs-container", "body");
+            }
+            if (!element.getAttribute("data-bs-trigger")) {
+                element.setAttribute("data-bs-trigger", "hover focus");
+            }
+            return bootstrap.Tooltip.getOrCreateInstance(element, {
+                container: "body",
+                trigger: "hover focus",
+            });
+        });
+    }
+
     window.AppUI = {
         showToast,
         confirmAction,
         promptAction,
         getDataTableLanguageUrl,
+        initTooltips,
     };
 })();

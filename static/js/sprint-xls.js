@@ -49,7 +49,7 @@
         const name = await window.AppUI?.promptAction({
             title: i18n.add_developer || "Add developer",
             label: i18n.developer_name || "Developer name",
-            placeholder: "Jane Doe",
+            placeholder: i18n.developer_name_placeholder || "Jane Doe",
             confirmLabel: i18n.create || "Create",
             cancelLabel: i18n.cancel || "Cancel",
             required: true,

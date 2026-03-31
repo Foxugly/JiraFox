@@ -51,258 +51,51 @@
             status_word: "{% trans 'status' %}"
         };
 
-        const DT_LANG_URL = window.AppUI.getDataTableLanguageUrl("{{ LANGUAGE_CODE|default:'fr' }}", "2.0.8");
+        const DT_LANG_URL = {
+            fr: "https://cdn.datatables.net/plug-ins/2.0.8/i18n/fr-FR.json",
+            nl: "https://cdn.datatables.net/plug-ins/2.0.8/i18n/nl-NL.json",
+            en: "https://cdn.datatables.net/plug-ins/2.0.8/i18n/en-GB.json",
+        }["{{ LANGUAGE_CODE|default:'fr'|lower|slice:':2' }}"] || "https://cdn.datatables.net/plug-ins/2.0.8/i18n/en-GB.json";
     </script>
 {% endblock %}
 
 {% block content %}
+    {% blocktrans trimmed asvar tt_wip %}
+        <strong>WIP (Work In Progress)</strong><br>
+        Nombre total de tickets actuellement en cours (statuts actifs).<br>
+        Un WIP trop eleve augmente le multitache, l'attente et ralentit le flux.
+    {% endblocktrans %}
+    {% blocktrans trimmed asvar tt_aging_wip %}
+        <strong>Aging WIP &gt; 10 jours</strong><br>
+        Nombre de tickets en cours depuis plus de 10 jours.<br>
+        Un volume eleve indique un risque de blocage ou de dispersion du travail.
+    {% endblocktrans %}
+    {% blocktrans trimmed asvar tt_cycle %}
+        <strong>Cycle Time (P50)</strong><br>Temps median necessaire pour terminer un ticket a partir du premier statut <em>In Progress</em>.<br>Le P50 signifie que 50% des tickets sont termines en moins de cette duree.
+    {% endblocktrans %}
+    {% blocktrans trimmed asvar tt_lead %}
+        <strong>Lead Time (P50)</strong><br>
+        Temps median entre la creation d'un ticket et sa finalisation.<br>
+        Il reflete l'experience reelle du client.
+    {% endblocktrans %}
+    {% blocktrans trimmed asvar tt_throughput %}
+        <strong>Throughput (7 jours)</strong><br>
+        Nombre de tickets termines au cours des 7 derniers jours.<br>
+        Indicateur cle de capacite et de stabilite du flux.
+    {% endblocktrans %}
+    {% blocktrans trimmed asvar flow_eff_tooltip %}
+        <strong>Flow efficiency</strong><br>
+        Part du temps ou le ticket est <em>reellement travaille</em> (cycle time)
+        par rapport au temps total entre creation et fin (lead time).<br>
+        <strong>Bas</strong> : beaucoup d'attente.
+        <strong>Haut</strong> : flux fluide.
+    {% endblocktrans %}
+
     <div class="container-fluid py-3 dashboard-shell page-shell glass-panel">
-        <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3">
-            <div>
-                <h1 class="h4 mb-1">
-                    {% trans "Agile Dashboard" %} - Sprint : {{ sprint.name }}
-                    <div class="btn-group btn-group-sm" role="group">
-                        <a id="wiaOpenJiraTop" class="btn btn-sm btn-outline-primary" href="{{ sprint.url }}"
-                           target="_blank" rel="noopener noreferrer">
-                            <i class="fa-brands fa-jira me-1"></i>
-                        </a>
-                        <a class="btn btn-outline-secondary" href="{% url 'sprint-detail' sprint.id %}">
-                            <i class="fa-solid fa-up-right-from-square"></i>
-                        </a>
-                    </div>
-                </h1>
-                <div class="text-secondary">
-                    {% trans "Sprint / Flow overview with Kanban metrics, aging and bottlenecks." %}
-                </div>
-            </div>
-
-            <div class="d-flex align-items-center gap-2">
-                <span id="statusSummaryBadge" class="badge text-bg-secondary">{% trans "Loading..." %}</span>
-                <span id="statusItemsBadge" class="badge text-bg-secondary">{% trans "Loading..." %}</span>
-                <button id="reloadBtn" class="btn btn-sm btn-outline-secondary" type="button">
-                    {% trans "Reload" %}
-                </button>
-            </div>
-        </div>
-
-        <div class="row g-3 mb-3">
-            <div class="col-12 col-md-6 col-xl-2">
-                {% blocktrans trimmed asvar tt_wip %}
-    <strong>WIP (Work In Progress)</strong><br>
-    Nombre total de tickets actuellement en cours (statuts actifs).<br>
-    Un WIP trop eleve augmente le multitache, l'attente et ralentit le flux.
-{% endblocktrans %}
-                <div class="card p-3 h-100">
-                    <div class="kpi-title">{% trans "WIP Items" %}<span data-bs-toggle="tooltip"
-                                                                        data-bs-placement="top"
-                                                                        data-bs-html="true"
-                                                                        title="{{ tt_wip|safe }}">
-  <i class="fa-solid fa-circle-info ms-1 text-secondary"></i>
-</span></div>
-                    <div class="kpi-value" id="kpiWip">-</div>
-                    <div class="kpi-sub" id="kpiWipSub">-</div>
-                </div>
-            </div>
-
-            <div class="col-12 col-md-6 col-xl-2">
-                <div class="card p-3 h-100">
-{% blocktrans trimmed asvar tt_aging_wip %}
-<strong>Aging WIP &gt; 10 jours</strong><br>
-Nombre de tickets en cours depuis plus de 10 jours.<br>
-Un volume eleve indique un risque de blocage ou de dispersion du travail.
-{% endblocktrans %}
-                    <div class="kpi-title">{% trans "Aging WIP > 10d" %}<span data-bs-toggle="tooltip"
-      data-bs-placement="top"
-      data-bs-html="true"
-      title="{{ tt_aging_wip|safe }}">
-  <i class="fa-solid fa-circle-info ms-1 text-secondary"></i>
-</span></div>
-                    <div class="kpi-value" id="kpiAging">-</div>
-                    <div class="kpi-sub" id="kpiAgingSub">-</div>
-                </div>
-            </div>
-
-            <div class="col-12 col-md-6 col-xl-2">
-                <div class="card p-3 h-100">
-{% blocktrans trimmed asvar tt_cycle %}
-    <strong>Cycle Time (P50)</strong><br>Temps median necessaire pour terminer un ticket a partir du premier statut <em>In Progress</em>.<br>Le P50 signifie que 50% des tickets sont termines en moins de cette duree.
-{% endblocktrans %}
-                    <div class="kpi-title">{% trans "Cycle Time (P50)" %}<span data-bs-toggle="tooltip"
-      data-bs-placement="top"
-      data-bs-html="true"
-      title="{{ tt_cycle|safe }}">
-  <i class="fa-solid fa-circle-info ms-1 text-secondary"></i>
-</span></div>
-                    <div class="kpi-value" id="kpiCycle">-</div>
-                    <div class="kpi-sub">{% trans "business days" %}</div>
-                </div>
-            </div>
-
-            <div class="col-12 col-md-6 col-xl-2">
-                <div class="card p-3 h-100">
-{% blocktrans trimmed asvar tt_lead %}
-<strong>Lead Time (P50)</strong><br>
-Temps median entre la creation d'un ticket et sa finalisation.<br>
-Il reflete l'experience reelle du client.
-{% endblocktrans %}
-                    <div class="kpi-title">{% trans "Lead Time (P50)" %}<span data-bs-toggle="tooltip"
-      data-bs-placement="top"
-      data-bs-html="true"
-      title="{{ tt_lead|safe }}">
-  <i class="fa-solid fa-circle-info ms-1 text-secondary"></i>
-</span></div>
-                    <div class="kpi-value" id="kpiLead">-</div>
-                    <div class="kpi-sub">{% trans "business days" %}</div>
-                </div>
-            </div>
-
-            <div class="col-12 col-md-6 col-xl-2">
-                <div class="card p-3 h-100">
-{% blocktrans trimmed asvar tt_throughput %}
-<strong>Throughput (7 jours)</strong><br>
-Nombre de tickets termines au cours des 7 derniers jours.<br>
-Indicateur cle de capacite et de stabilite du flux.
-{% endblocktrans %}
-                    <div class="kpi-title">{% trans "Throughput (7d)" %}<span data-bs-toggle="tooltip"
-      data-bs-placement="top"
-      data-bs-html="true"
-      title="{{ tt_throughput|safe }}">
-  <i class="fa-solid fa-circle-info ms-1 text-secondary"></i>
-</span></div>
-                    <div class="kpi-value" id="kpiThroughput">-</div>
-                    <div class="kpi-sub">{% trans "done items" %}</div>
-                </div>
-            </div>
-
-            <div class="col-12 col-md-6 col-xl-2">
-                <div class="card p-3 h-100">
-                    <div class="kpi-title">{% trans "Flow Efficiency" %}
-                        {% blocktrans trimmed asvar flow_eff_tooltip %}
-                            <strong>Flow efficiency</strong><br>
-                            Part du temps ou le ticket est <em>reellement travaille</em> (cycle time)
-                            par rapport au temps total entre creation et fin (lead time).<br>
-                            <strong>Bas</strong> : beaucoup d'attente.
-                            <strong>Haut</strong> : flux fluide.
-                        {% endblocktrans %}
-                        <span class="text-secondary ms-1"
-                              data-bs-toggle="tooltip"
-                              data-bs-placement="top"
-                              data-bs-html="true"
-                              title="{{ flow_eff_tooltip|safe }}">
-  <i class="fa-solid fa-circle-info"></i>
-</span></div>
-                    <div class="kpi-value" id="kpiFlowEff">-</div>
-                    <div class="kpi-sub">{% trans "cycle / lead" %}</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row g-3 mb-3">
-            <div class="col-12 col-xl-7">
-                <div class="card p-3 h-100">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <div>
-                            <div class="text-uppercase text-secondary small">{% trans "Chart" %}</div>
-                            <div class="fw-semibold">{% trans "Work Item Age" %}</div>
-                        </div>
-                        <div class="btn-group btn-group-sm" role="group">
-                            <a id="wiaOpenJiraCard" class="btn btn-sm btn-outline-primary" href="{{ sprint.url }}"
-                               target="_blank" rel="noopener noreferrer">
-                                <i class="fa-brands fa-jira me-2"></i> {% trans "Open in Jira" %}
-                            </a>
-                            <a class="btn btn-outline-secondary" href="{% url 'sprint-detail' sprint.id %}">
-                                <i class="fa-solid fa-up-right-from-square"></i>
-                            </a>
-                        </div>
-                    </div>
-
-                    <div id="wiaChartWrap">
-                        <canvas id="wiaChart"></canvas>
-                        <div id="chartTooltip">
-                            <div class="tt-card">
-                                <div class="tt-title">
-                                    <span id="ttKey">-</span>
-                                    <span id="ttAge" class="badge text-bg-dark badge-age">-</span>
-                                </div>
-                                <div id="ttTitle" class="small mb-2 text-dark">-</div>
-                                <div class="tt-meta">
-                                    <span class="me-2">{% trans "Status" %}: <strong id="ttStatus">-</strong></span>
-                                </div>
-                                <div class="tt-link">
-                                    <a id="ttLink" href="#" target="_blank" rel="noopener noreferrer">{% trans "Open in Jira" %} -></a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="text-secondary small mt-2" id="wiaHint">-</div>
-                </div>
-            </div>
-
-            <div class="col-12 col-xl-5">
-                <div class="card p-3 h-100">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <div>
-                            <div class="text-uppercase text-secondary small">{% trans "Insights" %}</div>
-                            <div class="fw-semibold">{% trans "Bottlenecks" %}</div>
-                        </div>
-                        <a id="bottlenecksOpenJira" class="btn btn-sm btn-outline-primary" href="#" target="_blank"
-                           rel="noopener noreferrer">
-                            <i class="fa-brands fa-jira me-2"></i> {% trans "Open in Jira" %}
-                        </a>
-                    </div>
-
-                    <div class="table-responsive">
-                        <table class="table table-sm table-hover table-striped align-middle mb-0" id="bottlenecksTable">
-                            <thead>
-                            <tr>
-                                <th>{% trans "Status" %}</th>
-                                <th class="text-end">{% trans "Count" %}</th>
-                                <th class="text-end">{% trans "Avg age" %}</th>
-                                <th class="text-end">{% trans "Max age" %}</th>
-                            </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-
-                    <div class="text-secondary small mt-2">
-                        {% trans "Tip: thickening statuses typically indicate a bottleneck." %}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card p-3">
-            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
-                <div>
-                    <div class="text-uppercase text-secondary small">{% trans "Table" %}</div>
-                    <div class="fw-semibold">{% trans "Top aging items" %}</div>
-                </div>
-                <a id="agingOpenJira" class="btn btn-sm btn-outline-primary" href="#" target="_blank"
-                   rel="noopener noreferrer">
-                    <i class="fa-brands fa-jira me-2"></i> {% trans "Open in Jira" %}
-                </a>
-            </div>
-
-            <div class="table-responsive">
-                <table id="agingTable" class="table table-striped table-hover align-middle nowrap dashboard-table-full">
-                    <thead>
-                    <tr>
-                        <th>{% trans "Key" %}</th>
-                        <th>{% trans "Title" %}</th>
-                        <th>{% trans "Status" %}</th>
-                        <th class="text-end">{% trans "Age" %}</th>
-                        <th>{% trans "Assignee" %}</th>
-                        <th class="text-end">{% trans "Action" %}</th>
-                    </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-
-            <div class="text-secondary small mt-2" id="tableHint">-</div>
-        </div>
+        {% include "dashboard/_toolbar.html" %}
+        {% include "dashboard/_kpis.html" %}
+        {% include "dashboard/_insights.html" %}
+        {% include "dashboard/_aging_table.html" %}
     </div>
 {% endblock %}
 

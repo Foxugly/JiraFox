@@ -1,0 +1,64 @@
+{% load i18n %}
+<div class="row g-3 mb-3">
+    <div class="col-12 col-md-6 col-xl-2">
+        <div class="card p-3 h-100">
+            <div class="kpi-title">{% trans "WIP Items" %}<span data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" title="{{ tt_wip|safe }}">
+                <i class="fa-solid fa-circle-info ms-1 text-secondary"></i>
+            </span></div>
+            <div class="kpi-value" id="kpiWip">-</div>
+            <div class="kpi-sub" id="kpiWipSub">-</div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-2">
+        <div class="card p-3 h-100">
+            <div class="kpi-title">{% trans "Aging WIP > 10d" %}<span data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" title="{{ tt_aging_wip|safe }}">
+                <i class="fa-solid fa-circle-info ms-1 text-secondary"></i>
+            </span></div>
+            <div class="kpi-value" id="kpiAging">-</div>
+            <div class="kpi-sub" id="kpiAgingSub">-</div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-2">
+        <div class="card p-3 h-100">
+            <div class="kpi-title">{% trans "Cycle Time (P50)" %}<span data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" title="{{ tt_cycle|safe }}">
+                <i class="fa-solid fa-circle-info ms-1 text-secondary"></i>
+            </span></div>
+            <div class="kpi-value" id="kpiCycle">-</div>
+            <div class="kpi-sub">{% trans "business days" %}</div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-2">
+        <div class="card p-3 h-100">
+            <div class="kpi-title">{% trans "Lead Time (P50)" %}<span data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" title="{{ tt_lead|safe }}">
+                <i class="fa-solid fa-circle-info ms-1 text-secondary"></i>
+            </span></div>
+            <div class="kpi-value" id="kpiLead">-</div>
+            <div class="kpi-sub">{% trans "business days" %}</div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-2">
+        <div class="card p-3 h-100">
+            <div class="kpi-title">{% trans "Throughput (7d)" %}<span data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" title="{{ tt_throughput|safe }}">
+                <i class="fa-solid fa-circle-info ms-1 text-secondary"></i>
+            </span></div>
+            <div class="kpi-value" id="kpiThroughput">-</div>
+            <div class="kpi-sub">{% trans "done items" %}</div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-2">
+        <div class="card p-3 h-100">
+            <div class="kpi-title">{% trans "Flow Efficiency" %}
+                <span class="text-secondary ms-1" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" title="{{ flow_eff_tooltip|safe }}">
+                    <i class="fa-solid fa-circle-info"></i>
+                </span>
+            </div>
+            <div class="kpi-value" id="kpiFlowEff">-</div>
+            <div class="kpi-sub">{% trans "cycle / lead" %}</div>
+        </div>
+    </div>
+</div>

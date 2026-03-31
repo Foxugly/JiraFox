@@ -2,6 +2,8 @@
 {% load static i18n %}
 
 {% block content %}
+    {% trans "Mes configurations Jira" as jira_configs_hero_title %}
+    {% trans "Creer, tester et activer plusieurs connexions selon vos boards et vos contextes d'equipe." as jira_configs_hero_description %}
     <section class="page-shell glass-panel section-stack">
         <form class="d-none">{% csrf_token %}</form>
 
@@ -13,12 +15,7 @@
                 </span>
             </div>
             <div class="position-relative">
-                <div class="page-hero-copy mx-auto">
-                    <h1 class="hero-title fs-1 mt-0 mb-2">{% trans "Mes configurations Jira" %}</h1>
-                    <p class="text-secondary mb-0">
-                        {% trans "Creer, tester et activer plusieurs connexions selon vos boards et vos contextes d'equipe." %}
-                    </p>
-                </div>
+                {% include "includes/page_hero_copy.html" with hero_title=jira_configs_hero_title hero_description=jira_configs_hero_description %}
                 <button class="btn btn-primary position-absolute top-0 end-0"
                         id="btnAddConfig"
                         data-bs-toggle="modal"
@@ -78,25 +75,25 @@
                                            role="switch"
                                            data-config-id="{{ c.id }}"
                                            {% if c.current %}checked{% endif %}
-                                           aria-label="Definir comme configuration courante">
+                                           aria-label="{% trans 'Definir comme configuration courante' %}">
                                 </div>
                             </td>
                             <td class="text-end">
                                 <div class="btn-group btn-group-sm" role="group">
                                     <button class="btn btn-outline-success btn-test"
-                                            title="Tester la connexion"
+                                            title="{% trans 'Tester la connexion' %}"
                                             data-url="{% url 'jira_config_test' c.id %}">
                                         <i class="fa-solid fa-vial"></i>
                                     </button>
                                     <button class="btn btn-outline-primary btn-edit"
-                                            title="Editer"
+                                            title="{% trans 'Editer' %}"
                                             data-bs-toggle="modal"
                                             data-bs-target="#jiraConfigModal"
                                             data-url="{% url 'jira_config_modal_edit' c.id %}">
                                         <i class="fa-solid fa-pen-to-square"></i>
                                     </button>
                                     <button class="btn btn-outline-danger btn-delete"
-                                            title="Supprimer"
+                                            title="{% trans 'Supprimer' %}"
                                             data-url="{% url 'jira_config_delete' c.id %}">
                                         <i class="fa-solid fa-trash"></i>
                                     </button>
