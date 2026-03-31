@@ -1,6 +1,7 @@
 (function () {
     const page = window.SPRINT_KANBAN_PAGE;
     if (!page) return;
+    const i18n = page.i18n || {};
 
     function escapeHtml(value) {
         return String(value ?? "")
@@ -46,7 +47,7 @@
                         <span class="badge text-bg-secondary">${count}</span>
                     </div>
                     <div style="max-height: 70vh; overflow:auto;">
-                        ${count === 0 ? '<div class="text-muted small p-2">Aucune issue</div>' : ""}
+                        ${count === 0 ? `<div class="text-muted small p-2">${escapeHtml(i18n.no_issue || "No issue")}</div>` : ""}
                         ${issues.map(issueCard).join("")}
                     </div>
                 </div>
@@ -57,7 +58,7 @@
         const root = document.getElementById("kanban");
         if (!root) return;
 
-        root.innerHTML = '<div class="utility-panel"><div class="text-muted">Chargement...</div></div>';
+        root.innerHTML = `<div class="utility-panel"><div class="text-muted">${escapeHtml(i18n.loading || "Loading...")}</div></div>`;
 
         try {
             const response = await fetch(page.apiUrl, {headers: {"Accept": "application/json"}});
@@ -66,7 +67,7 @@
             const columns = await response.json();
             root.innerHTML = Array.isArray(columns)
                 ? columns.map(columnCard).join("")
-                : '<div class="utility-panel"><div class="alert alert-warning mb-0">Reponse inattendue.</div></div>';
+                : `<div class="utility-panel"><div class="alert alert-warning mb-0">${escapeHtml(i18n.unexpected_response || "Unexpected response.")}</div></div>`;
 
             root.querySelectorAll(".kanban-card").forEach((button) => {
                 button.addEventListener("click", () => {
@@ -75,7 +76,7 @@
                 });
             });
         } catch (error) {
-            root.innerHTML = `<div class="utility-panel"><div class="alert alert-danger mb-0">Impossible de charger le Kanban: ${escapeHtml(error.message)}</div></div>`;
+            root.innerHTML = `<div class="utility-panel"><div class="alert alert-danger mb-0">${escapeHtml(i18n.unable_to_load_kanban || "Unable to load Kanban")}: ${escapeHtml(error.message)}</div></div>`;
         }
     }
 

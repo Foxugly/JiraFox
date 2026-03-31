@@ -6,7 +6,7 @@
             <span class="site-brand-mark"><i class="fa-solid fa-fox"></i></span>
             <span class="site-brand-copy">
                 <span class="site-brand-title">JiraFox</span>
-                <span class="site-brand-subtitle">Flow radar</span>
+                <span class="site-brand-subtitle">{% trans "Flow radar" %}</span>
             </span>
         </a>
 
@@ -25,6 +25,9 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'sprint-list' %}"><i class="fa-brands fa-trello me-2"></i>{% trans "Sprint" %}</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'about' %}"><i class="fa-solid fa-circle-info me-2"></i>{% trans "About" %}</a>
+                </li>
             </ul>
 
             <ul class="navbar-nav ms-auto align-items-center gap-2">
@@ -32,7 +35,7 @@
                     <form action="{% url 'set_language' %}" method="post" class="d-flex align-items-center">
                         {% csrf_token %}
                         <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                        <div class="btn-group btn-group-sm lang-switch" role="group" aria-label="Language switch">
+                        <div class="btn-group btn-group-sm lang-switch" role="group" aria-label="{% trans 'Language switch' %}">
                             <input type="radio" class="btn-check" name="language" id="lang-fr" value="fr"
                                    {% if CURRENT_LANG == "fr" %}checked{% endif %}
                                    onchange="this.form.submit()">
@@ -63,11 +66,11 @@
                             </li>
                             <li>
                                 <a class="dropdown-item" href="{% url 'jira_config_list' %}">
-                                    <i class="fa-brands fa-jira me-2"></i>Jira
+                                    <i class="fa-brands fa-jira me-2"></i>{% trans "Jira" %}
                                 </a>
                             </li>
                             <li>
-                                <a class="dropdown-item" href="{% url 'account_reset_password' %}">
+                                <a class="dropdown-item" href="{% url 'account_change_password' %}">
                                     <i class="fa-solid fa-key me-2"></i>{% trans "Change password" %}
                                 </a>
                             </li>

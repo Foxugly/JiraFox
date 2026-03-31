@@ -1,27 +1,30 @@
 {% load i18n %}
-<div class="page-hero mb-3">
-    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
-        <div>
-            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                <a class="btn btn-sm btn-outline-secondary" href="{% url 'sprint-list' %}">
-                    <i class="fa-solid fa-arrow-left me-2"></i>{% trans "Back" %}
-                </a>
-                <span class="page-kicker">
-                    <i class="fa-solid fa-bug"></i>
-                    {{ issue.project }}
-                </span>
-            </div>
-            <h1 class="hero-title fs-1 mt-0 mb-2"><span class="mono">{{ issue.key }}</span></h1>
-            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                <span class="badge text-bg-secondary">{{ issue.issueType|default:"-" }}</span>
-                <span class="badge soft-badge">{{ issue.state|default:"-" }}</span>
-            </div>
-            <div class="text-secondary truncate-2" style="max-width: 1100px;">{{ issue.summary|default:"-" }}</div>
+<div class="page-hero page-hero-detail mb-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3 issue-hero-top">
+        <div class="d-flex flex-wrap align-items-center justify-content-start gap-2">
+            <a class="btn btn-sm btn-outline-secondary" href="{% url 'sprint-list' %}">
+                <i class="fa-solid fa-arrow-left me-2"></i>{% trans "Back" %}
+            </a>
+            <span class="page-kicker">
+                <i class="fa-solid fa-bug"></i>
+                {{ issue.project }}
+            </span>
+        </div>
+        <div class="d-flex flex-wrap align-items-center justify-content-center gap-2 issue-hero-badges">
+            <span class="badge text-bg-secondary px-3 py-2">{{ issue.issueType|default:"-" }}</span>
+            <span class="badge soft-badge px-3 py-2">{{ issue.state|default:"-" }}</span>
         </div>
         <div class="page-hero-actions">
             <a class="btn btn-outline-primary" href="{{ issue.url }}" target="_blank" rel="noopener noreferrer">
                 <i class="fa-brands fa-jira me-2"></i>{% trans "Open in Jira" %}
             </a>
         </div>
+    </div>
+    <div class="page-hero-copy-wide mx-auto text-center">
+        <h1 class="h2 mt-0 mb-3">
+            <span class="mono">{{ issue.key }}</span>
+            <span class="text-secondary"> - </span>
+            <span>{{ issue.summary|default:"-" }}</span>
+        </h1>
     </div>
 </div>

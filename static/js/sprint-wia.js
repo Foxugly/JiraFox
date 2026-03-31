@@ -1,6 +1,7 @@
 (function () {
     const page = window.SPRINT_WIA_PAGE;
     if (!page) return;
+    const i18n = page.i18n || {};
 
     const badge = document.getElementById("statusBadge");
     const reloadButton = document.getElementById("reloadBtn");
@@ -29,12 +30,12 @@
     }
 
     async function loadData() {
-        setBadge("Loading...", "secondary");
+        setBadge(i18n.loading || "Loading...", "secondary");
         try {
             const response = await fetch(page.apiUrl, {headers: {"Accept": "application/json"}});
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const data = await response.json();
-            if (!data || !Array.isArray(data.items)) throw new Error("Invalid payload: missing items");
+            if (!data || !Array.isArray(data.items)) throw new Error(i18n.invalid_payload_missing_items || "Invalid payload: missing items");
             if (!Array.isArray(data.statuses) || data.statuses.length === 0) {
                 data.statuses = [...new Set(data.items.map((item) => item.status))];
             }
@@ -42,8 +43,8 @@
             return data;
         } catch (error) {
             console.warn("WIA API load failed", error);
-            setBadge("API error", "danger");
-            notify(`Unable to load WIA data: ${error.message}`, "danger", 4500);
+            setBadge(i18n.api_error || "API error", "danger");
+            notify(`${i18n.unable_to_load_wia_data || "Unable to load WIA data"}: ${error.message}`, "danger", 4500);
             throw error;
         }
     }
@@ -71,7 +72,7 @@
         ttKey.textContent = raw.key ?? "-";
         ttTitle.textContent = raw.title ?? "";
         ttStatus.textContent = raw.status ?? "-";
-        ttAge.textContent = `${age} d`;
+        ttAge.textContent = `${age} ${i18n.days_short || "d"}`;
         ttAge.className = `badge badge-age ${ageBadgeClass(Number(age) || 999)}`;
         ttLink.href = raw.url || "#";
         ttLink.style.pointerEvents = raw.url ? "auto" : "none";
@@ -100,7 +101,7 @@
             statuses.forEach((status, index) => {
                 const xPos = x.getPixelForValue(index);
                 const count = counts[status] ?? 0;
-                ctx.fillText(`${count} item${count > 1 ? "s" : ""}`, xPos, yTopInside);
+                ctx.fillText(`${count} ${count > 1 ? (i18n.items || "items") : (i18n.item || "item")}`, xPos, yTopInside);
             });
             ctx.restore();
         }
@@ -162,6 +163,7 @@
             pageLength: 25,
             lengthMenu: [10, 25, 50, 100],
             order: [[3, "desc"]],
+            language: {url: page.datatableLanguageUrl || window.AppUI?.getDataTableLanguageUrl(page.languageCode, "1.13.8")},
             columns: [
                 {
                     data: "key",
@@ -242,7 +244,7 @@
                             stacked: true,
                             beginAtZero: true,
                             max: payload.maxY,
-                            title: {display: true, text: "Item age (days)"}
+                            title: {display: true, text: i18n.item_age_days || "Item age (days)"}
                         }
                     }
                 }

@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}JiraFox - {% trans "About" %}{% endblock %}
+
+{% block content %}
+    <section class="page-shell glass-panel section-stack">
+        <div class="page-hero">
+            <div class="d-flex justify-content-start mb-3 page-hero-kicker-row">
+                <span class="page-kicker">
+                    <i class="fa-solid fa-circle-info"></i>
+                    {% trans "About" %}
+                </span>
+            </div>
+            <div class="page-hero-copy-md mx-auto">
+                <h1 class="hero-title fs-1 mt-0 mb-2">{% trans "JiraFox, in short" %}</h1>
+                <p class="text-secondary mb-0">
+                    {% trans "A Django-based cockpit focused on sprint visibility, Jira navigation, delivery flow and lightweight operational reporting." %}
+                </p>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-12 col-lg-6">
+                <div class="utility-panel h-100">
+                    <h2 class="h4 mb-3">{% trans "Technical overview" %}</h2>
+                    <p class="mb-3 text-secondary">
+                        {% trans "JiraFox connects to Jira, structures sprint and issue data, and exposes focused screens for backlog review, WIA, kanban reading, exports and dashboard monitoring." %}
+                    </p>
+                    <p class="mb-0 text-secondary">
+                        {% trans "The project has been progressively refactored to separate service logic, Django views, templates and frontend scripts." %}
+                    </p>
+                </div>
+            </div>
+            <div class="col-12 col-lg-6">
+                <div class="utility-panel h-100">
+                    <h2 class="h4 mb-3">{% trans "Technology stack" %}</h2>
+                    <div class="vstack gap-2">
+                        <div class="d-flex justify-content-between gap-3"><span class="inline-note">{% trans "Backend" %}</span><strong>Django, Python</strong></div>
+                        <div class="d-flex justify-content-between gap-3"><span class="inline-note">{% trans "Frontend" %}</span><strong>Bootstrap 5, DataTables, vanilla JavaScript</strong></div>
+                        <div class="d-flex justify-content-between gap-3"><span class="inline-note">{% trans "Data sources" %}</span><strong>Jira REST APIs</strong></div>
+                        <div class="d-flex justify-content-between gap-3"><span class="inline-note">{% trans "Quality" %}</span><strong>{% trans "Django checks, targeted unit tests, service-layer refactoring" %}</strong></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-lg-6">
+                <div class="utility-panel h-100">
+                    <h2 class="h4 mb-3">{% trans "Main capabilities" %}</h2>
+                    <div class="vstack gap-2 text-secondary">
+                        <div>{% trans "Sprint list and sprint detail views" %}</div>
+                        <div>{% trans "Issue detail pages with flow metrics and status history" %}</div>
+                        <div>{% trans "Operational dashboard for active sprint monitoring" %}</div>
+                        <div>{% trans "WIA, kanban and XLS reporting screens" %}</div>
+                        <div>{% trans "Per-user Jira connection management" %}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-lg-6">
+                <div class="utility-panel h-100">
+                    <h2 class="h4 mb-3">{% trans "Project links" %}</h2>
+                    <div class="vstack gap-3">
+                        <div>
+                            <div class="inline-note mb-1">{% trans "GitHub repository" %}</div>
+                            <a class="fw-semibold text-decoration-none" href="https://github.com/Foxugly/JiraFox" target="_blank" rel="noopener noreferrer">
+                                https://github.com/Foxugly/JiraFox
+                            </a>
+                        </div>
+                        <div>
+                            <div class="inline-note mb-1">{% trans "Owner" %}</div>
+                            <div>Foxugly</div>
+                        </div>
+                        <div>
+                            <div class="inline-note mb-1">{% trans "Copyright" %}</div>
+                            <div>© 2026 Foxugly</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

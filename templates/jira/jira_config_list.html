@@ -3,21 +3,23 @@
 
 {% block content %}
     <section class="page-shell glass-panel section-stack">
-        <form style="display:none">{% csrf_token %}</form>
+        <form class="d-none">{% csrf_token %}</form>
 
         <div class="page-hero">
-            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
-                <div>
-                    <span class="page-kicker">
-                        <i class="fa-brands fa-jira"></i>
-                        {% trans "Jira connections" %}
-                    </span>
-                    <h1 class="hero-title fs-1 mt-3 mb-2">{% trans "Mes configurations Jira" %}</h1>
+            <div class="d-flex justify-content-start mb-3 page-hero-kicker-row">
+                <span class="page-kicker">
+                    <i class="fa-brands fa-jira"></i>
+                    {% trans "Jira connections" %}
+                </span>
+            </div>
+            <div class="position-relative">
+                <div class="page-hero-copy mx-auto">
+                    <h1 class="hero-title fs-1 mt-0 mb-2">{% trans "Mes configurations Jira" %}</h1>
                     <p class="text-secondary mb-0">
                         {% trans "Creer, tester et activer plusieurs connexions selon vos boards et vos contextes d'equipe." %}
                     </p>
                 </div>
-                <button class="btn btn-primary"
+                <button class="btn btn-primary position-absolute top-0 end-0"
                         id="btnAddConfig"
                         data-bs-toggle="modal"
                         data-bs-target="#jiraConfigModal"
@@ -32,24 +34,24 @@
                 <table class="table align-middle mb-0">
                     <thead>
                     <tr>
-                        <th>URL</th>
-                        <th>Email</th>
-                        <th>Board</th>
-                        <th>Project</th>
-                        <th>Epic</th>
+                        <th>{% trans "URL" %}</th>
+                        <th>{% trans "Email" %}</th>
+                        <th>{% trans "Board" %}</th>
+                        <th>{% trans "Project" %}</th>
+                        <th>{% trans "Epic" %}</th>
                         <th>{% trans "Dernier test" %}</th>
-                        <th class="text-center">Current</th>
+                        <th class="text-center">{% trans "Current" %}</th>
                         <th class="text-end">{% trans "Actions" %}</th>
                     </tr>
                     </thead>
                     <tbody>
                     {% for c in configs %}
                         <tr data-row-id="{{ c.id }}">
-                            <td class="text-truncate" style="max-width: 280px;">{{ c.jira_url|default:"-" }}</td>
-                            <td class="text-truncate" style="max-width: 220px;">{{ c.jira_email|default:"-" }}</td>
+                            <td class="text-truncate jira-cell-url">{{ c.jira_url|default:"-" }}</td>
+                            <td class="text-truncate jira-cell-email">{{ c.jira_email|default:"-" }}</td>
                             <td>{{ c.jira_board_id|default:"-" }}</td>
                             <td>{{ c.jira_project_id|default:"-" }}</td>
-                            <td class="text-truncate" style="max-width: 180px;">{{ c.jira_recurrent_epic_key|default:"-" }}</td>
+                            <td class="text-truncate jira-cell-epic">{{ c.jira_recurrent_epic_key|default:"-" }}</td>
                             <td>
                                 {% if c.last_tested_at %}
                                     <div class="d-flex align-items-center gap-2">
@@ -61,7 +63,7 @@
                                         <span class="text-muted small">{{ c.last_tested_at }}</span>
                                     </div>
                                     {% if c.last_test_error and not c.last_test_ok %}
-                                        <div class="text-muted small text-truncate" style="max-width: 420px;" title="{{ c.last_test_error|escape }}">
+                                        <div class="text-muted small text-truncate jira-cell-error" title="{{ c.last_test_error|escape }}">
                                             {{ c.last_test_error }}
                                         </div>
                                     {% endif %}
@@ -122,7 +124,27 @@
 {% block js %}
     <script>
         window.JIRA_CONFIGS_PAGE = {
-            setCurrentUrl: "{% url 'jira_config_set_current' %}"
+            setCurrentUrl: "{% url 'jira_config_set_current' %}",
+            i18n: {
+                saving: "{% trans 'Saving...' %}",
+                testing: "{% trans 'Testing...' %}",
+                test_in_progress: "{% trans 'Connection test in progress...' %}",
+                connection_ok: "{% trans 'Connection OK' %}",
+                connection_failed: "{% trans 'Connection failed' %}",
+                unknown_error: "{% trans 'unknown error' %}",
+                configuration_saved: "{% trans 'Configuration saved.' %}",
+                jira_connection_validated: "{% trans 'Jira connection validated.' %}",
+                jira_connection_failed: "{% trans 'Jira connection failed.' %}",
+                delete_configuration: "{% trans 'Delete configuration' %}",
+                delete_configuration_question: "{% trans 'Delete this Jira configuration?' %}",
+                delete: "{% trans 'Delete' %}",
+                cancel: "{% trans 'Cancel' %}",
+                configuration_deleted: "{% trans 'Configuration deleted.' %}",
+                jira_connection_ok: "{% trans 'Jira connection OK.' %}",
+                current_configuration_updated: "{% trans 'Current configuration updated.' %}",
+                unable_to_save_current_configuration: "{% trans 'Unable to save current configuration.' %}",
+                unexpected_response_format: "{% trans 'Unexpected response format' %}"
+            }
         };
     </script>
     <script src="{% static 'js/jira-configs.js' %}"></script>

@@ -18,12 +18,13 @@ from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import TemplateView
 
-from JiraFox.views import dashboard_summary_api, dashboard_items_api, HomeView, DashboardView, ScriptView
+from JiraFox.views import dashboard_summary_api, dashboard_items_api, HomeView, DashboardView, ScriptView, AboutView
 
 urlpatterns = [
     path("api/dashboard/summary/", dashboard_summary_api, name="dashboard-summary-api"),
     path("api/dashboard/items/", dashboard_items_api, name="dashboard-items-api"),
     path("", HomeView.as_view(), name="home"),
+    path("about/", AboutView.as_view(), name="about"),
 
     path("script/", ScriptView.as_view(), name="script"),
     path("dashboard/", DashboardView.as_view(), name="dashboard"),

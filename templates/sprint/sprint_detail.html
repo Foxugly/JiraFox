@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n datetime_filters common_tags %}
+{% load static i18n datetime_filters common_tags %}
 
 {% block header %}
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
@@ -15,7 +15,7 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
                     <h2 class="h4 mb-1">{% trans "Sprint backlog" %}</h2>
-                    <p class="inline-note mb-0">{% trans "Vue détaillée des issues du sprint avec accès direct au détail et à Jira." %}</p>
+                    <p class="inline-note mb-0">{% trans "Detailed sprint issue view with direct access to details and Jira." %}</p>
                 </div>
                 <button id="reloadBtn" class="btn btn-outline-secondary" type="button">
                     <i class="fa-solid fa-arrows-rotate me-2"></i>{% trans "Reload" %}
@@ -26,7 +26,7 @@
                 <table id="issuesTable" class="table align-middle mb-0">
                     <thead>
                     <tr>
-                        <th>Key</th>
+                        <th>{% trans "Key" %}</th>
                         <th>{% trans "Summary" %}</th>
                         <th>{% trans "Type" %}</th>
                         <th>{% trans "State" %}</th>
@@ -46,62 +46,12 @@
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script>
-        const API_URL = "{% url 'sprint-api-issues' sprint_id=sprint_id %}";
-        const ISSUE_DETAIL_URL_TEMPLATE = "{% url 'issue-detail' jira_key='__KEY__' %}";
-        const DJANGO_LANG = "{{ request.LANGUAGE_CODE }}";
-        const DATATABLE_LANG_MAP = {"fr": "fr-FR", "nl": "nl-NL", "en": "en-GB"};
-        const DATATABLE_LANG_URL = "https://cdn.datatables.net/plug-ins/1.13.6/i18n/" + (DATATABLE_LANG_MAP[DJANGO_LANG] || "en-GB") + ".json";
+        window.SPRINT_DETAIL_PAGE = {
+            apiUrl: "{% url 'sprint-api-issues' sprint_id=sprint_id %}",
+            issueDetailUrlTemplate: "{% url 'issue-detail' jira_key='__KEY__' %}",
+            languageCode: "{{ request.LANGUAGE_CODE }}",
+            datatableLanguageUrl: window.AppUI.getDataTableLanguageUrl("{{ request.LANGUAGE_CODE }}", "1.13.6")
+        };
     </script>
-    <script>
-        $(document).ready(function () {
-            const dt = $("#issuesTable").DataTable({
-                pageLength: 25,
-                order: [[0, "asc"]],
-                language: {url: DATATABLE_LANG_URL},
-                ajax: {
-                    url: API_URL,
-                    dataSrc: function (json) {
-                        return json.items || [];
-                    }
-                },
-                columns: [
-                    {
-                        data: "key",
-                        render: function (data, type) {
-                            if (type !== "display") return data;
-                            const href = ISSUE_DETAIL_URL_TEMPLATE.replace("__KEY__", encodeURIComponent(data));
-                            return `<a class="fw-semibold text-decoration-none mono" href="${href}">${data}</a>`;
-                        }
-                    },
-                    {data: "summary"},
-                    {data: "issueType"},
-                    {data: "state"},
-                    {data: "assignee"},
-                    {
-                        data: null,
-                        orderable: false,
-                        searchable: false,
-                        className: "text-end",
-                        render: function (row) {
-                            const key = row.key || "";
-                            const jiraUrl = row.url || "#";
-                            const detailUrl = ISSUE_DETAIL_URL_TEMPLATE.replace("__KEY__", encodeURIComponent(key));
-                            return `<div class="btn-group btn-group-sm" role="group">
-                                <a class="btn btn-sm btn-outline-primary" href="${jiraUrl}" target="_blank" rel="noopener noreferrer">
-                                    <i class="fa-brands fa-jira"></i>
-                                </a>
-                                <a class="btn btn-outline-secondary" href="${detailUrl}">
-                                    <i class="fa-solid fa-up-right-from-square"></i>
-                                </a>
-                            </div>`;
-                        }
-                    }
-                ]
-            });
-
-            $("#reloadBtn").on("click", function () {
-                dt.ajax.reload(null, false);
-            });
-        });
-    </script>
+    <script src="{% static 'js/sprint-detail.js' %}"></script>
 {% endblock %}

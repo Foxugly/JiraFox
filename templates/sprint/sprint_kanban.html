@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static i18n %}
 
 {% block title %}JiraFox - Sprint {{ sprint.name }} - Kanban{% endblock %}
 
@@ -10,8 +10,8 @@
         <div class="utility-panel">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
                 <div>
-                    <h2 class="h4 mb-1">Kanban</h2>
-                    <p class="inline-note mb-0">Vue colonne par colonne des issues du sprint.</p>
+                    <h2 class="h4 mb-1">{% trans "Kanban" %}</h2>
+                    <p class="inline-note mb-0">{% trans "Column-by-column view of sprint issues." %}</p>
                 </div>
             </div>
             <div id="kanban" class="kanban-grid"></div>
@@ -22,7 +22,13 @@
 {% block js %}
     <script>
         window.SPRINT_KANBAN_PAGE = {
-            apiUrl: "{% url 'sprint-api-kanban' sprint.id %}"
+            apiUrl: "{% url 'sprint-api-kanban' sprint.id %}",
+            i18n: {
+                no_issue: "{% trans 'No issue' %}",
+                loading: "{% trans 'Loading...' %}",
+                unexpected_response: "{% trans 'Unexpected response.' %}",
+                unable_to_load_kanban: "{% trans 'Unable to load Kanban' %}"
+            }
         };
     </script>
     <script src="{% static 'js/sprint-kanban.js' %}"></script>

@@ -90,7 +90,7 @@
         } catch (error) {
             console.warn("summary fallback", error);
             setBadge(badgeSummary, i18n.fallback || "Fallback", "warning");
-            notify("Summary API unavailable, using local fallback.", "warning", 3200);
+            notify(i18n.summary_fallback_message || "Summary API unavailable, using local fallback.", "warning", 3200);
             return page.fallbackSummary || {kpis: {}, wia: {items: []}, bottlenecks: [], links: {}};
         }
     }
@@ -104,7 +104,7 @@
         } catch (error) {
             console.warn("items fallback", error);
             setBadge(badgeItems, i18n.fallback || "Fallback", "warning");
-            notify("Items API unavailable, using local fallback.", "warning", 3200);
+            notify(i18n.items_fallback_message || "Items API unavailable, using local fallback.", "warning", 3200);
             return page.fallbackItems || {items: []};
         }
     }
@@ -116,7 +116,7 @@
         };
 
         setText("kpiWip", kpis?.wip ?? "-");
-        setText("kpiWipSub", kpis?.wip_delta != null ? `${kpis.wip_delta >= 0 ? "+" : ""}${kpis.wip_delta} vs last week` : "-");
+        setText("kpiWipSub", kpis?.wip_delta != null ? `${kpis.wip_delta >= 0 ? "+" : ""}${kpis.wip_delta} ${i18n.vs_last_week || "vs last week"}` : "-");
         setText("kpiAging", kpis?.aging_wip ?? "-");
         setText("kpiAgingSub", kpis?.aging_wip_pct != null ? `${kpis.aging_wip_pct}% ${i18n.items || "items"}` : "-");
         setText("kpiCycle", kpis?.cycle_p50_days != null ? `${kpis.cycle_p50_days}` : "-");
@@ -266,7 +266,7 @@
 
         const hint = document.getElementById("wiaHint");
         if (hint) {
-            hint.textContent = statuses.length ? `${statuses.length} ${i18n.status || "status"} / ${items.length} ${i18n.items || "items"}` : "-";
+            hint.textContent = statuses.length ? `${statuses.length} ${i18n.status_word || i18n.status || "status"} / ${items.length} ${i18n.items || "items"}` : "-";
         }
     }
 

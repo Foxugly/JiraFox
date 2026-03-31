@@ -1,4 +1,9 @@
-from django.test import SimpleTestCase
+from types import SimpleNamespace
+from unittest.mock import patch
+
+from django.contrib.auth import get_user_model
+from django.test import SimpleTestCase, TestCase
+from django.urls import reverse
 
 from JiraFox.services.dashboard import (
     build_dashboard_bottlenecks,
@@ -71,3 +76,31 @@ class DashboardServicesTests(SimpleTestCase):
         self.assertEqual(result[0]["ageDays"], 7)
         self.assertEqual(result[0]["assignee"], "Jane Doe")
         self.assertEqual(result[0]["detail_url"], "/issue/ABC-1/")
+
+
+class SprintPagesTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(username="alice", password="secret")
+        self.client.force_login(self.user)
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_sprint_list_page_renders(self, mock_get_jira):
+        mock_get_jira.return_value = SimpleNamespace(
+            cfg=SimpleNamespace(jira_board_id=42),
+            list_sprints_for_current_board=lambda states: [
+                {
+                    "id": 12,
+                    "name": "Sprint 12",
+                    "state": "active",
+                    "startDate": "2026-03-01T08:00:00.000+0000",
+                    "endDate": "2026-03-14T18:00:00.000+0000",
+                    "url": "https://jira.example/sprint/12",
+                }
+            ],
+        )
+
+        response = self.client.get(reverse("sprint-list"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "sprint/sprint_list.html")
+        self.assertContains(response, "Sprint 12")

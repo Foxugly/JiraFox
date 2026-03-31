@@ -1,4 +1,6 @@
 (function () {
+    const page = window.SPRINT_XLS_PAGE || {};
+    const i18n = page.i18n || {};
     const addButton = document.getElementById("add-dev-btn");
     const headerRow = document.getElementById("dev-header");
     const table = document.getElementById("dev-table");
@@ -30,11 +32,11 @@
 
                 input.classList.remove("is-invalid");
                 input.classList.add("is-valid");
-                notify("Value saved.", "success", 1200);
+                notify(i18n.value_saved || "Value saved.", "success", 1200);
                 window.setTimeout(() => input.classList.remove("is-valid"), 600);
             } catch (error) {
                 input.classList.add("is-invalid");
-                notify("Unable to save value.", "danger", 3500);
+                notify(i18n.unable_to_save_value || "Unable to save value.", "danger", 3500);
                 console.error(error);
             }
         };
@@ -45,11 +47,11 @@
 
     addButton?.addEventListener("click", async () => {
         const name = await window.AppUI?.promptAction({
-            title: "Add developer",
-            label: "Developer name",
+            title: i18n.add_developer || "Add developer",
+            label: i18n.developer_name || "Developer name",
             placeholder: "Jane Doe",
-            confirmLabel: "Create",
-            cancelLabel: "Cancel",
+            confirmLabel: i18n.create || "Create",
+            cancelLabel: i18n.cancel || "Cancel",
             required: true,
         });
         if (!name) return;
@@ -62,10 +64,10 @@
             });
             if (!response.ok) throw new Error(await response.text());
 
-            notify("Developer added.", "success");
+            notify(i18n.developer_added || "Developer added.", "success");
             window.location.reload();
         } catch (error) {
-            notify("Unable to create developer.", "danger", 4000);
+            notify(i18n.unable_to_create_developer || "Unable to create developer.", "danger", 4000);
             console.error(error);
         }
     });
@@ -73,11 +75,11 @@
     document.querySelectorAll("#dev-header .delete-dev").forEach((button) => {
         button.addEventListener("click", async (event) => {
             event.stopPropagation();
-            const confirmed = await window.AppUI?.confirmAction("Remove this developer from the team?", {
-                title: "Remove developer",
-                confirmLabel: "Remove",
+            const confirmed = await window.AppUI?.confirmAction(i18n.remove_developer_question || "Remove this developer from the team?", {
+                title: i18n.remove_developer || "Remove developer",
+                confirmLabel: i18n.remove || "Remove",
                 confirmClass: "btn-danger",
-                cancelLabel: "Cancel",
+                cancelLabel: i18n.cancel || "Cancel",
             });
             if (!confirmed) return;
 
@@ -88,10 +90,10 @@
                 });
                 if (!response.ok) throw new Error(await response.text());
 
-                notify("Developer removed from team.", "success");
+                notify(i18n.developer_removed || "Developer removed from team.", "success");
                 window.location.reload();
             } catch (error) {
-                notify("Unable to remove developer.", "danger", 4000);
+                notify(i18n.unable_to_remove_developer || "Unable to remove developer.", "danger", 4000);
                 console.error(error);
             }
         });
@@ -154,10 +156,10 @@
                 body,
             });
             if (!response.ok) throw new Error(await response.text());
-            notify("Column order saved.", "success", 1600);
+            notify(i18n.column_order_saved || "Column order saved.", "success", 1600);
         } catch (error) {
             console.error(error);
-            notify("Unable to save column order.", "danger", 4000);
+            notify(i18n.unable_to_save_column_order || "Unable to save column order.", "danger", 4000);
         } finally {
             draggingHeader = null;
             draggingIndex = -1;

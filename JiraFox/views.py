@@ -70,6 +70,13 @@ class HomeView(View):
         return render(request, self.template_name, {})
 
 
+class AboutView(View):
+    template_name = "about.html"
+
+    def get(self, request):
+        return render(request, self.template_name, {})
+
+
 class ScriptView(LoginRequiredMixin, View):
     template_name = "home.html"
 

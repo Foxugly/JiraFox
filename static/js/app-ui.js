@@ -1,4 +1,5 @@
 (function () {
+    const appI18n = window.APP_UI_I18N || {};
     const toastContainer = document.getElementById("appToastContainer");
     const confirmModalEl = document.getElementById("appConfirmModal");
     const promptModalEl = document.getElementById("appPromptModal");
@@ -50,9 +51,9 @@
             const messageEl = document.getElementById("appConfirmMessage");
             const cancelBtn = confirmModalEl.querySelector('[data-action="cancel"]');
             const confirmBtn = confirmModalEl.querySelector('[data-action="confirm"]');
-            const title = options?.title || "Confirmation";
-            const confirmLabel = options?.confirmLabel || "Confirm";
-            const cancelLabel = options?.cancelLabel || "Cancel";
+            const title = options?.title || appI18n.confirm_title || "Confirmation";
+            const confirmLabel = options?.confirmLabel || appI18n.confirm_confirm || "Confirm";
+            const cancelLabel = options?.cancelLabel || appI18n.confirm_cancel || "Cancel";
             let settled = false;
 
             titleEl.textContent = title;
@@ -100,13 +101,13 @@
             const confirmBtn = promptModalEl.querySelector('[data-action="confirm"]');
             let settled = false;
 
-            titleEl.textContent = options?.title || "Input";
-            labelEl.textContent = options?.label || "Value";
+            titleEl.textContent = options?.title || appI18n.prompt_title || "Input";
+            labelEl.textContent = options?.label || appI18n.prompt_label || "Value";
             inputEl.value = options?.defaultValue || "";
             inputEl.placeholder = options?.placeholder || "";
             inputEl.required = Boolean(options?.required);
-            confirmBtn.textContent = options?.confirmLabel || "Confirm";
-            cancelBtn.textContent = options?.cancelLabel || "Cancel";
+            confirmBtn.textContent = options?.confirmLabel || appI18n.confirm_confirm || "Confirm";
+            cancelBtn.textContent = options?.cancelLabel || appI18n.confirm_cancel || "Cancel";
             confirmBtn.className = `btn ${options?.confirmClass || "btn-primary"}`;
 
             const close = (value) => {
@@ -145,9 +146,18 @@
         });
     }
 
+    function getDataTableLanguageUrl(languageCode, version) {
+        const normalizedLang = String(languageCode || "en").toLowerCase().split("-")[0];
+        const datatableLangMap = {fr: "fr-FR", nl: "nl-NL", en: "en-GB"};
+        const resolvedLang = datatableLangMap[normalizedLang] || "en-GB";
+        const resolvedVersion = version || "1.13.6";
+        return `https://cdn.datatables.net/plug-ins/${resolvedVersion}/i18n/${resolvedLang}.json`;
+    }
+
     window.AppUI = {
         showToast,
         confirmAction,
         promptAction,
+        getDataTableLanguageUrl,
     };
 })();

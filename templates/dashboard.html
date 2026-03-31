@@ -3,6 +3,8 @@
 
 {% block title %}JiraFox - Dashboard{% endblock %}
 
+{% block body_class %}site-shell dashboard-body{% endblock %}
+
 {% block header %}
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -12,94 +14,6 @@
     <script src="https://cdn.datatables.net/2.1.8/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/3.0.3/js/dataTables.responsive.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/3.0.3/js/responsive.bootstrap5.min.js"></script>
-
-    <style>
-        body {
-            background: #f8f9fa;
-        }
-
-        .card {
-            border: 0;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, .06);
-        }
-
-        .kpi-title {
-            font-size: .78rem;
-            letter-spacing: .04em;
-            text-transform: uppercase;
-            color: #6c757d;
-        }
-
-        .kpi-value {
-            font-size: 1.7rem;
-            font-weight: 800;
-            line-height: 1.1;
-        }
-
-        .kpi-sub {
-            font-size: .9rem;
-            color: #6c757d;
-        }
-
-        .mono {
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-        }
-
-        canvas {
-            height: 420px !important;
-        }
-
-        .table thead th {
-            white-space: nowrap;
-        }
-
-        #wiaChartWrap {
-            position: relative;
-        }
-
-        #chartTooltip {
-            position: absolute;
-            pointer-events: auto;
-            transform: translate(-50%, -100%);
-            z-index: 20;
-            display: none;
-            min-width: 260px;
-            max-width: 360px;
-        }
-
-        #chartTooltip .tt-card {
-            border-radius: 12px;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, .18);
-            border: 1px solid rgba(0, 0, 0, .08);
-            background: #fff;
-            padding: .75rem .9rem;
-        }
-
-        #chartTooltip .tt-title {
-            font-weight: 600;
-            margin-bottom: .25rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: .5rem;
-        }
-
-        #chartTooltip .tt-meta {
-            font-size: .9rem;
-            color: #6c757d;
-            margin-bottom: .5rem;
-        }
-
-        #chartTooltip .tt-link a {
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        #chartTooltip .badge-age {
-            font-weight: 600;
-        }
-    </style>
 
     <script>
         const I18N = {
@@ -131,14 +45,13 @@
             fallback: "{% trans 'Fallback (local)' %}",
             loading: "{% trans 'Loading...' %}",
             open: "{% trans 'Open' %}",
+            summary_fallback_message: "{% trans 'Summary API unavailable, using local fallback.' %}",
+            items_fallback_message: "{% trans 'Items API unavailable, using local fallback.' %}",
+            vs_last_week: "{% trans 'vs last week' %}",
+            status_word: "{% trans 'status' %}"
         };
 
-        const DJANGO_LANG = "{{ LANGUAGE_CODE|default:'fr' }}";
-        const DT_LANG_URL = {
-            fr: "https://cdn.datatables.net/plug-ins/2.0.8/i18n/fr-FR.json",
-            nl: "https://cdn.datatables.net/plug-ins/2.0.8/i18n/nl-NL.json",
-            en: "https://cdn.datatables.net/plug-ins/2.0.8/i18n/en-GB.json",
-        }[DJANGO_LANG] || "https://cdn.datatables.net/plug-ins/2.0.8/i18n/en-GB.json";
+        const DT_LANG_URL = window.AppUI.getDataTableLanguageUrl("{{ LANGUAGE_CODE|default:'fr' }}", "2.0.8");
     </script>
 {% endblock %}
 
@@ -373,7 +286,7 @@ Indicateur cle de capacite et de stabilite du flux.
             </div>
 
             <div class="table-responsive">
-                <table id="agingTable" class="table table-striped table-hover align-middle nowrap" style="width:100%">
+                <table id="agingTable" class="table table-striped table-hover align-middle nowrap dashboard-table-full">
                     <thead>
                     <tr>
                         <th>{% trans "Key" %}</th>

@@ -31,9 +31,9 @@
                        data-reorder-url="{% url 'reorder_teamdevs' team.id %}">
                     <thead>
                     <tr id="dev-header">
-                        <th class="text-muted" style="min-width: 100px;">&nbsp;</th>
+                        <th class="text-muted dev-col-spacer">&nbsp;</th>
                         {% for td in teamdevs %}
-                            <th class="dev-col" draggable="true" data-teamdev-id="{{ td.id }}" data-dev-id="{{ td.dev.id }}" style="min-width: 120px;">
+                            <th class="dev-col" draggable="true" data-teamdev-id="{{ td.id }}" data-dev-id="{{ td.dev.id }}">
                                 <div class="fw-semibold"><i class="fa-solid fa-grip-vertical me-1"></i>{{ td.dev.name }}</div>
                                 <div class="dev-actions">
                                     <button class="btn btn-outline-danger btn-sm delete-dev" title="{% trans 'Retirer de la team' %}" data-delete-url="{% url 'delete_dev_from_team' td.id %}">
@@ -77,38 +77,27 @@
     </section>
 {% endblock %}
 
-{% block header %}
-    <style>
-        th.dev-col {
-            cursor: move;
-            white-space: nowrap;
-            position: sticky;
-            top: 0;
-            background: rgba(255, 250, 242, 0.98);
-            z-index: 5;
-            min-width: 120px;
-            max-width: 150px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        th.dev-col .dev-actions {
-            position: absolute;
-            top: 4px;
-            right: 6px;
-            display: flex;
-            gap: 4px;
-        }
-        th.dev-col.dragging {
-            opacity: 0.6;
-            outline: 2px dashed #999;
-        }
-        table#dev-table input[type="number"] {
-            width: 100%;
-            max-width: 90px;
-        }
-    </style>
-{% endblock %}
-
 {% block js %}
+    <script>
+        window.SPRINT_XLS_PAGE = {
+            i18n: {
+                value_saved: "{% trans 'Value saved.' %}",
+                unable_to_save_value: "{% trans 'Unable to save value.' %}",
+                add_developer: "{% trans 'Add developer' %}",
+                developer_name: "{% trans 'Developer name' %}",
+                create: "{% trans 'Create' %}",
+                cancel: "{% trans 'Cancel' %}",
+                developer_added: "{% trans 'Developer added.' %}",
+                unable_to_create_developer: "{% trans 'Unable to create developer.' %}",
+                remove_developer: "{% trans 'Remove developer' %}",
+                remove_developer_question: "{% trans 'Remove this developer from the team?' %}",
+                remove: "{% trans 'Remove' %}",
+                developer_removed: "{% trans 'Developer removed from team.' %}",
+                unable_to_remove_developer: "{% trans 'Unable to remove developer.' %}",
+                column_order_saved: "{% trans 'Column order saved.' %}",
+                unable_to_save_column_order: "{% trans 'Unable to save column order.' %}"
+            }
+        };
+    </script>
     <script src="{% static 'js/sprint-xls.js' %}"></script>
 {% endblock %}

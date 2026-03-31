@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static i18n %}
 
 {% block header %}
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -16,12 +16,12 @@
         <div class="utility-panel">
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
                 <div>
-                    <h2 class="h4 mb-1">Work Item Age Diagram</h2>
-                    <div class="inline-note">Diagramme et table alimentes par la meme API.</div>
+                    <h2 class="h4 mb-1">{% trans "Work Item Age Diagram" %}</h2>
+                    <div class="inline-note">{% trans "Chart and table are powered by the same API." %}</div>
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                    <span id="statusBadge" class="badge text-bg-secondary">Loading...</span>
-                    <button id="reloadBtn" class="btn btn-sm btn-outline-secondary" type="button">Reload</button>
+                    <span id="statusBadge" class="badge text-bg-secondary">{% trans "Loading..." %}</span>
+                    <button id="reloadBtn" class="btn btn-sm btn-outline-secondary" type="button">{% trans "Reload" %}</button>
                 </div>
             </div>
 
@@ -35,10 +35,10 @@
                         </div>
                         <div id="ttTitle" class="small mb-2 text-dark">-</div>
                         <div class="tt-meta">
-                            <span class="me-2">Status: <strong id="ttStatus">-</strong></span>
+                            <span class="me-2">{% trans "Status" %}: <strong id="ttStatus">-</strong></span>
                         </div>
                         <div class="tt-link">
-                            <a id="ttLink" href="#" target="_blank" rel="noopener noreferrer">Open in Jira -></a>
+                            <a id="ttLink" href="#" target="_blank" rel="noopener noreferrer">{% trans "Open in Jira" %} -></a>
                         </div>
                     </div>
                 </div>
@@ -46,20 +46,20 @@
 
             <div class="card p-4">
                 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
-                    <h3 class="h6 mb-0">Items sorted by descending age</h3>
-                    <div class="inline-note">Search, sorting and pagination.</div>
+                    <h3 class="h6 mb-0">{% trans "Items sorted by descending age" %}</h3>
+                    <div class="inline-note">{% trans "Search, sorting and pagination." %}</div>
                 </div>
                 <div class="table-responsive">
                     <table id="wiaTable" class="table table-sm table-striped table-hover align-middle w-100">
                         <thead>
                         <tr>
-                            <th>Key</th>
-                            <th>Title</th>
-                            <th>Status</th>
-                            <th>Age (days)</th>
-                            <th>Cycle Time (days)</th>
-                            <th>First In Progress</th>
-                            <th class="text-end">Link</th>
+                            <th>{% trans "Key" %}</th>
+                            <th>{% trans "Title" %}</th>
+                            <th>{% trans "Status" %}</th>
+                            <th>{% trans "Age (days)" %}</th>
+                            <th>{% trans "Cycle Time (days)" %}</th>
+                            <th>{% trans "First In Progress" %}</th>
+                            <th class="text-end">{% trans "Link" %}</th>
                         </tr>
                         </thead>
                         <tbody></tbody>
@@ -79,7 +79,19 @@
     <script>
         window.SPRINT_WIA_PAGE = {
             apiUrl: "/sprint/{{ sprint_id }}/api/wia/",
-            issueDetailUrlTemplate: "{% url 'issue-detail' jira_key='__KEY__' %}"
+            issueDetailUrlTemplate: "{% url 'issue-detail' jira_key='__KEY__' %}",
+            languageCode: "{{ request.LANGUAGE_CODE }}",
+            datatableLanguageUrl: window.AppUI.getDataTableLanguageUrl("{{ request.LANGUAGE_CODE }}", "1.13.8"),
+            i18n: {
+                loading: "{% trans 'Loading...' %}",
+                api_error: "{% trans 'API error' %}",
+                unable_to_load_wia_data: "{% trans 'Unable to load WIA data' %}",
+                invalid_payload_missing_items: "{% trans 'Invalid payload: missing items' %}",
+                item: "{% trans 'item' %}",
+                items: "{% trans 'items' %}",
+                item_age_days: "{% trans 'Item age (days)' %}",
+                days_short: "{% trans 'd' %}"
+            }
         };
     </script>
     <script src="{% static 'js/sprint-wia.js' %}"></script>

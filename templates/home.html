@@ -13,7 +13,7 @@
                 </span>
                 <h1 class="hero-title">{% trans "Voir le flux avant qu'il ne se grippe." %}</h1>
                 <p class="hero-lead">
-                    {% trans "JiraFox rassemble les signaux utiles du sprint: aging, throughput, bottlenecks, capacité et accès directs à Jira. L'objectif n'est pas d'ajouter une couche de reporting, mais de rendre les décisions visibles plus vite." %}
+                    {% trans "JiraFox rassemble les signaux utiles du sprint: aging, throughput, bottlenecks, capacite et acces directs a Jira. L'objectif n'est pas d'ajouter une couche de reporting, mais de rendre les decisions visibles plus vite." %}
                 </p>
                 <div class="hero-actions mt-4">
                     {% if user.is_authenticated %}
@@ -32,13 +32,13 @@
             </div>
 
             <aside class="accent-panel">
-                <div class="page-kicker bg-transparent text-light p-0 mb-3">
+                <div class="page-kicker mb-3">
                     <i class="fa-solid fa-binoculars"></i>
                     {% trans "En un regard" %}
                 </div>
                 <h2 class="h3 mb-3">{% trans "Un cockpit plus qu'une homepage." %}</h2>
-                <p class="text-light-emphasis mb-4">
-                    {% trans "Chaque écran pousse vers une action concrète: vérifier l'âge réel du travail, ouvrir la bonne requête Jira, ou recaler la capacité de l'équipe." %}
+                <p class="text-secondary mb-4">
+                    {% trans "Chaque ecran pousse vers une action concrete: verifier l'age reel du travail, ouvrir la bonne requete Jira, ou recaler la capacite de l'equipe." %}
                 </p>
                 <div class="stat-chip">
                     <span>{% trans "Work item aging" %}</span>
@@ -62,9 +62,9 @@
                         <i class="fa-solid fa-compass-drafting"></i>
                         {% trans "Parcours" %}
                     </div>
-                    <h2 class="h3 mt-3 mb-1">{% trans "Entrées principales" %}</h2>
+                    <h2 class="h3 mt-3 mb-1">{% trans "Entrees principales" %}</h2>
                     <p class="text-secondary mb-0">
-                        {% trans "Trois accès pensés pour aller du signal au détail sans détour." %}
+                        {% trans "Trois acces penses pour aller du signal au detail sans detour." %}
                     </p>
                 </div>
             </div>
@@ -74,7 +74,7 @@
                     <div class="feature-icon"><i class="fa-solid fa-chart-line"></i></div>
                     <h3 class="h5">{% trans "Dashboard" %}</h3>
                     <p class="text-secondary">
-                        {% trans "Vue synthétique du sprint courant, avec KPIs, WIA chart, bottlenecks et top aging items." %}
+                        {% trans "Vue synthetique du sprint courant, avec KPIs, WIA chart, bottlenecks et top aging items." %}
                     </p>
                     <a class="btn btn-outline-primary btn-sm" href="{% url 'dashboard' %}">{% trans "Ouvrir" %}</a>
                 </article>
@@ -83,7 +83,7 @@
                     <div class="feature-icon"><i class="fa-brands fa-trello"></i></div>
                     <h3 class="h5">{% trans "Sprints" %}</h3>
                     <p class="text-secondary">
-                        {% trans "Lister les sprints, naviguer dans leurs détails et basculer rapidement vers Jira ou l'export." %}
+                        {% trans "Lister les sprints, naviguer dans leurs details et basculer rapidement vers Jira ou l'export." %}
                     </p>
                     <a class="btn btn-outline-primary btn-sm" href="{% url 'sprint-list' %}">{% trans "Parcourir" %}</a>
                 </article>
@@ -92,7 +92,7 @@
                     <div class="feature-icon"><i class="fa-brands fa-jira"></i></div>
                     <h3 class="h5">{% trans "Connexions Jira" %}</h3>
                     <p class="text-secondary">
-                        {% trans "Gérer plusieurs boards, tester les accès et choisir la configuration courante." %}
+                        {% trans "Gerer plusieurs boards, tester les acces et choisir la configuration courante." %}
                     </p>
                     <a class="btn btn-outline-primary btn-sm" href="{% url 'jira_config_list' %}">{% trans "Configurer" %}</a>
                 </article>

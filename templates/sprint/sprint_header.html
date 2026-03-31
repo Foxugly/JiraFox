@@ -1,29 +1,31 @@
 {% load i18n datetime_filters common_tags %}
-<div class="page-hero mb-3">
-    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+<div class="page-hero page-hero-sprint mb-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <div class="d-flex flex-wrap align-items-center justify-content-start gap-2">
+            <a class="btn btn-sm btn-outline-secondary" href="{% url 'sprint-list' %}">
+                <i class="fa-solid fa-arrow-left me-2"></i>{% trans "Back" %}
+            </a>
+            <span class="page-kicker">
+                <i class="fa-brands fa-trello"></i>
+                {% blocktrans with sprint_id=sprint.id %}Sprint {{ sprint_id }}{% endblocktrans %}
+            </span>
+        </div>
+        <div class="page-hero-actions ms-auto">
+            <a class="btn btn-outline-secondary" href="{% url 'sprint-kanban' sprint.id %}"><i class="fa-solid fa-table-columns me-2"></i>{% trans "Kanban" %}</a>
+            <a class="btn btn-outline-secondary" href="{% url 'sprint-report' sprint.id %}"><i class="fa-solid fa-table me-2"></i>{% trans "Report" %}</a>
+            <a class="btn btn-outline-secondary" href="{% url 'sprint-wia' sprint.id %}"><i class="fa-solid fa-chart-simple me-2"></i>WIA</a>
+            <a class="btn btn-outline-secondary" href="{% url 'sprint_xls_report' sprint.id %}"><i class="fa-regular fa-file-excel me-2"></i>XLSX</a>
+            <a class="btn btn-outline-primary" href="{{ jira_sprint_url }}" target="_blank" rel="noopener"><i class="fa-brands fa-jira me-2"></i>{% trans "Open in Jira" %}</a>
+        </div>
+    </div>
+    <div class="page-hero-copy mx-auto text-center">
         <div>
-            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                <a class="btn btn-sm btn-outline-secondary" href="{% url 'sprint-list' %}">
-                    <i class="fa-solid fa-arrow-left me-2"></i>{% trans "Back" %}
-                </a>
-                <span class="page-kicker">
-                    <i class="fa-brands fa-trello"></i>
-                    Sprint {{ sprint.id }}
-                </span>
-            </div>
             <h1 class="hero-title fs-1 mt-0 mb-2"><span class="mono">{{ sprint.name }}</span></h1>
-            <div class="page-hero-meta">
+            <div class="page-hero-meta justify-content-center">
                 <span><strong>{% trans "State" %}:</strong> {{ sprint.state }}</span>
                 <span><strong>{% trans "Start" %}:</strong> {{ sprint.startDate|format_jira_date:"%d/%m/%Y" }}</span>
                 <span><strong>{% trans "End" %}:</strong> {{ sprint.endDate|format_jira_date:"%d/%m/%Y" }}</span>
             </div>
-        </div>
-        <div class="page-hero-actions">
-            <a class="btn btn-outline-secondary" href="{% url 'sprint-kanban' sprint.id %}"><i class="fa-solid fa-table-columns me-2"></i>Kanban</a>
-            <a class="btn btn-outline-secondary" href="{% url 'sprint-report' sprint.id %}"><i class="fa-solid fa-table me-2"></i>Report</a>
-            <a class="btn btn-outline-secondary" href="{% url 'sprint-wia' sprint.id %}"><i class="fa-solid fa-chart-simple me-2"></i>WIA</a>
-            <a class="btn btn-outline-secondary" href="{% url 'sprint_xls_report' sprint.id %}"><i class="fa-regular fa-file-excel me-2"></i>XLSX</a>
-            <a class="btn btn-outline-primary" href="{{ jira_sprint_url }}" target="_blank" rel="noopener"><i class="fa-brands fa-jira me-2"></i>{% trans "Open in Jira" %}</a>
         </div>
     </div>
 </div>

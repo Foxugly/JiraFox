@@ -1,6 +1,7 @@
 (function () {
     const page = window.JIRA_CONFIGS_PAGE;
     if (!page) return;
+    const i18n = page.i18n || {};
 
     const modalContent = document.getElementById("jiraConfigModalContent");
     const addButton = document.getElementById("btnAddConfig");
@@ -22,7 +23,7 @@
         if (!contentType.includes("application/json")) {
             const text = await response.text();
             console.error("Non JSON response", response.status, text.slice(0, 800));
-            throw new Error(`Unexpected response format (${response.status})`);
+            throw new Error(`${i18n.unexpected_response_format || "Unexpected response format"} (${response.status})`);
         }
         return response.json();
     }
@@ -47,7 +48,7 @@
 
             if (submitButton) {
                 submitButton.disabled = true;
-                submitButton.textContent = "Saving...";
+                submitButton.textContent = i18n.saving || "Saving...";
             }
 
             try {
@@ -62,7 +63,7 @@
                 });
 
                 if (data.ok) {
-                    notify("Configuration saved.", "success");
+                    notify(i18n.configuration_saved || "Configuration saved.", "success");
                     window.location.reload();
                     return;
                 }
@@ -88,9 +89,9 @@
         testButton.addEventListener("click", async () => {
             const oldLabel = testButton.textContent;
             testButton.disabled = true;
-            testButton.textContent = "Testing...";
+            testButton.textContent = i18n.testing || "Testing...";
             resultBox.className = "alert alert-info";
-            resultBox.textContent = "Connection test in progress...";
+            resultBox.textContent = i18n.test_in_progress || "Connection test in progress...";
             resultBox.classList.remove("d-none");
 
             try {
@@ -105,14 +106,14 @@
 
                 if (data.ok && data.result === true) {
                     resultBox.className = "alert alert-success";
-                    resultBox.textContent = "Connection OK";
-                    notify("Jira connection validated.", "success");
+                    resultBox.textContent = i18n.connection_ok || "Connection OK";
+                    notify(i18n.jira_connection_validated || "Jira connection validated.", "success");
                     return;
                 }
 
                 resultBox.className = "alert alert-danger";
-                resultBox.textContent = `Connection failed: ${data.error || "unknown error"}`;
-                notify("Jira connection failed.", "danger", 4500);
+                resultBox.textContent = `${i18n.connection_failed || "Connection failed"}: ${data.error || i18n.unknown_error || "unknown error"}`;
+                notify(i18n.jira_connection_failed || "Jira connection failed.", "danger", 4500);
             } catch (error) {
                 resultBox.className = "alert alert-danger";
                 resultBox.textContent = error.message;
@@ -134,11 +135,11 @@
 
     document.querySelectorAll(".btn-delete").forEach((button) => {
         button.addEventListener("click", async (event) => {
-            const confirmed = await window.AppUI?.confirmAction("Delete this Jira configuration?", {
-                title: "Delete configuration",
-                confirmLabel: "Delete",
+            const confirmed = await window.AppUI?.confirmAction(i18n.delete_configuration_question || "Delete this Jira configuration?", {
+                title: i18n.delete_configuration || "Delete configuration",
+                confirmLabel: i18n.delete || "Delete",
                 confirmClass: "btn-danger",
-                cancelLabel: "Cancel",
+                cancelLabel: i18n.cancel || "Cancel",
             });
             if (!confirmed) return;
 
@@ -154,7 +155,7 @@
                 });
                 if (data.ok) {
                     event.currentTarget.closest("tr")?.remove();
-                    notify("Configuration deleted.", "success");
+                    notify(i18n.configuration_deleted || "Configuration deleted.", "success");
                 }
             } catch (error) {
                 notify(error.message, "danger", 4500);
@@ -179,9 +180,9 @@
                     credentials: "same-origin",
                 });
                 if (data.ok && data.result === true) {
-                    notify("Jira connection OK.", "success");
+                    notify(i18n.jira_connection_ok || "Jira connection OK.", "success");
                 } else {
-                    notify(`Jira connection failed: ${data.error || "unknown error"}`, "danger", 5000);
+                    notify(`${i18n.connection_failed || "Connection failed"}: ${data.error || i18n.unknown_error || "unknown error"}`, "danger", 5000);
                 }
                 window.location.reload();
             } catch (error) {
@@ -221,12 +222,12 @@
                 });
 
                 if (!data.ok) {
-                    notify(data.error || "Unable to save current configuration.", "danger", 4500);
+                    notify(data.error || i18n.unable_to_save_current_configuration || "Unable to save current configuration.", "danger", 4500);
                     window.location.reload();
                     return;
                 }
 
-                notify("Current configuration updated.", "success");
+                notify(i18n.current_configuration_updated || "Current configuration updated.", "success");
             } catch (error) {
                 notify(error.message, "danger", 4500);
                 window.location.reload();

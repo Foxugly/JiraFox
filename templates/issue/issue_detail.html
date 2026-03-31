@@ -8,24 +8,24 @@
         <div class="row g-3">
             <div class="col-12 col-lg-4">
                 <div class="utility-panel h-100">
-                    <div class="text-uppercase text-secondary small mb-2">Lead time</div>
-                    <div class="metric-value">{{ issue.kanban_metrics.lead_time_days|default:"-" }} j</div>
-                    <div class="inline-note mt-2">{{ issue.kanban_metrics.lead_time_hours|default:"-" }} h business</div>
+                    <div class="text-uppercase text-secondary small mb-2">{% trans "Lead time" %}</div>
+                    <div class="metric-value">{{ issue.kanban_metrics.lead_time_days|default:"-" }} {% trans "d" %}</div>
+                    <div class="inline-note mt-2">{{ issue.kanban_metrics.lead_time_hours|default:"-" }} {% trans "business h" %}</div>
                 </div>
             </div>
             <div class="col-12 col-lg-4">
                 <div class="utility-panel h-100">
-                    <div class="text-uppercase text-secondary small mb-2">Cycle time</div>
-                    <div class="metric-value">{{ issue.kanban_metrics.cycle_time_days|default:"-" }} j</div>
-                    <div class="inline-note mt-2">{{ issue.kanban_metrics.cycle_time_hours|default:"-" }} h business</div>
+                    <div class="text-uppercase text-secondary small mb-2">{% trans "Cycle time" %}</div>
+                    <div class="metric-value">{{ issue.kanban_metrics.cycle_time_days|default:"-" }} {% trans "d" %}</div>
+                    <div class="inline-note mt-2">{{ issue.kanban_metrics.cycle_time_hours|default:"-" }} {% trans "business h" %}</div>
                     <div class="inline-note mt-3">{% trans "First in progress" %}: <strong>{{ issue.kanban_metrics.first_in_progress_display|default:"-" }}</strong></div>
                 </div>
             </div>
             <div class="col-12 col-lg-4">
                 <div class="utility-panel h-100">
-                    <div class="text-uppercase text-secondary small mb-2">Current WIP age</div>
-                    <div class="metric-value">{{ issue.kanban_metrics.current_wip_age_days|default:"-" }} j</div>
-                    <div class="inline-note mt-2">{{ issue.kanban_metrics.current_wip_age_hours|default:"-" }} h business</div>
+                    <div class="text-uppercase text-secondary small mb-2">{% trans "Current WIP age" %}</div>
+                    <div class="metric-value">{{ issue.kanban_metrics.current_wip_age_days|default:"-" }} {% trans "d" %}</div>
+                    <div class="inline-note mt-2">{{ issue.kanban_metrics.current_wip_age_hours|default:"-" }} {% trans "business h" %}</div>
                 </div>
             </div>
         </div>
@@ -44,22 +44,22 @@
             <div class="col-12 col-lg-4">
                 <div class="utility-panel h-100">
                     <h2 class="h5 mb-3">{% trans "Scrum / effort" %}</h2>
-                    <div class="d-flex justify-content-between mt-2"><span class="inline-note">Story points</span><strong>{{ issue.estimation.story_points|default:"-" }}</strong></div>
-                    <div class="d-flex justify-content-between mt-2"><span class="inline-note">Original estimate</span><strong>{{ issue.estimation.original_estimate_hours|default:"-" }} h</strong></div>
-                    <div class="d-flex justify-content-between mt-2"><span class="inline-note">Remaining</span><strong>{{ issue.remaining_hours|default:"-" }} h</strong></div>
-                    <div class="d-flex justify-content-between mt-2"><span class="inline-note">Spent</span><strong>{{ issue.spent_hours|default:"-" }} h</strong></div>
+                    <div class="d-flex justify-content-between mt-2"><span class="inline-note">{% trans "Story points" %}</span><strong>{{ issue.estimation.story_points|default:"-" }}</strong></div>
+                    <div class="d-flex justify-content-between mt-2"><span class="inline-note">{% trans "Original estimate" %}</span><strong>{{ issue.estimation.original_estimate_hours|default:"-" }} h</strong></div>
+                    <div class="d-flex justify-content-between mt-2"><span class="inline-note">{% trans "Remaining" %}</span><strong>{{ issue.remaining_hours|default:"-" }} h</strong></div>
+                    <div class="d-flex justify-content-between mt-2"><span class="inline-note">{% trans "Spent" %}</span><strong>{{ issue.spent_hours|default:"-" }} h</strong></div>
                 </div>
             </div>
             <div class="col-12 col-lg-4">
                 <div class="utility-panel h-100">
-                    <h2 class="h5 mb-3">Time in status</h2>
+                    <h2 class="h5 mb-3">{% trans "Time in status" %}</h2>
                     {% if issue.kanban_metrics.time_in_status %}
                         <div class="vstack gap-3">
                             {% for row in issue.kanban_metrics.time_in_status %}
                                 <div>
                                     <div class="d-flex justify-content-between align-items-baseline">
                                         <div class="fw-semibold">{{ row.status }}</div>
-                                        <div class="inline-note"><strong>{{ row.days }}</strong> j · {{ row.hours }} h</div>
+                                        <div class="inline-note"><strong>{{ row.days }}</strong> {% trans "d" %} · {{ row.hours }} h</div>
                                     </div>
                                     <div class="progress mt-2" role="progressbar" aria-valuenow="{{ row.pct|stringformat:'g' }}" aria-valuemin="0" aria-valuemax="100">
                                         <div class="progress-bar {% if row.pct < 30 %}bg-success{% elif row.pct < 60 %}bg-warning{% else %}bg-danger{% endif %}" style="width: {{ row.pct|stringformat:'g' }}%"></div>
