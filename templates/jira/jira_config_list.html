@@ -1,372 +1,129 @@
 {% extends "base.html" %}
-{% block content %}
-    <div class="container-fluid py-3">
+{% load static i18n %}
 
-        {# ✅ Force la pose du cookie CSRF sur cette page #}
+{% block content %}
+    <section class="page-shell glass-panel section-stack">
         <form style="display:none">{% csrf_token %}</form>
 
-        <div class="d-flex align-items-center justify-content-between mb-3">
-            <div>
-                <h1 class="h4 mb-0">Mes configurations Jira</h1>
-                <div class="text-muted small">Créer / éditer / tester directement depuis le modal.</div>
+        <div class="page-hero">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                <div>
+                    <span class="page-kicker">
+                        <i class="fa-brands fa-jira"></i>
+                        {% trans "Jira connections" %}
+                    </span>
+                    <h1 class="hero-title fs-1 mt-3 mb-2">{% trans "Mes configurations Jira" %}</h1>
+                    <p class="text-secondary mb-0">
+                        {% trans "Creer, tester et activer plusieurs connexions selon vos boards et vos contextes d'equipe." %}
+                    </p>
+                </div>
+                <button class="btn btn-primary"
+                        id="btnAddConfig"
+                        data-bs-toggle="modal"
+                        data-bs-target="#jiraConfigModal"
+                        data-url="{% url 'jira_config_modal_create' %}">
+                    <i class="fa-solid fa-plus me-2"></i>{% trans "Ajouter" %}
+                </button>
             </div>
-
-            <button class="btn btn-primary"
-                    id="btnAddConfig"
-                    data-bs-toggle="modal"
-                    data-bs-target="#jiraConfigModal"
-                    data-url="{% url 'jira_config_modal_create' %}">
-                + Ajouter
-            </button>
         </div>
 
-        <div class="card shadow-sm">
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover mb-0 align-middle">
-                        <thead class="table-light">
-                        <tr>
-                            <th>URL</th>
-                            <th>Email</th>
-                            <th>Board</th>
-                            <th>Project</th>
-                            <th>Epic</th>
-                            <th>Dernier test</th>
-                            <th class="text-center">Current</th>
-                            <th class="text-end">Actions</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {% for c in configs %}
-                            <tr data-row-id="{{ c.id }}">
-                                <td class="text-truncate" style="max-width: 280px;">{{ c.jira_url|default:"-" }}</td>
-                                <td class="text-truncate" style="max-width: 220px;">{{ c.jira_email|default:"-" }}</td>
-                                <td>{{ c.jira_board_id|default:"-" }}</td>
-                                <td>{{ c.jira_project_id|default:"-" }}</td>
-                                <td class="text-truncate" style="max-width: 180px;">
-                                    {{ c.jira_recurrent_epic_key|default:"-" }}
-                                </td>
-
-                                <td>
-                                    {% if c.last_tested_at %}
-                                        <div class="d-flex align-items-center gap-2">
-                                            {% if c.last_test_ok %}
-                                                <span class="badge text-bg-success">OK</span>
-                                            {% else %}
-                                                <span class="badge text-bg-danger">KO</span>
-                                            {% endif %}
-                                            <span class="text-muted small">{{ c.last_tested_at }}</span>
-                                        </div>
-                                        {% if c.last_test_error and not c.last_test_ok %}
-                                            <div class="text-muted small text-truncate" style="max-width: 420px;"
-                                                 title="{{ c.last_test_error|escape }}">
-                                                {{ c.last_test_error }}
-                                            </div>
+        <div class="utility-panel">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                    <tr>
+                        <th>URL</th>
+                        <th>Email</th>
+                        <th>Board</th>
+                        <th>Project</th>
+                        <th>Epic</th>
+                        <th>{% trans "Dernier test" %}</th>
+                        <th class="text-center">Current</th>
+                        <th class="text-end">{% trans "Actions" %}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for c in configs %}
+                        <tr data-row-id="{{ c.id }}">
+                            <td class="text-truncate" style="max-width: 280px;">{{ c.jira_url|default:"-" }}</td>
+                            <td class="text-truncate" style="max-width: 220px;">{{ c.jira_email|default:"-" }}</td>
+                            <td>{{ c.jira_board_id|default:"-" }}</td>
+                            <td>{{ c.jira_project_id|default:"-" }}</td>
+                            <td class="text-truncate" style="max-width: 180px;">{{ c.jira_recurrent_epic_key|default:"-" }}</td>
+                            <td>
+                                {% if c.last_tested_at %}
+                                    <div class="d-flex align-items-center gap-2">
+                                        {% if c.last_test_ok %}
+                                            <span class="badge text-bg-success">OK</span>
+                                        {% else %}
+                                            <span class="badge text-bg-danger">KO</span>
                                         {% endif %}
-                                    {% else %}
-                                        <span class="text-muted">-</span>
-                                    {% endif %}
-                                </td>
-
-                                {# ✅ NEW: current switch #}
-                                <td class="text-center">
-                                    <div class="form-check form-switch d-inline-flex m-0">
-                                        <input
-                                            class="form-check-input js-current-switch"
-                                            type="checkbox"
-                                            role="switch"
-                                            data-config-id="{{ c.id }}"
-                                            {% if c.current %}checked{% endif %}
-                                            aria-label="Définir comme configuration courante"
-                                        >
+                                        <span class="text-muted small">{{ c.last_tested_at }}</span>
                                     </div>
-                                </td>
-
-                                <td class="text-end">
-                                    <div class="btn-group btn-group-sm" role="group">
-
-                                        {# 🔍 TESTER (FontAwesome) #}
-                                        <button
-                                            class="btn btn-outline-success btn-test"
+                                    {% if c.last_test_error and not c.last_test_ok %}
+                                        <div class="text-muted small text-truncate" style="max-width: 420px;" title="{{ c.last_test_error|escape }}">
+                                            {{ c.last_test_error }}
+                                        </div>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <div class="form-check form-switch d-inline-flex m-0">
+                                    <input class="form-check-input js-current-switch"
+                                           type="checkbox"
+                                           role="switch"
+                                           data-config-id="{{ c.id }}"
+                                           {% if c.current %}checked{% endif %}
+                                           aria-label="Definir comme configuration courante">
+                                </div>
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button class="btn btn-outline-success btn-test"
                                             title="Tester la connexion"
                                             data-url="{% url 'jira_config_test' c.id %}">
-                                            <i class="fa-solid fa-vial"></i>
-                                        </button>
-
-                                        {# ✏️ ÉDITER (FontAwesome) #}
-                                        <button
-                                            class="btn btn-outline-primary btn-edit"
-                                            title="Éditer"
+                                        <i class="fa-solid fa-vial"></i>
+                                    </button>
+                                    <button class="btn btn-outline-primary btn-edit"
+                                            title="Editer"
                                             data-bs-toggle="modal"
                                             data-bs-target="#jiraConfigModal"
                                             data-url="{% url 'jira_config_modal_edit' c.id %}">
-                                            <i class="fa-solid fa-pen-to-square"></i>
-                                        </button>
-
-                                        {# 🗑️ SUPPRIMER (FontAwesome) #}
-                                        <button
-                                            class="btn btn-outline-danger btn-delete"
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-delete"
                                             title="Supprimer"
                                             data-url="{% url 'jira_config_delete' c.id %}">
-                                            <i class="fa-solid fa-trash"></i>
-                                        </button>
-
-                                    </div>
-                                </td>
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="8" class="text-center text-muted py-4">Aucune configuration.</td>
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">{% trans "Aucune configuration." %}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
+    </section>
 
-    </div>
-
-    {# Modal unique (réutilisée add/edit) #}
     <div class="modal fade" id="jiraConfigModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <div class="modal-content" id="jiraConfigModalContent">
-                {# contenu injecté en AJAX #}
-            </div>
+            <div class="modal-content" id="jiraConfigModalContent"></div>
         </div>
     </div>
+{% endblock %}
 
+{% block js %}
     <script>
-        (function () {
-            const modalContent = document.getElementById("jiraConfigModalContent");
-
-            // ✅ helper CSRF (Django)
-            function getCookie(name) {
-                const value = `; ${document.cookie}`;
-                const parts = value.split(`; ${name}=`);
-                if (parts.length === 2) return parts.pop().split(';').shift();
-            }
-
-            async function fetchJson(url, options) {
-                const r = await fetch(url, options);
-                const ct = (r.headers.get("content-type") || "").toLowerCase();
-
-                if (!ct.includes("application/json")) {
-                    const txt = await r.text();
-                    console.error("Réponse non JSON", r.status, txt.slice(0, 800));
-                    throw new Error(`Réponse non-JSON (status ${r.status}). Voir console.`);
-                }
-                return await r.json();
-            }
-
-            async function loadModal(url) {
-                const r = await fetch(url, {
-                    headers: {"X-Requested-With": "XMLHttpRequest"},
-                    credentials: "same-origin",
-                });
-                modalContent.innerHTML = await r.text();
-                initJiraConfigModal(modalContent);
-            }
-
-            function initJiraConfigModal(root) {
-                const form = root.querySelector("#jiraConfigForm");
-                if (!form) return;
-
-                form.addEventListener("submit", async (e) => {
-                    e.preventDefault();
-
-                    const submitBtn = root.querySelector("#jiraConfigSubmitBtn");
-                    const submitOld = submitBtn ? submitBtn.textContent : null;
-                    if (submitBtn) {
-                        submitBtn.disabled = true;
-                        submitBtn.textContent = "Enregistrement...";
-                    }
-
-                    try {
-                        const data = await fetchJson(form.action, {
-                            method: "POST",
-                            headers: {
-                                "X-Requested-With": "XMLHttpRequest",
-                                "X-CSRFToken": getCookie("csrftoken"),
-                            },
-                            credentials: "same-origin",
-                            body: new FormData(form),
-                        });
-
-                        if (data.ok) {
-                            window.location.reload();
-                            return;
-                        }
-                        if (data.html) {
-                            modalContent.innerHTML = data.html;
-                            initJiraConfigModal(modalContent);
-                        }
-                    } catch (err) {
-                        alert("Erreur: " + err.message);
-                    } finally {
-                        if (submitBtn) {
-                            submitBtn.disabled = false;
-                            submitBtn.textContent = submitOld;
-                        }
-                    }
-                }, {once: true});
-
-                // Test connexion (mode edit)
-                const testBtn = root.querySelector("#btnTestJira");
-                const resultBox = root.querySelector("#jiraTestResult");
-
-                if (testBtn && resultBox) {
-                    testBtn.addEventListener("click", async () => {
-                        testBtn.disabled = true;
-                        const old = testBtn.textContent;
-                        testBtn.textContent = "Test...";
-
-                        resultBox.className = "alert alert-info";
-                        resultBox.textContent = "Test en cours…";
-                        resultBox.classList.remove("d-none");
-
-                        try {
-                            const data = await fetchJson(testBtn.dataset.url, {
-                                method: "POST",
-                                headers: {
-                                    "X-Requested-With": "XMLHttpRequest",
-                                    "X-CSRFToken": getCookie("csrftoken"),
-                                },
-                                credentials: "same-origin",
-                            });
-
-                            if (data.ok && data.result === true) {
-                                resultBox.className = "alert alert-success";
-                                resultBox.textContent = "✅ Connexion OK";
-                            } else {
-                                resultBox.className = "alert alert-danger";
-                                resultBox.textContent = "❌ Connexion KO : " + (data.error || "Erreur inconnue");
-                            }
-                        } catch (e) {
-                            resultBox.className = "alert alert-danger";
-                            resultBox.textContent = "❌ " + e.message;
-                        } finally {
-                            testBtn.disabled = false;
-                            testBtn.textContent = old;
-                        }
-                    }, {once: true});
-                }
-            }
-
-            // Open modal create
-            document.getElementById("btnAddConfig").addEventListener("click", (e) => {
-                loadModal(e.currentTarget.dataset.url);
-            });
-
-            // Open modal edit
-            document.querySelectorAll(".btn-edit").forEach(btn => {
-                btn.addEventListener("click", (e) => loadModal(e.currentTarget.dataset.url));
-            });
-
-            // Delete
-            document.querySelectorAll(".btn-delete").forEach(btn => {
-                btn.addEventListener("click", async (e) => {
-                    if (!confirm("Supprimer cette configuration ?")) return;
-                    const url = e.currentTarget.dataset.url;
-
-                    try {
-                        const data = await fetchJson(url, {
-                            method: "POST",
-                            headers: {
-                                "X-CSRFToken": getCookie("csrftoken"),
-                                "X-Requested-With": "XMLHttpRequest",
-                            },
-                            credentials: "same-origin",
-                        });
-
-                        if (data.ok) e.currentTarget.closest("tr").remove();
-                    } catch (err) {
-                        alert("Erreur: " + err.message);
-                    }
-                });
-            });
-
-            // Tester depuis la liste
-            document.querySelectorAll(".btn-test").forEach(btn => {
-                btn.addEventListener("click", async (e) => {
-                    const button = e.currentTarget;
-                    const url = button.dataset.url;
-
-                    const oldText = button.innerHTML;
-                    button.disabled = true;
-                    button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-
-                    try {
-                        const data = await fetchJson(url, {
-                            method: "POST",
-                            headers: {
-                                "X-Requested-With": "XMLHttpRequest",
-                                "X-CSRFToken": getCookie("csrftoken"),
-                            },
-                            credentials: "same-origin",
-                        });
-
-                        if (data.ok && data.result === true) {
-                            alert("✅ Connexion Jira OK");
-                        } else {
-                            alert("❌ Connexion Jira KO\n\n" + (data.error || "Erreur inconnue"));
-                        }
-
-                        window.location.reload();
-                    } catch (err) {
-                        alert("❌ " + err.message);
-                    } finally {
-                        button.disabled = false;
-                        button.innerHTML = oldText;
-                    }
-                });
-            });
-
-            // ✅ NEW: current switch AJAX
-            const setCurrentUrl = "{% url 'jira_config_set_current' %}";
-
-            document.querySelectorAll(".js-current-switch").forEach(sw => {
-                sw.addEventListener("change", async (e) => {
-                    const el = e.currentTarget;
-                    const configId = el.dataset.configId;
-                    const wantCurrent = el.checked;
-
-                    // On n'autorise qu'un current => UI: si on coche, on décoche les autres
-                    if (wantCurrent) {
-                        document.querySelectorAll(".js-current-switch").forEach(other => {
-                            if (other !== el) other.checked = false;
-                        });
-                    }
-
-                    // Empêche "aucun current" via UI (optionnel) :
-                    // si tu veux toujours en avoir un, décommente :
-                    // if (!wantCurrent) { el.checked = true; return; }
-
-                    const body = new FormData();
-                    body.append("config_id", configId);
-                    body.append("current", String(wantCurrent));
-
-                    try {
-                        const data = await fetchJson(setCurrentUrl, {
-                            method: "POST",
-                            headers: {
-                                "X-Requested-With": "XMLHttpRequest",
-                                "X-CSRFToken": getCookie("csrftoken"),
-                            },
-                            credentials: "same-origin",
-                            body: body,
-                        });
-
-                        if (!data.ok) {
-                            alert(data.error || "Impossible d'enregistrer le current.");
-                            window.location.reload();
-                        }
-                    } catch (err) {
-                        alert("❌ " + err.message);
-                        window.location.reload();
-                    }
-                });
-            });
-        })();
+        window.JIRA_CONFIGS_PAGE = {
+            setCurrentUrl: "{% url 'jira_config_set_current' %}"
+        };
     </script>
+    <script src="{% static 'js/jira-configs.js' %}"></script>
 {% endblock %}

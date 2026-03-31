@@ -4,3 +4,4 @@ jira~=3.10.5
 openpyxl~=3.1.5
 pip-system-certs~=5.3
 python-dotenv
+python-dateutil

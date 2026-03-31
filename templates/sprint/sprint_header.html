@@ -1,56 +1,29 @@
 {% load i18n datetime_filters common_tags %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <!-- Titre -->
-    <a class="btn btn-sm btn-outline-secondary" href="{% url 'sprint-list' %}">
-        <i class="fa-solid fa-arrow-left me-2"></i>{% trans "Back" %}</a>
-    <div>
-        <div class="d-flex align-items-center text-center gap-2 flex-wrap">
-            <h1 class="h4 mb-0">
-                <span class="text-muted">Sprint {{ sprint.id }}</span> /
-                <span class="fw-semibold mono">{{ sprint.name }}</span>
-            </h1>
+<div class="page-hero mb-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+        <div>
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                <a class="btn btn-sm btn-outline-secondary" href="{% url 'sprint-list' %}">
+                    <i class="fa-solid fa-arrow-left me-2"></i>{% trans "Back" %}
+                </a>
+                <span class="page-kicker">
+                    <i class="fa-brands fa-trello"></i>
+                    Sprint {{ sprint.id }}
+                </span>
+            </div>
+            <h1 class="hero-title fs-1 mt-0 mb-2"><span class="mono">{{ sprint.name }}</span></h1>
+            <div class="page-hero-meta">
+                <span><strong>{% trans "State" %}:</strong> {{ sprint.state }}</span>
+                <span><strong>{% trans "Start" %}:</strong> {{ sprint.startDate|format_jira_date:"%d/%m/%Y" }}</span>
+                <span><strong>{% trans "End" %}:</strong> {{ sprint.endDate|format_jira_date:"%d/%m/%Y" }}</span>
+            </div>
         </div>
-
-        <div class="text-secondary mt-1 text-center truncate-2" style="max-width: 1100px;">
-              <strong>État :</strong>
-                <span class="badge
-            {% if sprint.state == 'active' %}bg-success
-            {% elif sprint.state == 'future' %}bg-info
-            {% else %}bg-secondary
-            {% endif %}
-        ">
-            {{ sprint.state }}
-        </span> -
-                <strong>Début :</strong> {{ sprint.startDate|format_jira_date:"%d/%m/%Y" }} -
-                <strong>Fin :</strong> {{ sprint.endDate|format_jira_date:"%d/%m/%Y" }}
+        <div class="page-hero-actions">
+            <a class="btn btn-outline-secondary" href="{% url 'sprint-kanban' sprint.id %}"><i class="fa-solid fa-table-columns me-2"></i>Kanban</a>
+            <a class="btn btn-outline-secondary" href="{% url 'sprint-report' sprint.id %}"><i class="fa-solid fa-table me-2"></i>Report</a>
+            <a class="btn btn-outline-secondary" href="{% url 'sprint-wia' sprint.id %}"><i class="fa-solid fa-chart-simple me-2"></i>WIA</a>
+            <a class="btn btn-outline-secondary" href="{% url 'sprint_xls_report' sprint.id %}"><i class="fa-regular fa-file-excel me-2"></i>XLSX</a>
+            <a class="btn btn-outline-primary" href="{{ jira_sprint_url }}" target="_blank" rel="noopener"><i class="fa-brands fa-jira me-2"></i>{% trans "Open in Jira" %}</a>
         </div>
-    </div>
-
-    <!-- Boutons -->
-
-    <div class="btn-group">
-        <a class="btn btn-outline-secondary" role="button" aria-pressed="true"
-           href="{% url 'sprint-kanban' sprint.id %}">
-            <i class="fa-solid fa-table-columns text-danger"></i>
-        </a>
-
-        <a class="btn btn-outline-secondary" role="button" aria-pressed="true"
-           href="{% url 'sprint-report' sprint.id %}">
-            <i class="fa-solid fa-table text-warning"></i>
-        </a>
-        <a class="btn btn-outline-secondary" role="button" aria-pressed="true"
-           href="{% url 'sprint-wia' sprint.id %}">
-            <i class="fa-solid fa-chart-simple text-info"></i>
-        </a>
-        <a class="btn btn-outline-secondary" role="button" aria-pressed="true"
-           href="{% url 'sprint_xls_report' sprint.id %}">
-            <i class="fa-regular fa-file-excel text-success"></i>
-        </a>
-
-        <a class="btn btn-outline-secondary" role="button" aria-pressed="true"
-           href="{{ jira_sprint_url }}" target="_blank" rel="noopener">
-            <i class="fa-brands fa-jira text-primary"></i>
-        </a>
-
     </div>
 </div>

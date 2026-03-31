@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class Dev(models.Model):
     name = models.CharField(max_length=100)
     workload = models.IntegerField(default=36, help_text='Hours of workloads per sprint')
@@ -13,6 +14,6 @@ class Dev(models.Model):
     class Meta:
         verbose_name = 'Dev'
         verbose_name_plural = 'Devs'
-        ordering = ('name',)
+        ordering = ("name",)
 
 

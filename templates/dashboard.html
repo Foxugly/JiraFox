@@ -1,13 +1,10 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load static i18n %}
 
 {% block title %}JiraFox - Dashboard{% endblock %}
 
 {% block header %}
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-
-    <!-- jQuery + DataTables (Bootstrap 5) -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <link href="https://cdn.datatables.net/2.1.8/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/responsive/3.0.3/css/responsive.bootstrap5.min.css" rel="stylesheet">
@@ -57,7 +54,6 @@
             white-space: nowrap;
         }
 
-        /* Tooltip HTML (comme l'autre page) */
         #wiaChartWrap {
             position: relative;
         }
@@ -105,7 +101,6 @@
         }
     </style>
 
-    <!-- Simple i18n dictionary for JS -->
     <script>
         const I18N = {
             dashboard_title: "{% trans 'Agile Dashboard' %}",
@@ -132,10 +127,9 @@
             lead_p50: "{% trans 'Lead Time (P50)' %}",
             throughput_7d: "{% trans 'Throughput (7d)' %}",
             flow_eff: "{% trans 'Flow Efficiency' %}",
-
             ok_api: "{% trans 'OK (API)' %}",
             fallback: "{% trans 'Fallback (local)' %}",
-            loading: "{% trans 'Loading…' %}",
+            loading: "{% trans 'Loading...' %}",
             open: "{% trans 'Open' %}",
         };
 
@@ -149,9 +143,7 @@
 {% endblock %}
 
 {% block content %}
-    <div class="container-fluid py-3">
-
-        <!-- Header row -->
+    <div class="container-fluid py-3 dashboard-shell page-shell glass-panel">
         <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3">
             <div>
                 <h1 class="h4 mb-1">
@@ -172,21 +164,20 @@
             </div>
 
             <div class="d-flex align-items-center gap-2">
-                <span id="statusSummaryBadge" class="badge text-bg-secondary">{% trans "Loading…" %}</span>
-                <span id="statusItemsBadge" class="badge text-bg-secondary">{% trans "Loading…" %}</span>
+                <span id="statusSummaryBadge" class="badge text-bg-secondary">{% trans "Loading..." %}</span>
+                <span id="statusItemsBadge" class="badge text-bg-secondary">{% trans "Loading..." %}</span>
                 <button id="reloadBtn" class="btn btn-sm btn-outline-secondary" type="button">
                     {% trans "Reload" %}
                 </button>
             </div>
         </div>
 
-        <!-- KPI row -->
         <div class="row g-3 mb-3">
             <div class="col-12 col-md-6 col-xl-2">
                 {% blocktrans trimmed asvar tt_wip %}
     <strong>WIP (Work In Progress)</strong><br>
     Nombre total de tickets actuellement en cours (statuts actifs).<br>
-    Un WIP trop élevé augmente le multitâche, l’attente et ralentit le flux.
+    Un WIP trop eleve augmente le multitache, l'attente et ralentit le flux.
 {% endblocktrans %}
                 <div class="card p-3 h-100">
                     <div class="kpi-title">{% trans "WIP Items" %}<span data-bs-toggle="tooltip"
@@ -195,8 +186,8 @@
                                                                         title="{{ tt_wip|safe }}">
   <i class="fa-solid fa-circle-info ms-1 text-secondary"></i>
 </span></div>
-                    <div class="kpi-value" id="kpiWip">—</div>
-                    <div class="kpi-sub" id="kpiWipSub">—</div>
+                    <div class="kpi-value" id="kpiWip">-</div>
+                    <div class="kpi-sub" id="kpiWipSub">-</div>
                 </div>
             </div>
 
@@ -205,7 +196,7 @@
 {% blocktrans trimmed asvar tt_aging_wip %}
 <strong>Aging WIP &gt; 10 jours</strong><br>
 Nombre de tickets en cours depuis plus de 10 jours.<br>
-Un volume élevé indique un risque de blocage ou de dispersion du travail.
+Un volume eleve indique un risque de blocage ou de dispersion du travail.
 {% endblocktrans %}
                     <div class="kpi-title">{% trans "Aging WIP > 10d" %}<span data-bs-toggle="tooltip"
       data-bs-placement="top"
@@ -213,15 +204,15 @@ Un volume élevé indique un risque de blocage ou de dispersion du travail.
       title="{{ tt_aging_wip|safe }}">
   <i class="fa-solid fa-circle-info ms-1 text-secondary"></i>
 </span></div>
-                    <div class="kpi-value" id="kpiAging">—</div>
-                    <div class="kpi-sub" id="kpiAgingSub">—</div>
+                    <div class="kpi-value" id="kpiAging">-</div>
+                    <div class="kpi-sub" id="kpiAgingSub">-</div>
                 </div>
             </div>
 
             <div class="col-12 col-md-6 col-xl-2">
                 <div class="card p-3 h-100">
 {% blocktrans trimmed asvar tt_cycle %}
-    <strong>Cycle Time (P50)</strong><br>Temps médian nécessaire pour terminer un ticket à partir du premier statut <em>In Progress</em>.<br>Le P50 signifie que 50% des tickets sont terminés en moins de cette durée.
+    <strong>Cycle Time (P50)</strong><br>Temps median necessaire pour terminer un ticket a partir du premier statut <em>In Progress</em>.<br>Le P50 signifie que 50% des tickets sont termines en moins de cette duree.
 {% endblocktrans %}
                     <div class="kpi-title">{% trans "Cycle Time (P50)" %}<span data-bs-toggle="tooltip"
       data-bs-placement="top"
@@ -229,7 +220,7 @@ Un volume élevé indique un risque de blocage ou de dispersion du travail.
       title="{{ tt_cycle|safe }}">
   <i class="fa-solid fa-circle-info ms-1 text-secondary"></i>
 </span></div>
-                    <div class="kpi-value" id="kpiCycle">—</div>
+                    <div class="kpi-value" id="kpiCycle">-</div>
                     <div class="kpi-sub">{% trans "business days" %}</div>
                 </div>
             </div>
@@ -238,8 +229,8 @@ Un volume élevé indique un risque de blocage ou de dispersion du travail.
                 <div class="card p-3 h-100">
 {% blocktrans trimmed asvar tt_lead %}
 <strong>Lead Time (P50)</strong><br>
-Temps médian entre la création d’un ticket et sa finalisation.<br>
-Il reflète l’expérience réelle du client.
+Temps median entre la creation d'un ticket et sa finalisation.<br>
+Il reflete l'experience reelle du client.
 {% endblocktrans %}
                     <div class="kpi-title">{% trans "Lead Time (P50)" %}<span data-bs-toggle="tooltip"
       data-bs-placement="top"
@@ -247,7 +238,7 @@ Il reflète l’expérience réelle du client.
       title="{{ tt_lead|safe }}">
   <i class="fa-solid fa-circle-info ms-1 text-secondary"></i>
 </span></div>
-                    <div class="kpi-value" id="kpiLead">—</div>
+                    <div class="kpi-value" id="kpiLead">-</div>
                     <div class="kpi-sub">{% trans "business days" %}</div>
                 </div>
             </div>
@@ -256,8 +247,8 @@ Il reflète l’expérience réelle du client.
                 <div class="card p-3 h-100">
 {% blocktrans trimmed asvar tt_throughput %}
 <strong>Throughput (7 jours)</strong><br>
-Nombre de tickets terminés au cours des 7 derniers jours.<br>
-Indicateur clé de capacité et de stabilité du flux.
+Nombre de tickets termines au cours des 7 derniers jours.<br>
+Indicateur cle de capacite et de stabilite du flux.
 {% endblocktrans %}
                     <div class="kpi-title">{% trans "Throughput (7d)" %}<span data-bs-toggle="tooltip"
       data-bs-placement="top"
@@ -265,7 +256,7 @@ Indicateur clé de capacité et de stabilité du flux.
       title="{{ tt_throughput|safe }}">
   <i class="fa-solid fa-circle-info ms-1 text-secondary"></i>
 </span></div>
-                    <div class="kpi-value" id="kpiThroughput">—</div>
+                    <div class="kpi-value" id="kpiThroughput">-</div>
                     <div class="kpi-sub">{% trans "done items" %}</div>
                 </div>
             </div>
@@ -275,12 +266,11 @@ Indicateur clé de capacité et de stabilité du flux.
                     <div class="kpi-title">{% trans "Flow Efficiency" %}
                         {% blocktrans trimmed asvar flow_eff_tooltip %}
                             <strong>Flow efficiency</strong><br>
-                            Part du temps où le ticket est <em>réellement travaillé</em> (cycle time)
-                            par rapport au temps total entre création et fin (lead time).<br>
-                            <strong>Bas</strong> : beaucoup d’attente ·
+                            Part du temps ou le ticket est <em>reellement travaille</em> (cycle time)
+                            par rapport au temps total entre creation et fin (lead time).<br>
+                            <strong>Bas</strong> : beaucoup d'attente.
                             <strong>Haut</strong> : flux fluide.
                         {% endblocktrans %}
-
                         <span class="text-secondary ms-1"
                               data-bs-toggle="tooltip"
                               data-bs-placement="top"
@@ -288,13 +278,12 @@ Indicateur clé de capacité et de stabilité du flux.
                               title="{{ flow_eff_tooltip|safe }}">
   <i class="fa-solid fa-circle-info"></i>
 </span></div>
-                    <div class="kpi-value" id="kpiFlowEff">—</div>
+                    <div class="kpi-value" id="kpiFlowEff">-</div>
                     <div class="kpi-sub">{% trans "cycle / lead" %}</div>
                 </div>
             </div>
         </div>
 
-        <!-- Charts row -->
         <div class="row g-3 mb-3">
             <div class="col-12 col-xl-7">
                 <div class="card p-3 h-100">
@@ -316,26 +305,24 @@ Indicateur clé de capacité et de stabilité du flux.
 
                     <div id="wiaChartWrap">
                         <canvas id="wiaChart"></canvas>
-
                         <div id="chartTooltip">
                             <div class="tt-card">
                                 <div class="tt-title">
-                                    <span id="ttKey">—</span>
-                                    <span id="ttAge" class="badge text-bg-dark badge-age">—</span>
+                                    <span id="ttKey">-</span>
+                                    <span id="ttAge" class="badge text-bg-dark badge-age">-</span>
                                 </div>
-                                <div id="ttTitle" class="small mb-2 text-dark">—</div>
+                                <div id="ttTitle" class="small mb-2 text-dark">-</div>
                                 <div class="tt-meta">
-                                    <span class="me-2">{% trans "Status" %}: <strong id="ttStatus">—</strong></span>
+                                    <span class="me-2">{% trans "Status" %}: <strong id="ttStatus">-</strong></span>
                                 </div>
                                 <div class="tt-link">
-                                    <a id="ttLink" href="#" target="_blank"
-                                       rel="noopener noreferrer">{% trans "Open in Jira" %} →</a>
+                                    <a id="ttLink" href="#" target="_blank" rel="noopener noreferrer">{% trans "Open in Jira" %} -></a>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="text-secondary small mt-2" id="wiaHint">—</div>
+                    <div class="text-secondary small mt-2" id="wiaHint">-</div>
                 </div>
             </div>
 
@@ -373,7 +360,6 @@ Indicateur clé de capacité et de stabilité du flux.
             </div>
         </div>
 
-        <!-- DataTable row -->
         <div class="card p-3">
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
                 <div>
@@ -402,470 +388,21 @@ Indicateur clé de capacité et de stabilité du flux.
                 </table>
             </div>
 
-            <div class="text-secondary small mt-2" id="tableHint">—</div>
+            <div class="text-secondary small mt-2" id="tableHint">-</div>
         </div>
-
     </div>
 {% endblock %}
 
 {% block js %}
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            document.querySelectorAll('[data-bs-toggle="tooltip"]')
-                .forEach(el => new bootstrap.Tooltip(el));
-        });
+        window.DASHBOARD_PAGE = {
+            apiSummaryUrl: "/api/dashboard/summary/",
+            apiItemsUrl: "/api/dashboard/items/",
+            datatableLanguageUrl: DT_LANG_URL,
+            i18n: I18N,
+            fallbackSummary: typeof FALLBACK_SUMMARY !== "undefined" ? FALLBACK_SUMMARY : null,
+            fallbackItems: typeof FALLBACK_ITEMS !== "undefined" ? FALLBACK_ITEMS : null
+        };
     </script>
-    <script>
-        (() => {
-            // =========================
-            // API CONFIG
-            // =========================
-            const API_SUMMARY_URL = "/api/dashboard/summary/"; // -> {kpis, wia, bottlenecks, links}
-            const API_ITEMS_URL = "/api/dashboard/items/";   // -> {items: [...]}
-
-            // =========================
-            // DOM
-            // =========================
-            const badgeSummary = document.getElementById("statusSummaryBadge");
-            const badgeItems = document.getElementById("statusItemsBadge");
-            const reloadBtn = document.getElementById("reloadBtn");
-
-            // Tooltip DOM
-            const tooltipEl = document.getElementById("chartTooltip");
-            const ttKey = document.getElementById("ttKey");
-            const ttTitle = document.getElementById("ttTitle");
-            const ttStatus = document.getElementById("ttStatus");
-            const ttAge = document.getElementById("ttAge");
-            const ttLink = document.getElementById("ttLink");
-
-            // =========================
-            // Helpers
-            // =========================
-            function setBadge(badge, text, kind = "secondary") {
-                if (!badge) return;
-                badge.className = `badge text-bg-${kind}`;
-                badge.textContent = text;
-            }
-
-            function ageBadgeClass(days) {
-                if (days < 10) return "text-bg-success";
-                if (days < 20) return "text-bg-warning";
-                return "text-bg-danger";
-            }
-
-            function safeNum(v, fallback = 0) {
-                const n = Number(v);
-                return Number.isFinite(n) ? n : fallback;
-            }
-
-            async function loadJson(url) {
-                const res = await fetch(url, {headers: {"Accept": "application/json"}});
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                return await res.json();
-            }
-
-            // =========================
-            // Tooltip HTML (external)
-            // =========================
-            function hideTooltip() {
-                if (tooltipEl) tooltipEl.style.display = "none";
-            }
-
-            function externalTooltipHandler(context) {
-                const {chart, tooltip} = context;
-                if (!tooltipEl) return;
-
-                if (tooltip.opacity === 0) {
-                    hideTooltip();
-                    return;
-                }
-
-                const point = tooltip.dataPoints?.[0];
-                if (!point || point.dataset.type !== "scatter") {
-                    hideTooltip();
-                    return;
-                }
-
-                const raw = point.raw || {};
-                ttKey.textContent = raw.key ?? "—";
-                ttTitle.textContent = raw.title ?? "";
-                ttStatus.textContent = raw.status ?? "—";
-
-                const age = raw.y ?? raw.ageDays ?? "?";
-                const ageNum = safeNum(age, 999);
-                ttAge.textContent = `${ageNum} ${I18N.days}`;
-                ttAge.className = `badge badge-age ${ageBadgeClass(ageNum)}`;
-
-                // Lien tooltip = Jira (comme l'autre page)
-                const url = raw.url || "#";
-                ttLink.href = url;
-                ttLink.style.pointerEvents = (url === "#") ? "none" : "auto";
-                const xScale = chart.scales.x;
-                const yScale = chart.scales.y;
-                const xPix = xScale.getPixelForValue(point.parsed.x);
-                const yPix = yScale.getPixelForValue(point.parsed.y);
-                const rect = chart.canvas.getBoundingClientRect();
-                const OFFSET_Y = 200; // ajuste à goût
-                const OFFSET_X = 0;
-                tooltipEl.style.left = (window.scrollX + rect.left + xPix + OFFSET_X) + "px";
-                tooltipEl.style.top = (window.scrollY + rect.top + yPix - OFFSET_Y) + "px";
-                tooltipEl.style.display = "block";
-            }
-
-            // =========================
-            // Loaders with fallback
-            // =========================
-            async function loadSummary() {
-                setBadge(badgeSummary, I18N.loading, "secondary");
-                try {
-                    const data = await loadJson(API_SUMMARY_URL);
-                    setBadge(badgeSummary, I18N.ok_api, "success");
-                    return data;
-                } catch (e) {
-                    console.warn("summary fallback", e);
-                    setBadge(badgeSummary, I18N.fallback, "warning");
-                    return (typeof FALLBACK_SUMMARY !== "undefined") ? FALLBACK_SUMMARY : {
-                        kpis: {},
-                        wia: {items: []},
-                        bottlenecks: [],
-                        links: {}
-                    };
-                }
-            }
-
-            async function loadItems() {
-                setBadge(badgeItems, I18N.loading, "secondary");
-                try {
-                    const data = await loadJson(API_ITEMS_URL);
-                    setBadge(badgeItems, "Issues - " + I18N.ok_api, "success");
-                    return data;
-                } catch (e) {
-                    console.warn("items fallback", e);
-                    setBadge(badgeItems, I18N.fallback, "warning");
-                    return (typeof FALLBACK_ITEMS !== "undefined") ? FALLBACK_ITEMS : {items: []};
-                }
-            }
-
-            // =========================
-            // KPI render
-            // =========================
-            function renderKpis(k) {
-                const wip = document.getElementById("kpiWip");
-                const wipSub = document.getElementById("kpiWipSub");
-                const aging = document.getElementById("kpiAging");
-                const agingSub = document.getElementById("kpiAgingSub");
-                const cycle = document.getElementById("kpiCycle");
-                const lead = document.getElementById("kpiLead");
-                const thr = document.getElementById("kpiThroughput");
-                const fe = document.getElementById("kpiFlowEff");
-
-                if (wip) wip.textContent = k?.wip ?? "—";
-                if (wipSub) {
-                    wipSub.textContent = (k?.wip_delta != null)
-                    ? `${k.wip_delta >= 0 ? "+" : ""}${k.wip_delta} vs last week`
-                    : "—";
-                }
-                if (aging) aging.textContent = k?.aging_wip ?? "—";
-                if (agingSub) agingSub.textContent = (k?.aging_wip_pct != null)
-                    ? `${k.aging_wip_pct}% ${I18N.items}`
-                    : "—";
-
-                if (cycle) cycle.textContent = (k?.cycle_p50_days != null) ? `${k.cycle_p50_days}` : "—";
-                if (lead) lead.textContent = (k?.lead_p50_days != null) ? `${k.lead_p50_days}` : "—";
-                if (thr) thr.textContent = k?.throughput_7d ?? "—";
-                if (fe) fe.textContent = (k?.flow_eff_pct != null) ? `${k.flow_eff_pct}%` : "—";
-            }
-
-            // =========================
-            // Bottlenecks table
-            // =========================
-            function renderBottlenecks(rows, links) {
-                const tbody = document.querySelector("#bottlenecksTable tbody");
-                if (!tbody) return;
-                tbody.innerHTML = "";
-
-                (rows || []).forEach(r => {
-                    const tr = document.createElement("tr");
-                    tr.innerHTML = `
-            <td class="fw-semibold">${r.status ?? ""}</td>
-            <td class="text-end">${r.count ?? ""}</td>
-            <td class="text-end">${r.avgAge ?? ""}</td>
-            <td class="text-end">${r.maxAge ?? ""}</td>
-          `;
-                    tbody.appendChild(tr);
-                });
-
-                const btn = document.getElementById("bottlenecksOpenJira");
-                if (btn) btn.href = links?.open_jira_bottlenecks || "#";
-            }
-
-            // =========================
-            // WIA Chart (single instance)
-            // =========================
-            let wiaChart = null;
-
-            // Register count plugin once
-            const CountPlugin = {
-                id: "countPluginWia",
-                afterDatasetsDraw(chart, args, pluginOptions) {
-                    const statuses = pluginOptions?.statuses || [];
-                    const counts = pluginOptions?.counts || {};
-                    if (!statuses.length) return;
-
-                    const {ctx, scales: {x}, chartArea} = chart;
-                    ctx.save();
-                    ctx.font = "12px system-ui";
-                    ctx.fillStyle = "#495057";
-                    ctx.textAlign = "center";
-                    ctx.textBaseline = "top";
-
-                    const yTopInside = chartArea.top + 6;
-                    statuses.forEach((s, i) => {
-                        const xPos = x.getPixelForValue(i);
-                        const n = counts[s] ?? 0;
-                        ctx.fillText(`${n} ${I18N.items}`, xPos, yTopInside);
-                    });
-
-                    ctx.restore();
-                }
-            };
-            Chart.register(CountPlugin);
-
-            function buildWiaChart(wia, links) {
-                const items = wia?.items || [];
-                const statuses = (Array.isArray(wia?.statuses) && wia.statuses.length)
-                    ? wia.statuses
-                    : [...new Set(items.map(i => i.status).filter(Boolean))];
-
-                const statusIndex = Object.fromEntries(statuses.map((s, i) => [s, i]));
-
-                const filteredItems = items.filter(it => statusIndex[it.status] !== undefined);
-
-                const counts = Object.fromEntries(statuses.map(s => [s, 0]));
-                items.forEach(it => {
-                    if (it.status in counts) counts[it.status]++;
-                });
-
-                const maxAge = items.length ? Math.max(...items.map(i => safeNum(i.ageDays, 0))) : 0;
-                const MAX_Y = maxAge + (wia?.maxYPad ?? 10);
-
-                function makeBarPoints(height) {
-                    return statuses.map((_, i) => ({x: i, y: height}));
-                }
-
-                const scatterData = filteredItems.map(it => ({
-                    x: statusIndex[it.status],
-                    y: safeNum(it.ageDays, 0),
-                    key: it.key,
-                    title: it.title || "",
-                    status: it.status,
-                    url: it.url || "#",
-                    detail_url: it.detail_url || "#",
-                    assignee: it.assignee || "—",
-                }));
-
-                const ctx = document.getElementById("wiaChart");
-                if (!ctx) return;
-
-                // (re)create chart
-                if (wiaChart) wiaChart.destroy();
-                hideTooltip();
-
-                wiaChart = new Chart(ctx, {
-                    data: {
-                        datasets: [
-                            {
-                                type: "bar",
-                                label: "0–10",
-                                data: makeBarPoints(10),
-                                backgroundColor: "rgba(46,204,113,0.35)",
-                                stack: "zones",
-                                order: 2,
-                                barThickness: 36,
-                                borderWidth: 0
-                            },
-                            {
-                                type: "bar",
-                                label: "10–20",
-                                data: makeBarPoints(10),
-                                backgroundColor: "rgba(243,156,18,0.35)",
-                                stack: "zones",
-                                order: 2,
-                                barThickness: 36,
-                                borderWidth: 0
-                            },
-                            {
-                                type: "bar",
-                                label: "20–50",
-                                data: makeBarPoints(30),
-                                backgroundColor: "rgba(231,76,60,0.35)",
-                                stack: "zones",
-                                order: 2,
-                                barThickness: 36,
-                                borderWidth: 0
-                            },
-                            {
-                                type: "scatter",
-                                label: "Items",
-                                data: scatterData,
-                                pointRadius: 4.5,
-                                pointHoverRadius: 7,
-                                backgroundColor: "#111",
-                                borderColor: "#111",
-                                order: 1
-                            },
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        layout: {padding: {top: 24}},
-                        interaction: {mode: "nearest", intersect: false},
-                        plugins: {
-                            legend: {position: "bottom"},
-                            tooltip: {enabled: false, external: externalTooltipHandler},
-                            countPluginWia: {statuses, counts},
-                        },
-                        onClick: (evt) => {
-                            const pts = wiaChart.getElementsAtEventForMode(evt, "nearest", {intersect: false}, true);
-                            if (!pts.length) return;
-                            const el = pts[0];
-                            const ds = wiaChart.data.datasets[el.datasetIndex];
-                            if (ds.type !== "scatter") return;
-                            const raw = ds.data[el.index];
-                            const href = raw?.url;
-                            if (href && href !== "#") window.open(href, "_blank", "noopener,noreferrer");
-                        },
-                        onHover: (event, elements, chart) => {
-                            const canvas = chart.canvas;
-                            canvas.style.cursor = elements.length ? "pointer" : "default";
-                        },
-                        scales: {
-                            x: {
-                                type: "linear",
-                                min: -0.6,
-                                max: Math.max(0, statuses.length - 0.4),
-                                ticks: {stepSize: 1, callback: (v) => statuses[v] ?? ""},
-                                grid: {display: false}
-                            },
-                            y: {
-                                stacked: true,
-                                beginAtZero: true,
-                                max: MAX_Y,
-                                title: {display: true, text: I18N.work_item_age + " (" + I18N.days + ")"}
-                            }
-                        }
-                    }
-                });
-
-                // Bonus: close tooltip on leave (bind once)
-                if (!ctx.dataset.tooltipBound) {
-                    ctx.addEventListener("mouseleave", hideTooltip);
-                    ctx.addEventListener("touchend", hideTooltip);
-                    ctx.dataset.tooltipBound = "1";
-                }
-
-                // Links + hint
-                const wiaBtnTop = document.getElementById("wiaOpenJiraTop");
-                const wiaBtnCard = document.getElementById("wiaOpenJiraCard");
-                const openWia = links?.open_jira_wia || wia?.open_jira_url || "#";
-                if (wiaBtnTop) wiaBtnTop.href = openWia;
-                if (wiaBtnCard) wiaBtnCard.href = openWia;
-
-                const hint = document.getElementById("wiaHint");
-                if (hint) hint.textContent = statuses.length
-                    ? `${statuses.length} ${I18N.status} / ${items.length} ${I18N.items}`
-                    : "—";
-            }
-
-            // =========================
-            // DataTable: Top aging items
-            // =========================
-            let dt = null;
-
-            function renderDataTable(items, links) {
-                const sorted = [...(items || [])].sort((a, b) => (safeNum(b.ageDays, 0) - safeNum(a.ageDays, 0)));
-
-                const btn = document.getElementById("agingOpenJira");
-                if (btn) btn.href = links?.open_jira_aging || "#";
-
-                const hint = document.getElementById("tableHint");
-                if (hint) hint.textContent = `${sorted.length} ${I18N.items}`;
-
-                if (dt) {
-                    dt.destroy();
-                    $("#agingTable tbody").empty();
-                }
-
-                dt = $("#agingTable").DataTable({
-                    data: sorted,
-                    responsive: true,
-                    pageLength: 10,
-                    lengthMenu: [10, 25, 50, 100],
-                    order: [[3, "desc"]],
-                    language: {url: DT_LANG_URL},
-                    columns: [
-                        {
-                            data: "key",
-                            render: (data, type, row) => {
-                                if (type !== "display") return data;
-                                const href = row.detail_url || "#";
-                                return `<a class="fw-semibold text-decoration-none mono" href="${href}">${data}</a>`;
-                            }
-                        },
-                        {data: "title", defaultContent: ""},
-                        {data: "status", defaultContent: ""},
-                        {
-                            data: "ageDays",
-                            className: "text-end",
-                            render: (data, type) => {
-                                const v = safeNum(data, 0);
-                                if (type !== "display") return v;
-                                return `<span class="badge ${ageBadgeClass(v)}">${v}</span>`;
-                            }
-                        },
-                        {data: "assignee", defaultContent: "—"},
-                        {
-                            data: "url",
-                            orderable: false,
-                            searchable: false,
-                            className: "text-end",
-                            render: (data, type, row) => {
-                                const jira = row.url || "#";
-                                return `
-                  <div class="btn-group btn-group-sm" role="group">
-                    <a class="btn btn-outline-primary" href="${jira}" target="_blank" rel="noopener noreferrer" title="${I18N.open_in_jira}">
-                      <i class="fa-brands fa-jira"></i>
-                    </a>
-                    <a class="btn btn-outline-secondary" href="${row.detail_url || '#'}" title="${I18N.view_details}">
-                      <i class="fa-solid fa-up-right-from-square"></i>
-                    </a>
-                  </div>`;
-                            }
-                        }
-                    ]
-                });
-            }
-
-            // =========================
-            // Render orchestrator
-            // =========================
-            async function render() {
-                const summary = await loadSummary();
-                const itemsPayload = await loadItems();
-
-                const links = summary?.links || {};
-
-                renderKpis(summary?.kpis || {});
-                renderBottlenecks(summary?.bottlenecks || [], links);
-                buildWiaChart(summary?.wia || {}, links);
-                renderDataTable(itemsPayload?.items || [], links);
-
-                setBadge(badgeSummary, I18N.ok_api, "success");
-            }
-
-            if (reloadBtn) reloadBtn.addEventListener("click", render);
-            render();
-        })();
-    </script>
+    <script src="{% static 'js/dashboard.js' %}"></script>
 {% endblock %}

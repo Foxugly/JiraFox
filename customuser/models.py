@@ -1,7 +1,6 @@
-from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
-from jiramodule.models import JiraConfiguration
+from django.db import models
 
 
 class CustomUser(AbstractUser):
@@ -11,3 +10,6 @@ class CustomUser(AbstractUser):
         choices=settings.LANGUAGES,
         default=getattr(settings, "LANGUAGE_CODE", "en"),
     )
+
+    def __str__(self) -> str:
+        return self.get_username()

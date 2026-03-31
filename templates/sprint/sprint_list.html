@@ -2,150 +2,110 @@
 {% load i18n datetime_filters %}
 
 {% block header %}
-    <link rel="stylesheet"
-          href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 {% endblock %}
 
 {% block title %}JiraFox - Sprint{% endblock %}
 
-
 {% block content %}
-
-    <div class="d-flex justify-content-between align-items-center">
-        <a class="btn btn-sm btn-outline-secondary" href="{% url 'home' %}">
-            <i class="fa-solid fa-arrow-left me-2"></i>{% trans "Back" %}
-        </a>
-        <h2 class="mb-0">
-            Sprints
-        </h2>
-        <!-- ===== Filtres ===== -->
-        <form method="get" class="mb-3">
-
-            <div class="btn-group" role="group" aria-label="Filter states">
-
-                <!-- ACTIVE -->
-                <input type="checkbox" class="btn-check" id="filter-active"
-                       name="state" value="active"
-                       {% if "active" in selected_states %}checked{% endif %}>
-                <label class="btn btn-outline-success" for="filter-active">
-                    Active
-                </label>
-
-                <!-- FUTURE -->
-                <input type="checkbox" class="btn-check" id="filter-future"
-                       name="state" value="future"
-                       {% if "future" in selected_states %}checked{% endif %}>
-                <label class="btn btn-outline-info" for="filter-future">
-                    Future
-                </label>
-
-                <!-- CLOSED -->
-                <input type="checkbox" class="btn-check" id="filter-closed"
-                       name="state" value="closed"
-                       {% if "closed" in selected_states %}checked{% endif %}>
-                <label class="btn btn-outline-secondary" for="filter-closed">
-                    Closed
-                </label>
-
+    <section class="page-shell glass-panel section-stack">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+            <div>
+                <span class="page-kicker">
+                    <i class="fa-brands fa-trello"></i>
+                    {% trans "Sprint map" %}
+                </span>
+                <h1 class="hero-title fs-1 mt-3 mb-2">{% trans "Sprints" %}</h1>
+                <p class="text-secondary mb-0">
+                    {% trans "Filtrer les cycles visibles, parcourir l'historique et ouvrir directement le sprint utile." %}
+                </p>
             </div>
 
-            <button type="submit" class="btn btn-primary ms-3">Filtrer</button>
-        </form>
-    </div>
+            <a class="btn btn-outline-secondary" href="{% url 'home' %}">
+                <i class="fa-solid fa-arrow-left me-2"></i>{% trans "Back" %}
+            </a>
+        </div>
 
+        <div class="content-panel">
+            <form method="get" class="d-flex flex-wrap align-items-center gap-3">
+                <div class="btn-group" role="group" aria-label="Filter states">
+                    <input type="checkbox" class="btn-check" id="filter-active" name="state" value="active"
+                           {% if "active" in selected_states %}checked{% endif %}>
+                    <label class="btn btn-outline-primary" for="filter-active">{% trans "Active" %}</label>
 
-    <!-- ===== TABLEAU ===== -->
-    <table id="sprintsTable" class="table table-striped table-bordered table-hover mt-3">
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>Nom</th>
-            <th>État</th>
-            <th>Début</th>
-            <th>Fin</th>
-            <th>Boutons</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for sprint in sprints %}
-            <tr>
-                <td><a href="{% url 'sprint-detail' sprint.id %}">{{ sprint.id }}</a></td>
-                <td>{{ sprint.name }}</td>
-                <td>
-                    <span class="badge
-                        {% if sprint.state == 'active' %}bg-success
-                        {% elif sprint.state == 'future' %}bg-info
-                        {% else %}bg-secondary{% endif %}
-                    ">
-                        {{ sprint.state }}
-                    </span>
-                </td>
-                <td>{{ sprint.startDate|format_jira_date:"%d/%m/%Y" }}</td>
-                <td>{{ sprint.endDate|format_jira_date:"%d/%m/%Y" }}</td>
-                <td>
-                    <div class="btn-group btn-group-sm" role="group">
-                        <a class="btn btn-sm btn-outline-primary" href="{{ sprint.url}}"
-                           target="_blank" rel="noopener noreferrer">
-                            <i class="fa-brands fa-jira"></i>
-                        </a>
-                        <a class="btn btn-outline-secondary" href="{% url "sprint-detail" sprint.id %}">
-                            <i class="fa-solid fa-up-right-from-square"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
-        {% empty %}
-            <tr>
-                <td colspan="6" class="text-center text-muted">
-                    Aucun sprint trouvé
-                </td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+                    <input type="checkbox" class="btn-check" id="filter-future" name="state" value="future"
+                           {% if "future" in selected_states %}checked{% endif %}>
+                    <label class="btn btn-outline-primary" for="filter-future">{% trans "Future" %}</label>
 
-    <!-- Pagination -->
-    {% if is_paginated %}
-        <nav>
-            <ul class="pagination justify-content-center">
-                {% if page_obj.has_previous %}
-                    <li class="page-item">
-                        <a class="page-link"
-                           href="?page={{ page_obj.previous_page_number }}&state={{ selected_states|join:',' }}">Précédent</a>
-                    </li>
-                {% endif %}
+                    <input type="checkbox" class="btn-check" id="filter-closed" name="state" value="closed"
+                           {% if "closed" in selected_states %}checked{% endif %}>
+                    <label class="btn btn-outline-primary" for="filter-closed">{% trans "Closed" %}</label>
+                </div>
 
-                <li class="page-item active">
-                <span class="page-link">
-                    Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
-                </span>
-                </li>
+                <button type="submit" class="btn btn-primary">{% trans "Filter" %}</button>
+            </form>
+        </div>
 
-                {% if page_obj.has_next %}
-                    <li class="page-item">
-                        <a class="page-link"
-                           href="?page={{ page_obj.next_page_number }}&state={{ selected_states|join:',' }}">Suivant</a>
-                    </li>
-                {% endif %}
-            </ul>
-        </nav>
-    {% endif %}
-
+        <div class="content-panel">
+            <div class="table-responsive">
+                <table id="sprintsTable" class="table align-middle mb-0">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>{% trans "Name" %}</th>
+                        <th>{% trans "State" %}</th>
+                        <th>{% trans "Start" %}</th>
+                        <th>{% trans "End" %}</th>
+                        <th class="text-end">{% trans "Actions" %}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for sprint in sprints %}
+                        <tr>
+                            <td><a class="fw-semibold text-decoration-none" href="{% url 'sprint-detail' sprint.id %}">{{ sprint.id }}</a></td>
+                            <td>{{ sprint.name }}</td>
+                            <td>
+                                <span class="badge {% if sprint.state == 'active' %}text-bg-success{% elif sprint.state == 'future' %}text-bg-warning{% else %}text-bg-secondary{% endif %}">
+                                    {{ sprint.state }}
+                                </span>
+                            </td>
+                            <td>{{ sprint.startDate|format_jira_date:"%d/%m/%Y" }}</td>
+                            <td>{{ sprint.endDate|format_jira_date:"%d/%m/%Y" }}</td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a class="btn btn-outline-primary" href="{{ sprint.url }}"
+                                       target="_blank" rel="noopener noreferrer">
+                                        <i class="fa-brands fa-jira"></i>
+                                    </a>
+                                    <a class="btn btn-outline-secondary" href="{% url 'sprint-detail' sprint.id %}">
+                                        <i class="fa-solid fa-up-right-from-square"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">{% trans "No sprint found" %}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
 {% endblock %}
 
 {% block js %}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-
     <script>
         $(document).ready(function () {
             $('#sprintsTable').DataTable({
-                "pageLength": 25,
-                "order": [[0, "asc"]],
-                "language": {
-                    "url": "https://cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json"
+                pageLength: 25,
+                order: [[0, "asc"]],
+                language: {
+                    url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json"
                 }
             });
         });

@@ -1,40 +1,76 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}JiraFox{% endblock %}</title>
-
-    <!-- Bootstrap 5 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap"
+          rel="stylesheet">
     <link rel="stylesheet"
-            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-
-{%  block header %}{% endblock %}
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    {% block header %}{% endblock %}
 </head>
-
-<body class="d-flex flex-column min-vh-100">
-
+<body class="d-flex flex-column min-vh-100 {% block body_class %}site-shell{% endblock %}">
 {% include "includes/header.html" %}
 {% if messages %}
-    <div class="container mt-3">
+    <div class="site-main mt-3">
         {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} mb-2" role="alert">
+            <div class="alert alert-{{ message.tags }} mb-2 glass-panel" role="alert">
                 {{ message }}
             </div>
         {% endfor %}
     </div>
 {% endif %}
-<main class="fluid-container mx-4 my-4">
-    {% block content %}
-    {% endblock %}
+<main class="site-main">
+    {% block content %}{% endblock %}
 </main>
-
+<div id="appToastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1085;"></div>
+<div class="modal fade" id="appConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="appConfirmTitle">Confirmation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="appConfirmMessage" class="mb-0"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-action="cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" data-action="confirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="appPromptModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="appPromptForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="appPromptTitle">Input</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <label for="appPromptInput" id="appPromptLabel" class="form-label">Value</label>
+                    <input id="appPromptInput" name="value" class="form-control" autocomplete="off">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-action="cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary" data-action="confirm">Confirm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% include "includes/footer.html" %}
-
-<script
-        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js">
-</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'js/app-ui.js' %}"></script>
 {% block js %}{% endblock %}
 </body>
 </html>

@@ -1,24 +1,96 @@
 {% extends "base.html" %}
 {% load static i18n %}
 
-{% block header %}
-    <link rel="stylesheet"
-          href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-    <style>
+{% block title %}JiraFox - Team {{ team.name }}{% endblock %}
 
+{% block content %}
+    <section class="page-shell glass-panel section-stack">
+        {% include "sprint/sprint_header.html" %}
+
+        <div class="page-hero">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                <div>
+                    <span class="page-kicker">
+                        <i class="fa-regular fa-file-excel"></i>
+                        {% trans "Capacity sheet" %}
+                    </span>
+                    <h1 class="hero-title fs-1 mt-3 mb-2">{% trans "Team" %} {{ team.name }}</h1>
+                    <p class="text-secondary mb-0">{% trans "Ajuster la capacite, les conges et les temps recurrents avant generation du fichier." %}</p>
+                </div>
+                <div>
+                    <button id="add-dev-btn" class="btn btn-primary btn-sm" data-create-url="{% url 'create_dev' team.id %}">
+                        <i class="fa-solid fa-plus me-2"></i>{% trans "Ajouter un dev" %}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="utility-panel">
+            <div class="table-responsive">
+                <table id="dev-table" class="table align-middle"
+                       data-reorder-url="{% url 'reorder_teamdevs' team.id %}">
+                    <thead>
+                    <tr id="dev-header">
+                        <th class="text-muted" style="min-width: 100px;">&nbsp;</th>
+                        {% for td in teamdevs %}
+                            <th class="dev-col" draggable="true" data-teamdev-id="{{ td.id }}" data-dev-id="{{ td.dev.id }}" style="min-width: 120px;">
+                                <div class="fw-semibold"><i class="fa-solid fa-grip-vertical me-1"></i>{{ td.dev.name }}</div>
+                                <div class="dev-actions">
+                                    <button class="btn btn-outline-danger btn-sm delete-dev" title="{% trans 'Retirer de la team' %}" data-delete-url="{% url 'delete_dev_from_team' td.id %}">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+                            </th>
+                        {% endfor %}
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td class="fw-bold">{% trans "Workload" %}</td>
+                        {% for td in teamdevs %}<td><input type="number" class="form-control form-control-sm dev-input" data-update-url="{% url 'update_dev' td.dev.id %}" data-field="workload" value="{{ td.dev.workload }}"></td>{% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">{% trans "Holidays" %}</td>
+                        {% for td in teamdevs %}<td><input type="number" class="form-control form-control-sm dev-input" data-update-url="{% url 'update_dev' td.dev.id %}" data-field="holidays" value="{{ td.dev.holidays }}"></td>{% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">{% trans "Fastlane" %}</td>
+                        {% for td in teamdevs %}<td><input type="number" class="form-control form-control-sm dev-input" data-update-url="{% url 'update_dev' td.dev.id %}" data-field="fastlane" value="{{ td.dev.fastlane }}"></td>{% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">{% trans "Project meetings" %}</td>
+                        {% for td in teamdevs %}<td><input type="number" class="form-control form-control-sm dev-input" data-update-url="{% url 'update_dev' td.dev.id %}" data-field="project_meetings" value="{{ td.dev.project_meetings }}"></td>{% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">{% trans "Other meetings" %}</td>
+                        {% for td in teamdevs %}<td><input type="number" class="form-control form-control-sm dev-input" data-update-url="{% url 'update_dev' td.dev.id %}" data-field="other_meetings" value="{{ td.dev.other_meetings }}"></td>{% endfor %}
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <form id="csrf-form" class="d-none">{% csrf_token %}</form>
+            <a class="btn btn-primary mt-3" href="{% url 'sprint-xls-export' sprint_id %}">
+                <i class="fa-regular fa-file-excel me-2"></i>{% trans "Generer le Capacity Sheet" %}
+            </a>
+        </div>
+    </section>
+{% endblock %}
+
+{% block header %}
+    <style>
         th.dev-col {
             cursor: move;
             white-space: nowrap;
             position: sticky;
             top: 0;
-            background: #fff;
-            z-index: 5; /* au-dessus du reste */
+            background: rgba(255, 250, 242, 0.98);
+            z-index: 5;
             min-width: 120px;
             max-width: 150px;
             overflow: hidden;
             text-overflow: ellipsis;
         }
-
         th.dev-col .dev-actions {
             position: absolute;
             top: 4px;
@@ -34,305 +106,9 @@
             width: 100%;
             max-width: 90px;
         }
-        .table-sticky thead th {
-            position: sticky;
-            top: 0;
-            background: #fff;
-            z-index: 2;
-        }
     </style>
 {% endblock %}
 
-{% block title %}JiraFox - Team {{ team.name }}{% endblock %}
-
-{% block content %}
-<div class="container-fluid py-3">
-
-    {% include "sprint/sprint_header.html" %}
-    <div class="d-flex align-items-center justify-content-between mb-3">
-        <div></div>
-        <h3 class="mb-0">
-            Capacity Sheet - {% trans "Team" %} : {{ team.name }}
-        </h3>
-        <div>
-            <button id="add-dev-btn"
-                    class="btn btn-primary btn-sm"
-                    data-create-url="{% url 'create_dev' team.id %}">
-                <i class="fa-solid fa-plus me-2"></i>{% trans "Ajouter un dev" %}
-            </button>
-        </div>
-    </div>
-
-    <div class="table-responsive">
-        <table id="dev-table" class="table table-bordered table-striped table-sticky"
-               data-reorder-url="{% url 'reorder_teamdevs' team.id %}">
-            <thead>
-                <tr id="dev-header">
-                    <th class="text-muted" style="min-width: 100px;">&nbsp;</th>
-                    {% for td in teamdevs %}
-                        <th class="dev-col"
-                            draggable="true"
-                            data-teamdev-id="{{ td.id }}"
-                            data-dev-id="{{ td.dev.id }}"
-                            style="min-width: 120px;">
-                            <div class="fw-semibold"><i class="fa-solid fa-grip-vertical me-1"></i>{{ td.dev.name }}</div>
-                            <div class="dev-actions">
-                                <button class="btn btn-outline-danger btn-sm delete-dev"
-                                        title="{% trans 'Retirer de la team' %}"
-                                        data-delete-url="{% url 'delete_dev_from_team' td.id %}">
-                                    <i class="fa-solid fa-trash"></i>
-                                </button>
-                            </div>
-                        </th>
-                    {% endfor %}
-                </tr>
-            </thead>
-
-            <tbody>
-                {# Row: Workload #}
-                <tr>
-                    <td class="fw-bold">{% trans "Workload" %}</td>
-                    {% for td in teamdevs %}
-                        <td>
-                            <input type="number"
-                                   class="form-control form-control-sm dev-input"
-                                   data-update-url="{% url 'update_dev' td.dev.id %}"
-                                   data-field="workload"
-                                   value="{{ td.dev.workload }}">
-                        </td>
-                    {% endfor %}
-                </tr>
-
-                {# Row: Holidays #}
-                <tr>
-                    <td class="fw-bold">{% trans "Holidays" %}</td>
-                    {% for td in teamdevs %}
-                        <td>
-                            <input type="number"
-                                   class="form-control form-control-sm dev-input"
-                                   data-update-url="{% url 'update_dev' td.dev.id %}"
-                                   data-field="holidays"
-                                   value="{{ td.dev.holidays }}">
-                        </td>
-                    {% endfor %}
-                </tr>
-
-                {# Row: Fastlane #}
-                <tr>
-                    <td class="fw-bold">{% trans "Fastlane" %}</td>
-                    {% for td in teamdevs %}
-                        <td>
-                            <input type="number"
-                                   class="form-control form-control-sm dev-input"
-                                   data-update-url="{% url 'update_dev' td.dev.id %}"
-                                   data-field="fastlane"
-                                   value="{{ td.dev.fastlane }}">
-                        </td>
-                    {% endfor %}
-                </tr>
-
-                {# Row: Project meetings #}
-                <tr>
-                    <td class="fw-bold">{% trans "Project meetings" %}</td>
-                    {% for td in teamdevs %}
-                        <td>
-                            <input type="number"
-                                   class="form-control form-control-sm dev-input"
-                                   data-update-url="{% url 'update_dev' td.dev.id %}"
-                                   data-field="project_meetings"
-                                   value="{{ td.dev.project_meetings }}">
-                        </td>
-                    {% endfor %}
-                </tr>
-
-                {# Row: Other meetings #}
-                <tr>
-                    <td class="fw-bold">{% trans "Other meetings" %}</td>
-                    {% for td in teamdevs %}
-                        <td>
-                            <input type="number"
-                                   class="form-control form-control-sm dev-input"
-                                   data-update-url="{% url 'update_dev' td.dev.id %}"
-                                   data-field="other_meetings"
-                                   value="{{ td.dev.other_meetings }}">
-                        </td>
-                    {% endfor %}
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-    {# CSRF token caché pour AJAX #}
-    <form id="csrf-form" class="d-none">{% csrf_token %}</form>
-<a class="btn btn-primary" href="{% url 'sprint-xls-export' sprint_id %}"> <i class="fa-solid fa-arrows-rotate me-2"></i>{% trans "Générer le Capacity Sheet" %}</a>
-</div>
-{% endblock %}
-
 {% block js %}
-<script>
-(function() {
-    // -- CSRF helper
-    function getCsrfToken() {
-        const el = document.querySelector('#csrf-form input[name=csrfmiddlewaretoken]');
-        return el ? el.value : '';
-    }
-    const CSRF = getCsrfToken();
-
-    // -- Inline save on change/blur
-    const inputs = document.querySelectorAll('#dev-table .dev-input');
-    inputs.forEach(input => {
-        const handler = async (ev) => {
-            const url = input.dataset.updateUrl;
-            const field = input.dataset.field;
-            const value = input.value;
-
-            const body = new URLSearchParams({ field, value });
-
-            try {
-                const res = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'X-CSRFToken': CSRF },
-                    body
-                });
-                if (!res.ok) throw new Error(await res.text());
-                input.classList.remove('is-invalid');
-                input.classList.add('is-valid');
-                setTimeout(() => input.classList.remove('is-valid'), 600);
-            } catch (e) {
-                input.classList.add('is-invalid');
-                console.error(e);
-            }
-        };
-        input.addEventListener('change', handler);
-        input.addEventListener('blur', handler);
-    });
-
-    // -- Add Dev
-    const addBtn = document.getElementById('add-dev-btn');
-    if (addBtn) {
-        addBtn.addEventListener('click', async () => {
-            const name = prompt("Nom du Dev ?");
-            if (!name) return;
-            try {
-                const res = await fetch(addBtn.dataset.createUrl, {
-                    method: 'POST',
-                    headers: { 'X-CSRFToken': CSRF },
-                    body: new URLSearchParams({ name })
-                });
-                if (!res.ok) throw new Error(await res.text());
-                // Simplicité : rechargement
-                window.location.reload();
-            } catch (e) {
-                alert("Erreur lors de la création du dev");
-                console.error(e);
-            }
-        });
-    }
-
-    // -- Delete (remove from team)
-    const deleteBtns = document.querySelectorAll('#dev-header .delete-dev');
-    deleteBtns.forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            e.stopPropagation();
-            if (!confirm("Retirer ce dev de la team ?")) return;
-            try {
-                const res = await fetch(btn.dataset.deleteUrl, {
-                    method: 'POST',
-                    headers: { 'X-CSRFToken': CSRF },
-                });
-                if (!res.ok) throw new Error(await res.text());
-                // Simplicité : rechargement
-                window.location.reload();
-            } catch (e) {
-                alert("Erreur lors de la suppression");
-                console.error(e);
-            }
-        });
-    });
-
-    // -- Drag & Drop columns (reorder TeamDev)
-    const headerRow = document.getElementById('dev-header');
-    let draggingTh = null;
-    let draggingIndex = -1;
-
-    function getThIndex(th) {
-        // Dans notre header : [0]=label (non déplaçable), [1..N]=dev cols
-        return Array.from(headerRow.children).indexOf(th);
-    }
-
-    function moveColumn(fromIndex, toIndex) {
-        if (fromIndex === toIndex) return;
-        const rows = document.querySelectorAll('#dev-table tr');
-        rows.forEach(row => {
-            const cells = Array.from(row.children);
-            const fromCell = cells[fromIndex];
-            const toCell = cells[toIndex];
-            if (fromIndex < toIndex) {
-                row.insertBefore(fromCell, toCell.nextSibling);
-            } else {
-                row.insertBefore(fromCell, toCell);
-            }
-        });
-    }
-
-    headerRow.addEventListener('dragstart', (e) => {
-        const th = e.target.closest('th.dev-col');
-        if (!th) return;
-        draggingTh = th;
-        draggingIndex = getThIndex(th);
-        th.classList.add('dragging');
-        e.dataTransfer.effectAllowed = 'move';
-        // Firefox needs data
-        e.dataTransfer.setData('text/plain', th.dataset.teamdevId || '');
-    });
-
-    headerRow.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        const overTh = e.target.closest('th.dev-col');
-        if (!overTh || overTh === draggingTh) return;
-
-        const overIndex = getThIndex(overTh);
-        // protéger la première colonne (index 0, label)
-        if (draggingIndex < 1 || overIndex < 1) return;
-
-        // on déplace visuellement pendant dragover pour feedback
-        moveColumn(draggingIndex, overIndex);
-        draggingIndex = overIndex;
-    });
-
-    headerRow.addEventListener('drop', async (e) => {
-        e.preventDefault();
-        if (!draggingTh) return;
-        draggingTh.classList.remove('dragging');
-
-        // Calculer le nouvel ordre des teamdev ids
-        const ths = Array.from(headerRow.querySelectorAll('th.dev-col'));
-        const ids = ths.map(th => th.dataset.teamdevId);
-
-        const reorderUrl = document.getElementById('dev-table').dataset.reorderUrl;
-        try {
-            const body = new URLSearchParams();
-            ids.forEach(id => body.append('ids[]', id));
-            const res = await fetch(reorderUrl, {
-                method: 'POST',
-                headers: { 'X-CSRFToken': CSRF },
-                body
-            });
-            if (!res.ok) throw new Error(await res.text());
-        } catch (err) {
-            console.error(err);
-            alert("Erreur lors de l'enregistrement de l'ordre");
-        } finally {
-            draggingTh = null;
-            draggingIndex = -1;
-        }
-    });
-
-    headerRow.addEventListener('dragend', () => {
-        if (draggingTh) draggingTh.classList.remove('dragging');
-        draggingTh = null;
-        draggingIndex = -1;
-    });
-})();
-</script>
+    <script src="{% static 'js/sprint-xls.js' %}"></script>
 {% endblock %}

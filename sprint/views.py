@@ -4,6 +4,7 @@ from django.http import HttpResponse, JsonResponse
 from django.views import View
 from django.views.decorators.http import require_GET
 from django.views.generic import ListView, TemplateView
+from JiraFox.services.issue_data import build_sprint_issue_item, get_issue_status
 from jiramodule.services.jira_config_service import get_connected_jira_for_user
 from jiramodule.status import CANONICAL_ORDER, STATUS_EXCLUDED
 from team.models import TeamDev
@@ -57,24 +58,12 @@ class SprintDetailView(LoginRequiredMixin, TemplateView):
 @login_required
 def get_api_sprint_issues(request, sprint_id: int) -> JsonResponse:
     jira = get_connected_jira_for_user(request.user)
-
     issues = jira.get_cached_sprint_issues(
         sprint_id,
         jql_extra=jira.JIRA_ONLY_STANDARD_TYPES,
         full=True,
     )
-
-    items = []
-    for i in issues:
-        items.append({
-            "key": i.get("key"),
-            "summary": i.get("summary") or "",
-            "issueType": i.get("issueType") or "",
-            "state": (i.get("state") or "").strip() or "Unknown",
-            "assignee": ((i.get("assignee") or {}) or {}).get("displayName") or "",
-            "url": i.get("url") or "",
-        })
-    return JsonResponse({"items": items})
+    return JsonResponse({"items": [build_sprint_issue_item(issue) for issue in issues]})
 
 
 class SprintKanbanView(LoginRequiredMixin, TemplateView):
@@ -154,7 +143,7 @@ def get_api_sprint_kanban_issues(request, sprint_id: int) -> JsonResponse:
     jira = get_connected_jira_for_user(request.user)
     data_issues = {}
     for i in jira.get_cached_sprint_issues(sprint_id, jql_extra=jira.JIRA_ONLY_STANDARD_TYPES):
-        state = i["state"]
+        state = get_issue_status(i)
         if state in data_issues.keys():
             data_issues[state].append(i)
         else:

@@ -1,104 +1,29 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}JiraFox - Sprint {{ sprint.name }} - Kanban{% endblock %}
 
 {% block content %}
-    <div class="container-fluid py-3">
+    <section class="page-shell glass-panel section-stack">
         {% include "sprint/sprint_header.html" %}
-        <div id="kanban" class="row g-3 align-items-start"></div>
-    </div>
+
+        <div class="utility-panel">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+                <div>
+                    <h2 class="h4 mb-1">Kanban</h2>
+                    <p class="inline-note mb-0">Vue colonne par colonne des issues du sprint.</p>
+                </div>
+            </div>
+            <div id="kanban" class="kanban-grid"></div>
+        </div>
+    </section>
 {% endblock %}
 
 {% block js %}
     <script>
-        const API_URL = '{% url 'sprint-api-kanban' sprint.id %}';
-
-        function escapeHtml(s) {
-            return String(s ?? "")
-                .replaceAll("&", "&amp;")
-                .replaceAll("<", "&lt;")
-                .replaceAll(">", "&gt;")
-                .replaceAll('"', "&quot;")
-                .replaceAll("'", "&#039;");
-        }
-
-        function issueCard(issue) {
-            const key = escapeHtml(issue.key);
-            const name = escapeHtml(issue.summary ?? "—");
-            const assignee = escapeHtml(issue.assignee ?? "—");
-
-            return `
-      <button type="button"
-              class="card w-100 text-start mb-2 shadow-sm border-0 kanban-card"
-              data-issue-key="${key}"
-              style="cursor:pointer;">
-        <div class="card-body py-2">
-          <div class="d-flex justify-content-between align-items-start gap-2">
-            <div class="text-truncate">
-              <div class="fw-semibold">${key}</div>
-              <div class="small text-muted text-truncate">${name}</div>
-            </div>
-          </div>
-          <div class="mt-2 small text-muted">👤 ${assignee}</div>
-        </div>
-      </button>
-    `;
-        }
-
-        function columnCard(col) {
-            const title = escapeHtml(col.name);
-            const issues = Array.isArray(col.issues) ? col.issues : [];
-            const count = issues.length;
-
-            return `
-      <div class="col-12 col-md-4 col-lg-3">
-        <div class="card shadow-sm">
-          <div class="card-header d-flex align-items-center justify-content-between">
-            <div class="fw-semibold text-truncate">${title}</div>
-            <span class="badge text-bg-secondary">${count}</span>
-          </div>
-
-          <div class="card-body p-2" style="max-height: 70vh; overflow:auto;">
-            ${count === 0 ? `<div class="text-muted small p-2">Aucune issue</div>` : ""}
-            ${issues.map(issueCard).join("")}
-          </div>
-        </div>
-      </div>
-    `;
-        }
-
-        async function loadKanban() {
-            const root = document.getElementById("kanban");
-            root.innerHTML = `<div class="col-12"><div class="text-muted">Chargement…</div></div>`;
-
-            try {
-                const res = await fetch(API_URL, {headers: {"Accept": "application/json"}});
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const columns = await res.json();
-
-                root.innerHTML = Array.isArray(columns)
-                    ? columns.map(columnCard).join("")
-                    : `<div class="col-12"><div class="alert alert-warning">Réponse inattendue.</div></div>`;
-
-                // Clic sur card => ouvre Jira (ou tu remplaces par un modal)
-                root.querySelectorAll(".kanban-card").forEach(btn => {
-                    btn.addEventListener("click", () => {
-                        const key = btn.getAttribute("data-issue-key");
-                        // ✅ Remplace par ton URL Jira
-                        window.open(`https://jira.sm-ms.lan//browse/${encodeURIComponent(key)}`, "_blank");
-                    });
-                });
-
-            } catch (e) {
-                root.innerHTML = `
-        <div class="col-12">
-          <div class="alert alert-danger mb-0">
-            Impossible de charger le Kanban: ${escapeHtml(e.message)}
-          </div>
-        </div>`;
-            }
-        }
-
-        loadKanban();
+        window.SPRINT_KANBAN_PAGE = {
+            apiUrl: "{% url 'sprint-api-kanban' sprint.id %}"
+        };
     </script>
+    <script src="{% static 'js/sprint-kanban.js' %}"></script>
 {% endblock %}
