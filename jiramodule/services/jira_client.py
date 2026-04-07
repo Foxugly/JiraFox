@@ -202,7 +202,7 @@ class JiraManager:
         ]
         if not candidates:
             return None
-        return max(candidates, key=lambda sprint: sprint["id"])
+        return min(candidates, key=lambda sprint: sprint["id"])
 
     def get_sprint(self, sprint_id: int) -> Dict[str, Any]:
         sprint = self._with_retries(self.jira.sprint, sprint_id)
