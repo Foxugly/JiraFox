@@ -16,7 +16,6 @@ from JiraFox.services.dashboard import (
     build_dashboard_kpis,
     get_current_sprint_with_issues,
 )
-from JiraFox.services.script_compare import get_query_diff
 from jiramodule.services.jira_config_service import get_connected_jira_for_user
 from sprint.views import build_wia_data
 
@@ -115,13 +114,3 @@ class SettingsView(LoginRequiredMixin, View):
                 "current_jira_config": current_jira_config,
             },
         )
-
-
-class ScriptView(LoginRequiredMixin, View):
-    template_name = "home.html"
-
-    def get(self, request):
-        jira = get_connected_jira_for_user(request.user)
-        for key, summary in get_query_diff(jira):
-            print(key, "-", summary)
-        return render(request, self.template_name, {})

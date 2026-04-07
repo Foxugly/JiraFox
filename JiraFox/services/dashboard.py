@@ -3,6 +3,8 @@ from statistics import median
 
 from JiraFox.services.issue_data import build_dashboard_item, get_issue_status, get_kanban_metric
 
+AGING_WIP_THRESHOLD_DAYS = 10
+
 
 def get_current_sprint_with_issues(jira) -> tuple[dict | None, list[dict]]:
     sprint = jira.get_current_sprint(jira.cfg.jira_board_id)
@@ -22,7 +24,7 @@ def build_dashboard_kpis(issues: list[dict], throughput_7d: int) -> dict:
     aging_wip = [
         issue
         for issue in wip_items
-        if (get_kanban_metric(issue, "current_wip_age_days", 0) or 0) > 10
+        if (get_kanban_metric(issue, "current_wip_age_days", 0) or 0) > AGING_WIP_THRESHOLD_DAYS
     ]
     cycle_times = [
         value
@@ -79,4 +81,3 @@ def build_dashboard_bottlenecks(issues: list[dict]) -> list[dict]:
 
 def build_dashboard_items(issues: list[dict]) -> list[dict]:
     return [build_dashboard_item(issue) for issue in issues]
-

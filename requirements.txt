@@ -1,7 +1,7 @@
-django
-django-allauth
+Django==6.0.2
+django-allauth==65.15.0
 jira~=3.10.5
 openpyxl~=3.1.5
 pip-system-certs~=5.3
-python-dotenv
-python-dateutil
+python-dotenv==1.2.2
+python-dateutil==2.9.0.post0

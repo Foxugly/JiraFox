@@ -1,16 +1,24 @@
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import render
+from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
 
 from jiramodule.services.jira_config_management import (
     build_jira_config_form,
     get_user_jira_config_or_404,
-    render_jira_config_form_payload,
     save_jira_config_form,
     set_current_config,
     test_jira_configuration,
 )
+
+
+def render_jira_config_form_payload(*, request, form, mode: str, config=None) -> dict:
+    context = {"form": form, "mode": mode}
+    if config is not None:
+        context["cfg"] = config
+    html = render_to_string("jira/partials/jira_config_modal_form.html", context, request=request)
+    return {"ok": False, "html": html}
 
 
 @login_required
@@ -81,7 +89,10 @@ def jira_config_delete(request, pk: int):
 @login_required
 @require_POST
 def jira_config_set_current(request):
-    config_id = int(request.POST.get("config_id"))
+    try:
+        config_id = int(request.POST["config_id"])
+    except (KeyError, TypeError, ValueError):
+        return JsonResponse({"ok": False, "error": "Invalid config_id."}, status=400)
     want_current = request.POST.get("current") == "true"
     config = get_user_jira_config_or_404(request.user, config_id)
     set_current_config(config=config, want_current=want_current)

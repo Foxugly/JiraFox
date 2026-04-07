@@ -1,4 +1,5 @@
 from io import BytesIO
+from typing import Iterable
 
 from openpyxl import Workbook
 from openpyxl.styles import Border, PatternFill, Side
@@ -31,6 +32,7 @@ class SprintWorkbookBuilder:
         self.next_sprint_id = (self.jira.get_next_sprint(self.jira.cfg.jira_board_id) or {}).get("id")
         self.project_id = self.jira.cfg.jira_project_id
         self.recurrent_epic_key = self.jira.cfg.jira_recurrent_epic_key
+        self._jql_cache: dict[str, list[dict]] = {}
 
     def build(self) -> bytes:
         capacity_sheet = self.workbook.active
@@ -130,15 +132,13 @@ class SprintWorkbookBuilder:
         row += 1
         first_row = row
         for jql in jqls:
-            for issue in self.jira.run_jql(jql):
+            for issue in self._run_jql_cached(jql):
                 row = self._write_issue_row(worksheet, row, issue, diff_spent_hours)
 
         return self._write_sum_row(worksheet, row, first_row)
 
     def _write_issue_row(self, worksheet, row: int, issue: dict, diff_spent_hours: bool) -> int:
         first_name = self._get_firstname(issue)
-        if first_name == "Renaud":
-            return row
 
         worksheet.cell(row=row, column=self.title_col, value=self._issue_title(issue))
         if first_name and first_name in self.member_names:
@@ -221,7 +221,14 @@ class SprintWorkbookBuilder:
             return estimated_hours - spent_hours
         return float(issue.get("remaining_hours") or 0)
 
+    def _run_jql_cached(self, jql: str) -> Iterable[dict]:
+        if jql not in self._jql_cache:
+            self._jql_cache[jql] = self.jira.run_jql(jql)
+        return self._jql_cache[jql]
+
     def _jql_recurrents(self) -> str:
+        if self.next_sprint_id is None:
+            return "issuekey is EMPTY"
         return (
             f"project = {self.project_id} and sprint = {self.next_sprint_id} "
             f"and 'Epic Link' = {self.recurrent_epic_key}"
@@ -235,6 +242,8 @@ class SprintWorkbookBuilder:
         )
 
     def _jql_projects_next(self) -> str:
+        if self.next_sprint_id is None:
+            return "issuekey is EMPTY"
         return (
             f"project != {self.project_id} and sprint = {self.next_sprint_id} and "
             f"(labels = \"ASSU_POPU_SPRINT\" or issuetype in standardIssueTypes())"
@@ -247,6 +256,8 @@ class SprintWorkbookBuilder:
         )
 
     def _jql_new_backlog(self) -> str:
+        if self.next_sprint_id is None:
+            return "issuekey is EMPTY"
         return (
             f"project = {self.project_id} and sprint = {self.next_sprint_id} and "
             f"('Epic Link' != {self.recurrent_epic_key} OR 'Epic Link' is EMPTY)"

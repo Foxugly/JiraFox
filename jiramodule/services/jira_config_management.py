@@ -1,7 +1,7 @@
 import logging
 
 from django.db import transaction
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 
 from jiramodule.forms import JiraConfigurationForm
 from jiramodule.models import JiraConfiguration
@@ -26,18 +26,8 @@ def save_jira_config_form(*, form: JiraConfigurationForm, user) -> JiraConfigura
     config = form.save(commit=False)
     config.user = user
     config.is_active = False
-    config.save(user=user)
+    config.save()
     return config
-
-
-def render_jira_config_form_payload(*, request, form: JiraConfigurationForm, mode: str, config=None) -> dict:
-    context = {"form": form, "mode": mode}
-    if config is not None:
-        context["cfg"] = config
-
-    html = render(request, "jira/partials/jira_config_modal_form.html", context).content.decode("utf-8")
-    return {"ok": False, "html": html}
-
 
 def test_jira_configuration(config: JiraConfiguration, *, user_pk: int | None = None) -> tuple[bool, str]:
     try:
@@ -51,11 +41,7 @@ def test_jira_configuration(config: JiraConfiguration, *, user_pk: int | None = 
         error = str(exc)
         logger.exception("jira_config_test failed for cfg=%s user=%s", config.pk, user_pk)
 
-    if hasattr(config, "mark_test_result"):
-        config.mark_test_result(ok=ok, error=error)
-    else:
-        config.is_active = ok
-        config.save(update_fields=["is_active"])
+    config.mark_test_result(ok=ok, error=error)
 
     return ok, error
 

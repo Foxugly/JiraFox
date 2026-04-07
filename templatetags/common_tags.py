@@ -30,6 +30,6 @@ def format_assignee(assignee):
 
     # Ajout du username si présent
     if username:
-        return f"{full}"
+        return f"{full} ({username})"
 
     return full

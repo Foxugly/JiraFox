@@ -20,7 +20,6 @@ from JiraFox.views import (
     AboutView,
     DashboardView,
     HomeView,
-    ScriptView,
     SettingsView,
     dashboard_items_api,
     dashboard_summary_api,
@@ -32,7 +31,6 @@ urlpatterns = [
     path("", HomeView.as_view(), name="home"),
     path("about/", AboutView.as_view(), name="about"),
 
-    path("script/", ScriptView.as_view(), name="script"),
     path("dashboard/", DashboardView.as_view(), name="dashboard"),
     path("settings/", SettingsView.as_view(), name="settings"),
     path('admin/', admin.site.urls),

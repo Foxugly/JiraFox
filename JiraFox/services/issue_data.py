@@ -1,3 +1,6 @@
+from django.urls import reverse
+
+
 def get_issue_status(issue: dict, default: str = "Unknown") -> str:
     return (issue.get("state") or "").strip() or default
 
@@ -22,7 +25,7 @@ def build_dashboard_item(issue: dict) -> dict:
         "ageDays": get_kanban_metric(issue, "current_wip_age_days"),
         "assignee": get_issue_assignee_name(issue) or None,
         "url": issue.get("url") or "",
-        "detail_url": f"/issue/{issue_key}/",
+        "detail_url": reverse("issue-detail", kwargs={"jira_key": issue_key}),
     }
 
 
@@ -35,4 +38,3 @@ def build_sprint_issue_item(issue: dict) -> dict:
         "assignee": get_issue_assignee_name(issue),
         "url": issue.get("url") or "",
     }
-

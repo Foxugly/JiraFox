@@ -3,6 +3,7 @@ from typing import Optional, Tuple, List, Any, Dict
 
 from django.utils import timezone
 from django.utils.formats import date_format
+from django.utils.translation import gettext as _
 
 from jiramodule.utils.datetime_utils import serialize_dt, _parse_jira_dt, hours_to_business_days
 
@@ -132,7 +133,7 @@ class KanbanMetricsService:
                 "first_in_progress_display": None,
                 "current_wip_age_hours": None,
                 "time_in_status_hours": {},
-                "notes": "Pas assez d'infos pour calculer (created/status/changelog manquant).",
+                "notes": _("Not enough information to compute metrics (missing created/status/changelog)."),
             }
 
         # accumulate durations

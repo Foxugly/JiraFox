@@ -8,7 +8,7 @@ from team.models import Team
 class JiraConfiguration(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="jira_configs")
     jira_url = models.URLField("JIRA URL", blank=True, help_text="https://jira.sm-ms.lan/")
-    jira_email = models.EmailField("JIRA API token", max_length=255, blank=True)
+    jira_email = models.EmailField("JIRA Email", max_length=255, blank=True)
     jira_token = models.CharField("JIRA API token", max_length=255, blank=True)
     jira_board_id = models.PositiveIntegerField("JIRA board ID", null=True, blank=True)
     jira_project_id = models.PositiveIntegerField("JIRA project ID", null=True, blank=True)

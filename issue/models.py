@@ -1,3 +1,3 @@
 from django.db import models
 
-# Create your models here.
+# This app currently relies on Jira as the source of truth and does not persist local models.

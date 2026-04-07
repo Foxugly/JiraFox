@@ -7,6 +7,7 @@ from django.views.generic import ListView, TemplateView
 from JiraFox.services.issue_data import build_sprint_issue_item, get_issue_status
 from jiramodule.services.jira_config_service import get_connected_jira_for_user
 from jiramodule.status import CANONICAL_ORDER, STATUS_EXCLUDED
+from jiramodule.utils.datetime_utils import hours_to_business_days
 from team.models import TeamDev
 from .report import create_xlsx_bytes
 
@@ -23,8 +24,13 @@ class SprintListView(LoginRequiredMixin, ListView):
     context_object_name = "sprints"
     paginate_by = 10  # Bootstrap friendly
 
+    def _get_jira(self):
+        if not hasattr(self, "_jira"):
+            self._jira = get_connected_jira_for_user(self.request.user)
+        return self._jira
+
     def get_queryset(self):
-        jira = get_connected_jira_for_user(self.request.user)
+        jira = self._get_jira()
         selected_states = self.request.GET.getlist("state")
         if not selected_states:
             selected_states = ["active", "future"]
@@ -38,7 +44,7 @@ class SprintListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        jira = get_connected_jira_for_user(self.request.user)
+        jira = self._get_jira()
         context["board_id"] = jira.cfg.jira_board_id
         return context
 
@@ -75,7 +81,6 @@ class SprintKanbanView(LoginRequiredMixin, TemplateView):
 
         jira = get_connected_jira_for_user(self.request.user)
         context["sprint"] = jira.get_sprint(sprint_id)
-        # ctx["issues"] = jira.get_sprint_issues(sprint_id)
         return context
 
 
@@ -144,7 +149,7 @@ def get_api_sprint_kanban_issues(request, sprint_id: int) -> JsonResponse:
     data_issues = {}
     for i in jira.get_cached_sprint_issues(sprint_id, jql_extra=jira.JIRA_ONLY_STANDARD_TYPES):
         state = get_issue_status(i)
-        if state in data_issues.keys():
+        if state in data_issues:
             data_issues[state].append(i)
         else:
             data_issues[state] = [i, ]
@@ -184,8 +189,8 @@ def build_wia_data(jira, sprint_id: int) -> dict:
         age_hours = _to_float(km.get("current_wip_age_hours"), 0.0)
         cycle_hours = _to_float(km.get("cycle_time_hours"), 0.0)
 
-        age_days = max(0, int(age_hours // 8))
-        cycle_days = max(0, int(cycle_hours // 8))
+        age_days = max(0, int(hours_to_business_days(age_hours, day_hours=7.2) or 0))
+        cycle_days = max(0, int(hours_to_business_days(cycle_hours, day_hours=7.2) or 0))
 
         mapped_items.append({
             "key": i.get("key"),
