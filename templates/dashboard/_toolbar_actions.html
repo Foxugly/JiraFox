@@ -1,0 +1,27 @@
+{% load i18n %}
+<div class="btn-group btn-group-sm" role="group" aria-label="{% trans 'Sprint links' %}">
+    <a id="wiaOpenJiraTop" class="btn btn-outline-primary" href="{{ sprint.url }}"
+       target="_blank" rel="noopener noreferrer"
+       aria-label="{% trans 'Open in Jira' %}"
+       data-bs-toggle="tooltip" data-bs-title="{% trans 'Open in Jira' %}">
+        <i class="fa-brands fa-jira"></i>
+    </a>
+    <a class="btn btn-outline-secondary" href="{% url 'sprint-detail' sprint.id %}"
+       aria-label="{% trans 'View sprint detail' %}"
+       data-bs-toggle="tooltip" data-bs-title="{% trans 'View sprint detail' %}">
+        <i class="fa-solid fa-eye"></i>
+    </a>
+</div>
+<div class="btn-group btn-group-sm dashboard-status-group" role="group" aria-label="{% trans 'Dashboard status' %}">
+    <span id="statusSummaryBadge" class="btn btn-outline-secondary disabled" data-dashboard-status="true">
+        {% trans "Loading..." %}
+    </span>
+    <span id="statusItemsBadge" class="btn btn-outline-secondary disabled" data-dashboard-status="true">
+        {% trans "Loading..." %}
+    </span>
+    <button id="reloadBtn" class="btn btn-icon btn-outline-secondary" type="button"
+            aria-label="{% trans 'Reload' %}" data-bs-toggle="tooltip" data-bs-title="{% trans 'Reload' %}">
+        <i class="fa-solid fa-rotate-right" data-role="reload-icon"></i>
+        <span class="spinner-border spinner-border-sm d-none" data-role="reload-spinner" aria-hidden="true"></span>
+    </button>
+</div>

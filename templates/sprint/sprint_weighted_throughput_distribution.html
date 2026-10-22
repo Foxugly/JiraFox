@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block header %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block title %}JiraFox - Sprint {{ sprint.name }} - {% trans "Distribution du débit par pondération" %}{% endblock %}
+
+{% block content %}
+    <section class="page-shell glass-panel section-stack">
+        {% include "sprint/sprint_header.html" %}
+
+        <div class="utility-panel">
+            <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3">
+                <div>
+                    <h2 class="h4 mb-1">{% trans "Distribution du débit par pondération" %}</h2>
+                    <div class="inline-note">
+                        {% trans "Histogramme des tickets Done par story points." %}
+                    </div>
+                </div>
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <span class="badge text-bg-success">{% trans "Total tickets Done" %}: {{ done_count }}</span>
+                </div>
+            </div>
+
+            <div class="card p-4">
+                {% if estimated_done_count %}
+                    <div style="height: 420px;">
+                        <canvas id="weightedThroughputDistributionChart"></canvas>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <h3 class="h5 mb-2">{% trans "Aucune donnée à afficher" %}</h3>
+                        <p class="inline-note mb-0">
+                            {% trans "Aucun ticket Done avec story points n'a été trouvé pour ce sprint." %}
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+    {{ distribution|json_script:"weighted-throughput-distribution-data" }}
+{% endblock %}
+
+{% block js %}
+    {% if estimated_done_count %}
+        <script>
+            (function () {
+                const dataElement = document.getElementById("weighted-throughput-distribution-data");
+                const canvas = document.getElementById("weightedThroughputDistributionChart");
+                if (!dataElement || !canvas) return;
+
+                const distribution = JSON.parse(dataElement.textContent);
+                new Chart(canvas, {
+                    type: "bar",
+                    data: {
+                        labels: distribution.labels,
+                        datasets: [{
+                            label: "{% trans 'Nombre de tickets Done' %}",
+                            data: distribution.counts,
+                            backgroundColor: "rgba(47, 125, 225, 0.72)",
+                            borderColor: "rgba(31, 88, 143, 1)",
+                            borderWidth: 1,
+                            borderRadius: 6,
+                            maxBarThickness: 72
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {display: false},
+                            tooltip: {
+                                callbacks: {
+                                    title: (items) => `${items[0].label} {% trans 'story points' %}`,
+                                    label: (item) => `${item.raw} {% trans 'ticket(s) Done' %}`
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {display: true, text: "{% trans 'Story points' %}"},
+                                grid: {display: false}
+                            },
+                            y: {
+                                beginAtZero: true,
+                                ticks: {precision: 0, stepSize: 1},
+                                title: {display: true, text: "{% trans 'Nombre de tickets Done' %}"}
+                            }
+                        }
+                    }
+                });
+            })();
+        </script>
+    {% endif %}
+{% endblock %}

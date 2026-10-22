@@ -1,0 +1,1754 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: JiraFox\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-09-15 00:00+0200\n"
+"PO-Revision-Date: 2026-09-15 00:00+0200\n"
+"Last-Translator: Codex <codex@local>\n"
+"Language-Team: Dutch <nl@local>\n"
+"Language: nl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: templates/dashboard.html:72
+msgid ""
+"<strong>Aging WIP &gt; 10 jours</strong><br> Nombre de tickets en cours depuis plus de 10 jours.<br> Un volume eleve indique un risque de blocage ou de dispersion du travail."
+msgstr ""
+"<strong>Aging WIP &gt; 10 jours</strong><br> Nombre de tickets en cours depuis plus de 10 jours.<br> Un volume eleve indique un risque de blocage ou de dispersion du travail."
+
+#: templates/dashboard.html:77
+#, python-format
+msgid ""
+"<strong>Cycle Time (P50)</strong><br>Temps median necessaire pour terminer un ticket a partir du premier statut <em>In Progress</em>.<br>Le P50 signifie que 50% des tickets sont termines en moins de cette duree."
+msgstr ""
+"<strong>Cycle Time (P50)</strong><br>Temps median necessaire pour terminer un ticket a partir du premier statut <em>In Progress</em>.<br>Le P50 signifie que 50% des tickets sont termines en moins de cette duree."
+
+#: templates/dashboard.html:90
+msgid ""
+"<strong>Flow efficiency</strong><br> Part du temps ou le ticket est <em>reellement travaille</em> (cycle time) par rapport au temps total entre creation et fin (lead time).<br> <strong>Bas</strong> : beaucoup d'attente. <strong>Haut</strong> : flux fluide."
+msgstr ""
+"<strong>Flow efficiency</strong><br> Part du temps ou le ticket est <em>reellement travaille</em> (cycle time) par rapport au temps total entre creation et fin (lead time).<br> <strong>Bas</strong> : beaucoup d'attente. <strong>Haut</strong> : flux fluide."
+
+#: templates/dashboard.html:80
+msgid ""
+"<strong>Lead Time (P50)</strong><br> Temps median entre la creation d'un ticket et sa finalisation.<br> Il reflete l'experience reelle du client."
+msgstr ""
+"<strong>Lead Time (P50)</strong><br> Temps median entre la creation d'un ticket et sa finalisation.<br> Il reflete l'experience reelle du client."
+
+#: templates/dashboard.html:85
+msgid ""
+"<strong>Throughput (7 jours)</strong><br> Nombre de tickets termines au cours des 7 derniers jours.<br> Indicateur cle de capacite et de stabilite du flux."
+msgstr ""
+"<strong>Throughput (7 jours)</strong><br> Nombre de tickets termines au cours des 7 derniers jours.<br> Indicateur cle de capacite et de stabilite du flux."
+
+#: templates/dashboard.html:67
+msgid ""
+"<strong>WIP (Work In Progress)</strong><br> Nombre total de tickets actuellement en cours (statuts actifs).<br> Un WIP trop eleve augmente le multitache, l'attente et ralentit le flux."
+msgstr ""
+"<strong>WIP (Work In Progress)</strong><br> Nombre total de tickets actuellement en cours (statuts actifs).<br> Un WIP trop eleve augmente le multitache, l'attente et ralentit le flux."
+
+#: templates/jira/partials/jira_config_modal_form.html:4
+msgid "a Jira configuration"
+msgstr "a Jira configuration"
+
+#: templates/about.html:4 templates/about.html:8 templates/includes/header.html:37
+msgid "About"
+msgstr "Over"
+
+#: templates/account/password_reset.html:21
+msgid "Access recovery"
+msgstr "Toegang herstellen"
+
+#: templates/account/login.html:32
+msgid "Accéder à JiraFox"
+msgstr "Accéder à JiraFox"
+
+#: templates/dashboard.html:37 templates/dashboard/_aging_table.html:23
+msgid "Action"
+msgstr "Actie"
+
+#: templates/jira/jira_config_list.html:41 templates/sprint/sprint_detail.html:34 templates/sprint/sprint_list.html:45 templates/sprint/sprint_report.html:24
+msgid "Actions"
+msgstr "Acties"
+
+#: templates/sprint/sprint_list.html:22
+msgid "Active"
+msgstr "Actief"
+
+#: templates/jira/partials/jira_config_modal_form.html:4 templates/jira/partials/jira_config_modal_form.html:93
+msgid "Add"
+msgstr "Toevoegen"
+
+#: templates/jira/bulk_labels.html:18
+msgid "Add and remove labels from issues selected by JQL."
+msgstr "Add and remove labels from issues selected by JQL."
+
+#: jiramodule/views.py:77
+msgid "Add at least one label to add or remove."
+msgstr "Add at least one label to add or remove."
+
+#: templates/sprint/sprint_xls_report.html:93
+msgid "Add developer"
+msgstr "Ontwikkelaar toevoegen"
+
+#: templates/jira/bulk_operations.html:27
+msgid "Add or remove labels from a frozen preview of JQL-selected issues."
+msgstr "Add or remove labels from a frozen preview of JQL-selected issues."
+
+#: templates/account/password_reset.html:34 templates/account/signup.html:52
+msgid "Adresse email"
+msgstr "E-mailadres"
+
+#: templates/dashboard.html:35 templates/dashboard/_aging_table.html:21
+msgid "Age"
+msgstr "Leeftijd"
+
+#: templates/sprint/sprint_wia.html:59
+msgid "Age (days)"
+msgstr "Leeftijd (dagen)"
+
+#: templates/dashboard.html:20
+msgid "Agile Dashboard"
+msgstr "Agile dashboard"
+
+#: templates/dashboard.html:39 templates/dashboard/_kpis.html:15
+msgid "Aging WIP > 10d"
+msgstr "Verouderde WIP > 10d"
+
+#: templates/jira/jira_config_list.html:24
+msgid "Ajouter"
+msgstr "Toevoegen"
+
+#: templates/sprint/sprint_xls_report.html:22
+msgid "Ajouter un dev"
+msgstr "Ontwikkelaar toevoegen"
+
+#: templates/sprint/sprint_xls_report.html:18
+msgid "Ajuster la capacite, les conges et les temps recurrents avant generation du fichier."
+msgstr "Ajuster la capacite, les conges et les temps recurrents avant generation du fichier."
+
+#: templates/account/logout.html:22 templates/account/password_reset_from_key.html:86 templates/account/password_reset_from_key.html:88
+msgid "Annuler"
+msgstr "Annuleren"
+
+#: templates/sprint/sprint_wia.html:87
+msgid "API error"
+msgstr "API-fout"
+
+#: templates/jira/bulk_labels.html:71
+msgid "Apply changes"
+msgstr "Wijzigingen toepassen"
+
+#: templates/jira/bulk_operations.html:83
+msgid "Apply only when the preview is exact."
+msgstr "Apply only when the preview is exact."
+
+#: templates/jira/bulk_operations.html:69
+msgid "Apply should use the previewed issue list, not a freshly evaluated JQL query."
+msgstr "Apply should use the previewed issue list, not a freshly evaluated JQL query."
+
+#: templates/jira/bulk_operations.html:42
+msgid "Assign by JQL"
+msgstr "Assign by JQL"
+
+#: templates/jira/bulk_operations.html:43
+msgid "Assign selected issues to a developer after preview."
+msgstr "Assign selected issues to a developer after preview."
+
+#: templates/dashboard.html:36 templates/query.html:70 templates/dashboard/_aging_table.html:22 templates/issue/issue_detail.html:37 templates/sprint/sprint_detail.html:33
+msgid "Assignee"
+msgstr "Toegewezen aan"
+
+#: templates/account/logout.html:30
+msgid "Astuce : vous pouvez revenir à la page d’accueil."
+msgstr "Astuce : vous pouvez revenir à la page d’accueil."
+
+#: templates/sprint/sprint_weighted_throughput_distribution.html:36
+msgid "Aucun ticket Done avec story points n'a été trouvé pour ce sprint."
+msgstr "Aucun ticket Done avec story points n'a été trouvé pour ce sprint."
+
+#: templates/jira/jira_config_list.html:105
+msgid "Aucune configuration."
+msgstr "Aucune configuration."
+
+#: templates/sprint/sprint_weighted_throughput_distribution.html:34
+msgid "Aucune donnée à afficher"
+msgstr "Aucune donnée à afficher"
+
+#: templates/account/password_change.html:17
+msgid "Authenticated flow"
+msgstr "Authenticated flow"
+
+#: templates/jira/bulk_operations.html:17
+msgid "Available operations"
+msgstr "Available operations"
+
+#: templates/dashboard.html:31 templates/dashboard/_insights.html:82
+msgid "Avg age"
+msgstr "Gem. leeftijd"
+
+#: templates/issue/issue_header.html:6 templates/sprint/sprint_toolbar_actions.html:3
+msgid "Back"
+msgstr "Terug"
+
+#: templates/about.html:28
+msgid "Backend"
+msgstr "Backend"
+
+#: templates/query.html:149 templates/settings.html:101 templates/jira/jira_config_list.html:36
+msgid "Board"
+msgstr "Board"
+
+#: templates/account/signup.html:18
+msgid "Board configuration"
+msgstr "Boardconfiguratie"
+
+#: templates/jira/partials/jira_config_modal_form.html:43
+msgid "Board ID"
+msgstr "Board-ID"
+
+#: templates/dashboard.html:27 templates/dashboard/_insights.html:68
+msgid "Bottlenecks"
+msgstr "Knelpunten"
+
+#: templates/jira/bulk_operations.html:18
+msgid "Browser-driven Jira operations with preview before apply."
+msgstr "Browser-driven Jira operations with preview before apply."
+
+#: templates/jira/bulk_operations.html:34
+msgid "Bulk create issues"
+msgstr "Bulk create issues"
+
+#: templates/jira/bulk_labels.html:4
+msgid "Bulk labels"
+msgstr "Labels in bulk"
+
+#: jiramodule/views.py:115
+#, python-format
+msgid "Bulk labels applied: %(success_count)s updated, %(error_count)s error(s)."
+msgstr "Bulk labels applied: %(success_count)s updated, %(error_count)s error(s)."
+
+#: templates/jira/bulk_labels.html:9
+msgid "Bulk Labels by JQL"
+msgstr "Bulk Labels by JQL"
+
+#: templates/includes/header.html:33 templates/includes/header.html:89 templates/jira/bulk_labels.html:8 templates/jira/bulk_operations.html:4 templates/jira/bulk_operations.html:9
+msgid "Bulk operations"
+msgstr "Bulkbewerkingen"
+
+#: templates/dashboard/_kpis.html:29 templates/dashboard/_kpis.html:39
+msgid "business days"
+msgstr "werkdagen"
+
+#: templates/issue/issue_detail.html:13 templates/issue/issue_detail.html:20 templates/issue/issue_detail.html:28
+msgid "business h"
+msgstr "business h"
+
+#: templates/base.html:84 templates/jira/jira_config_list.html:138 templates/sprint/sprint_xls_report.html:97 templates/jira/partials/jira_config_modal_form.html:91
+msgid "Cancel"
+msgstr "Annuleren"
+
+#: templates/home.html:52 templates/account/login.html:26
+msgid "Capacity export"
+msgstr "Capaciteitsexport"
+
+#: templates/sprint/sprint_xls_report.html:15
+msgid "Capacity sheet"
+msgstr "Capaciteitssheet"
+
+#: templates/query.html:69
+msgid "Category"
+msgstr "Categorie"
+
+#: templates/account/password_reset_from_key.html:15
+msgid "Ce lien de réinitialisation n'est plus valide ou a déjà été utilisé."
+msgstr "Ce lien de réinitialisation n'est plus valide ou a déjà été utilisé."
+
+#: templates/jira/bulk_labels.html:84
+msgid "Change"
+msgstr "Wijzigen"
+
+#: templates/settings.html:91 templates/includes/header.html:94
+msgid "Change password"
+msgstr "Wachtwoord wijzigen"
+
+#: templates/account/password_reset_from_key_done.html:19
+msgid "Changement confirmé"
+msgstr "Changement confirmé"
+
+#: templates/account/password_change.html:12 templates/account/password_reset_from_key.html:73
+msgid "Changer le mot de passe"
+msgstr "Changer le mot de passe"
+
+#: templates/home.html:41
+msgid ""
+"Chaque ecran pousse vers une action concrete: verifier l'age reel du travail, ouvrir la bonne requete Jira, ou recaler la capacite de l'equipe."
+msgstr ""
+"Chaque ecran pousse vers une action concrete: verifier l'age reel du travail, ouvrir la bonne requete Jira, ou recaler la capacite de l'equipe."
+
+#: templates/dashboard/_insights.html:7 templates/dashboard/_insights.html:50
+msgid "Chart"
+msgstr "Grafiek"
+
+#: templates/sprint/sprint_wia.html:20
+msgid "Chart and table are powered by the same API."
+msgstr "Chart and table are powered by the same API."
+
+#: templates/account/password_reset_from_key.html:20
+msgid "Choisissez un nouveau mot de passe pour finaliser la récupération de votre accès."
+msgstr "Choisissez un nouveau mot de passe pour finaliser la récupération de votre accès."
+
+#: templates/jira/partials/jira_config_modal_form.html:5
+msgid "Close"
+msgstr "Sluiten"
+
+#: templates/sprint/sprint_list.html:30
+msgid "Closed"
+msgstr "Gesloten"
+
+#: templates/sprint/sprint_xls_report.html:105
+msgid "Column order saved."
+msgstr "Column order saved."
+
+#: templates/sprint/sprint_kanban.html:14
+msgid "Column-by-column view of sprint issues."
+msgstr "Column-by-column view of sprint issues."
+
+#: templates/jira/jira_config_list.html:139
+msgid "Configuration deleted."
+msgstr "Configuration deleted."
+
+#: templates/jira/jira_config_list.html:132
+msgid "Configuration saved."
+msgstr "Configuration saved."
+
+#: templates/home.html:97
+msgid "Configurer"
+msgstr "Configureren"
+
+#: templates/base.html:83
+msgid "Confirm"
+msgstr "Bevestigen"
+
+#: templates/base.html:82
+msgid "Confirmation"
+msgstr "Bevestiging"
+
+#: templates/account/signup.html:71
+msgid "Confirmer le mot de passe"
+msgstr "Wachtwoord bevestigen"
+
+#: templates/account/password_change.html:66 templates/account/password_reset_from_key.html:64
+msgid "Confirmer le nouveau mot de passe"
+msgstr "Confirmer le nouveau mot de passe"
+
+#: templates/account/login.html:33
+msgid "Connectez-vous avec votre compte pour reprendre là où vous vous êtes arrêté."
+msgstr "Connectez-vous avec votre compte pour reprendre là où vous vous êtes arrêté."
+
+#: templates/jira/jira_config_list.html:130
+msgid "Connection failed"
+msgstr "Verbinding mislukt"
+
+#: templates/jira/jira_config_list.html:129
+msgid "Connection OK"
+msgstr "Verbinding OK"
+
+#: templates/jira/jira_config_list.html:128
+msgid "Connection test in progress..."
+msgstr "Connection test in progress..."
+
+#: templates/account/login.html:13
+msgid "Connexion"
+msgstr "Aanmelden"
+
+#: templates/home.html:93
+msgid "Connexions Jira"
+msgstr "Jira-verbindingen"
+
+#: templates/about.html:62 templates/includes/footer.html:4
+msgid "Copyright"
+msgstr "Copyright"
+
+#: templates/dashboard.html:30 templates/dashboard/_insights.html:81
+msgid "Count"
+msgstr "Aantal"
+
+#: templates/sprint/sprint_xls_report.html:96
+msgid "Create"
+msgstr "Aanmaken"
+
+#: templates/settings.html:111
+msgid "Create a Jira connection"
+msgstr "Jira-verbinding aanmaken"
+
+#: templates/query.html:173
+msgid "Create epics"
+msgstr "Epics aanmaken"
+
+#: templates/jira/bulk_operations.html:35
+msgid "Create multiple tasks, bugs or epics from structured input."
+msgstr "Create multiple tasks, bugs or epics from structured input."
+
+#: templates/issue/issue_detail.html:38
+msgid "Created"
+msgstr "Created"
+
+#: templates/jira/jira_config_list.html:6
+msgid "Creer, tester et activer plusieurs connexions selon vos boards et vos contextes d'equipe."
+msgstr "Creer, tester et activer plusieurs connexions selon vos boards et vos contextes d'equipe."
+
+#: templates/account/signup.html:82
+msgid "Créer mon compte"
+msgstr "Créer mon compte"
+
+#: templates/account/login.html:81 templates/account/password_reset.html:47 templates/account/signup.html:13
+msgid "Créer un compte"
+msgstr "Créer un compte"
+
+#: templates/jira/jira_config_list.html:40
+msgid "Current"
+msgstr "Huidig"
+
+#: templates/jira/partials/jira_config_modal_form.html:57
+msgid "Current configuration"
+msgstr "Huidige configuratie"
+
+#: templates/jira/jira_config_list.html:141
+msgid "Current configuration updated."
+msgstr "Current configuration updated."
+
+#: templates/query.html:141 templates/settings.html:97
+msgid "Current Jira configuration"
+msgstr "Huidige Jira-configuratie"
+
+#: templates/jira/bulk_labels.html:82
+msgid "Current labels"
+msgstr "Current labels"
+
+#: JiraFox/views.py:268
+msgid "Current sprint Done"
+msgstr "Current sprint Done"
+
+#: JiraFox/views.py:264
+msgid "Current sprint issues"
+msgstr "Current sprint issues"
+
+#: JiraFox/views.py:272
+msgid "Current sprint WIP"
+msgstr "Current sprint WIP"
+
+#: templates/issue/issue_detail.html:26
+msgid "Current WIP age"
+msgstr "Current WIP age"
+
+#: templates/dashboard/_kpis.html:61
+msgid "cycle / lead"
+msgstr "cycle / lead"
+
+#: templates/issue/issue_detail.html:18
+msgid "Cycle time"
+msgstr "Cycle time"
+
+#: templates/sprint/sprint_wia.html:60
+msgid "Cycle Time (days)"
+msgstr "Cycle Time (dagen)"
+
+#: templates/dashboard.html:40 templates/dashboard/_kpis.html:25
+msgid "Cycle Time (P50)"
+msgstr "Cycle Time (P50)"
+
+#: templates/issue/issue_detail.html:12 templates/issue/issue_detail.html:19 templates/issue/issue_detail.html:27 templates/issue/issue_detail.html:62 templates/sprint/sprint_wia.html:93
+msgid "d"
+msgstr "d"
+
+#: templates/home.html:75 templates/dashboard/_toolbar.html:2 templates/includes/header.html:23
+msgid "Dashboard"
+msgstr "Dashboard"
+
+#: templates/account/login.html:18
+msgid "Dashboard sprint"
+msgstr "Dashboard sprint"
+
+#: templates/dashboard/_toolbar_actions.html:15
+msgid "Dashboard status"
+msgstr "Dashboard status"
+
+#: templates/about.html:30
+msgid "Data sources"
+msgstr "Gegevensbronnen"
+
+#: templates/dashboard.html:25
+msgid "days"
+msgstr "dagen"
+
+#: templates/jira/jira_config_list.html:78
+msgid "Definir comme configuration courante"
+msgstr "Definir comme configuration courante"
+
+#: templates/jira/jira_config_list.html:137
+msgid "Delete"
+msgstr "Verwijderen"
+
+#: templates/jira/jira_config_list.html:135
+msgid "Delete configuration"
+msgstr "Delete configuration"
+
+#: templates/jira/jira_config_list.html:136
+msgid "Delete this Jira configuration?"
+msgstr "Delete this Jira configuration?"
+
+#: templates/account/password_reset_done.html:21
+msgid "Delivery"
+msgstr "Delivery"
+
+#: templates/jira/jira_config_list.html:39
+msgid "Dernier test"
+msgstr "Laatste test"
+
+#: templates/sprint/sprint_detail.html:18
+msgid "Detailed sprint issue view with direct access to details and Jira."
+msgstr "Detailed sprint issue view with direct access to details and Jira."
+
+#: templates/sprint/sprint_xls_report.html:98
+msgid "Developer added."
+msgstr "Ontwikkelaar toegevoegd."
+
+#: templates/sprint/sprint_xls_report.html:94
+msgid "Developer name"
+msgstr "Naam ontwikkelaar"
+
+#: templates/sprint/sprint_xls_report.html:103
+msgid "Developer removed from team."
+msgstr "Ontwikkelaar uit team verwijderd."
+
+#: templates/sprint/sprint_weighted_throughput_distribution.html:8 templates/sprint/sprint_weighted_throughput_distribution.html:17
+msgid "Distribution du débit par pondération"
+msgstr "Distribution du débit par pondération"
+
+#: templates/about.html:31
+msgid "Django checks, targeted unit tests, service-layer refactoring"
+msgstr "Django checks, targeted unit tests, service-layer refactoring"
+
+#: templates/dashboard/_kpis.html:49
+msgid "done items"
+msgstr "afgewerkte items"
+
+#: templates/dashboard.html:45
+msgid "Done tickets"
+msgstr "Done tickets"
+
+#: JiraFox/forms.py:8
+msgid "Dutch"
+msgstr "Nederlands"
+
+#: templates/account/logout.html:10
+msgid "Déconnexion"
+msgstr "Déconnexion"
+
+#: templates/account/password_reset_from_key.html:37
+msgid "Définir un nouveau mot de passe"
+msgstr "Définir un nouveau mot de passe"
+
+#: templates/account/signup.html:85
+msgid "Déjà un compte ?"
+msgstr "Déjà un compte ?"
+
+#: templates/jira/partials/jira_config_modal_form.html:4
+msgid "Edit"
+msgstr "Bewerken"
+
+#: templates/jira/jira_config_list.html:89
+msgid "Editer"
+msgstr "Bewerken"
+
+#: JiraFox/forms.py:16 templates/settings.html:52 templates/account/password_reset_done.html:18 templates/jira/jira_config_list.html:35 templates/jira/partials/jira_config_modal_form.html:29
+msgid "Email"
+msgstr "E-mail"
+
+#: templates/account/password_reset_done.html:12
+msgid "Email envoyé"
+msgstr "Email envoyé"
+
+#: templates/account/password_reset.html:17
+msgid "Email reset"
+msgstr "Email reset"
+
+#: templates/home.html:37
+msgid "En un regard"
+msgstr "En un regard"
+
+#: templates/sprint/sprint_list.html:44
+msgid "End"
+msgstr "Einde"
+
+#: JiraFox/forms.py:9
+msgid "English"
+msgstr "Engels"
+
+#: templates/account/password_change.html:75
+msgid "Enregistrer le nouveau mot de passe"
+msgstr "Nieuw wachtwoord opslaan"
+
+#: templates/home.html:65
+msgid "Entrees principales"
+msgstr "Entrees principales"
+
+#: templates/account/password_reset.html:27
+msgid "Entrez votre adresse email. Si un compte existe, vous recevrez un lien de réinitialisation."
+msgstr "Entrez votre adresse email. Si un compte existe, vous recevrez un lien de réinitialisation."
+
+#: templates/account/password_reset.html:43
+msgid "Envoyer le lien de réinitialisation"
+msgstr "Envoyer le lien de réinitialisation"
+
+#: templates/account/password_reset.html:14
+msgid "Envoyez un lien de réinitialisation pour reprendre rapidement la main sur votre accès JiraFox."
+msgstr "Envoyez un lien de réinitialisation pour reprendre rapidement la main sur votre accès JiraFox."
+
+#: templates/jira/jira_config_list.html:38
+msgid "Epic"
+msgstr "Epic"
+
+#: templates/query.html:168
+msgid "Epic bootstrap"
+msgstr "Epic bootstrap"
+
+#: templates/jira/bulk_labels.html:173
+msgid ""
+"Every operation runs in two steps. Preview stores a frozen list of target tickets in your session. Apply updates only that frozen list, not a freshly re-evaluated JQL result."
+msgstr ""
+"Every operation runs in two steps. Preview stores a frozen list of target tickets in your session. Apply updates only that frozen list, not a freshly re-evaluated JQL result."
+
+#: templates/jira/bulk_operations.html:65
+msgid "Every operation should show affected issues and computed changes before Jira is modified."
+msgstr "Every operation should show affected issues and computed changes before Jira is modified."
+
+#: templates/jira/partials/jira_config_modal_form.html:25
+msgid "Ex:"
+msgstr "Ex:"
+
+#: templates/sprint/sprint_xls_report.html:95
+msgid "Ex: Jane Doe"
+msgstr "Ex: Jane Doe"
+
+#: templates/jira/bulk_labels.html:171
+msgid "Execution model"
+msgstr "Execution model"
+
+#: templates/home.html:24
+msgid "Explorer les sprints"
+msgstr "Sprints verkennen"
+
+#: templates/dashboard.html:49
+msgid "Fallback (local)"
+msgstr "Fallback (lokaal)"
+
+#: JiraFox/views.py:276 templates/sprint/sprint_xls_report.html:64
+msgid "Fastlane"
+msgstr "Fastlane"
+
+#: templates/sprint/sprint_list.html:33
+msgid "Filter"
+msgstr "Filteren"
+
+#: templates/issue/issue_detail.html:21
+msgid "First in progress"
+msgstr "First in progress"
+
+#: templates/sprint/sprint_wia.html:61
+msgid "First In Progress"
+msgstr "First In Progress"
+
+#: JiraFox/forms.py:14 templates/settings.html:34
+msgid "First name"
+msgstr "Voornaam"
+
+#: templates/dashboard.html:47 templates/dashboard/_kpis.html:55
+msgid "Flow Efficiency"
+msgstr "Flow-efficiëntie"
+
+#: templates/home.html:48
+msgid "Flow efficiency"
+msgstr "Flow efficiency"
+
+#: templates/account/signup.html:22
+msgid "Flow visibility"
+msgstr "Flowzichtbaarheid"
+
+#: JiraFox/forms.py:7
+msgid "French"
+msgstr "Frans"
+
+#: templates/about.html:29
+msgid "Frontend"
+msgstr "Frontend"
+
+#: templates/jira/bulk_operations.html:68
+msgid "Frozen target set"
+msgstr "Frozen target set"
+
+#: templates/sprint/sprint_list.html:26
+msgid "Future"
+msgstr "Toekomstig"
+
+#: templates/sprint/sprint_xls_report.html:81
+msgid "Generer le Capacity Sheet"
+msgstr "Capacity Sheet genereren"
+
+#: templates/home.html:95
+msgid "Gerer plusieurs boards, tester les acces et choisir la configuration courante."
+msgstr "Gerer plusieurs boards, tester les acces et choisir la configuration courante."
+
+#: templates/about.html:52
+msgid "GitHub repository"
+msgstr "GitHub-repository"
+
+#: templates/sprint/sprint_weighted_throughput_distribution.html:19
+msgid "Histogramme des tickets Done par story points."
+msgstr "Histogramme des tickets Done par story points."
+
+#: templates/issue/issue_detail.html:80
+msgid "History"
+msgstr "Geschiedenis"
+
+#: templates/sprint/sprint_xls_report.html:60
+msgid "Holidays"
+msgstr "Verlof"
+
+#: templates/includes/header.html:20
+msgid "Home"
+msgstr "Home"
+
+#: templates/account/login.html:42
+msgid "Identifiant ou email"
+msgstr "Gebruikersnaam of e-mail"
+
+#: templates/account/password_change.html:18
+msgid "In session"
+msgstr "In session"
+
+#: templates/issue/issue_detail.html:36
+msgid "Informations"
+msgstr "Informatie"
+
+#: templates/base.html:85
+msgid "Input"
+msgstr "Invoer"
+
+#: templates/dashboard/_insights.html:67
+msgid "Insights"
+msgstr "Inzichten"
+
+#: templates/settings.html:61
+msgid "Interface language"
+msgstr "Interfacetaal"
+
+#: templates/sprint/sprint_wia.html:89
+msgid "Invalid payload: missing items"
+msgstr "Ongeldige payload: items ontbreken"
+
+#: templates/account/login.html:22
+msgid "Issue aging"
+msgstr "Issue aging"
+
+#: templates/about.html:40
+msgid "Issue detail pages with flow metrics and status history"
+msgstr "Issue detail pages with flow metrics and status history"
+
+#: templates/query.html:58
+msgid "issue(s)"
+msgstr "issue(s)"
+
+#: templates/jira/bulk_labels.html:64
+msgid "issue(s) found"
+msgstr "issue(s) gevonden"
+
+#: templates/sprint/sprint_wia.html:90
+msgid "item"
+msgstr "item"
+
+#: templates/sprint/sprint_wia.html:92
+msgid "Item age (days)"
+msgstr "Item age (days)"
+
+#: templates/dashboard.html:24 templates/sprint/sprint_wia.html:91
+msgid "items"
+msgstr "items"
+
+#: templates/dashboard.html:53
+msgid "Items API unavailable, using local fallback."
+msgstr "Items API unavailable, using local fallback."
+
+#: templates/sprint/sprint_wia.html:49
+msgid "Items sorted by descending age"
+msgstr "Items gesorteerd op aflopende leeftijd"
+
+#: templates/includes/header.html:84
+msgid "Jira"
+msgstr "Jira"
+
+#: templates/jira/bulk_operations.html:8
+msgid "Jira automation"
+msgstr "Jira automation"
+
+#: templates/jira/jira_config_list.html:134
+msgid "Jira connection failed."
+msgstr "Jira connection failed."
+
+#: templates/jira/jira_config_list.html:140
+msgid "Jira connection OK."
+msgstr "Jira connection OK."
+
+#: templates/jira/jira_config_list.html:133
+msgid "Jira connection validated."
+msgstr "Jira connection validated."
+
+#: templates/jira/jira_config_list.html:14
+msgid "Jira connections"
+msgstr "Jira-verbindingen"
+
+#: templates/query.html:9
+msgid "Jira Query Console"
+msgstr "Jira-queryconsole"
+
+#: templates/jira/partials/jira_config_modal_form.html:20
+msgid "Jira URL"
+msgstr "Jira-URL"
+
+#: templates/about.html:17
+msgid ""
+"JiraFox connects to Jira, structures sprint and issue data, and exposes focused screens for backlog review, WIA, kanban reading, exports and dashboard monitoring."
+msgstr ""
+"JiraFox connects to Jira, structures sprint and issue data, and exposes focused screens for backlog review, WIA, kanban reading, exports and dashboard monitoring."
+
+#: templates/home.html:16
+msgid ""
+"JiraFox rassemble les signaux utiles du sprint: aging, throughput, bottlenecks, capacite et acces directs a Jira. L'objectif n'est pas d'ajouter une couche de reporting, mais de rendre les decisions visibles plus vite."
+msgstr ""
+"JiraFox rassemble les signaux utiles du sprint: aging, throughput, bottlenecks, capacite et acces directs a Jira. L'objectif n'est pas d'ajouter une couche de reporting, mais de rendre les decisions visibles plus vite."
+
+#: templates/about.html:7
+msgid "JiraFox, in short"
+msgstr "JiraFox in het kort"
+
+#: templates/jira/bulk_labels.html:192
+msgid "JQL examples"
+msgstr "JQL-voorbeelden"
+
+#: jiramodule/views.py:74
+msgid "JQL is required."
+msgstr "JQL is verplicht."
+
+#: templates/query.html:4
+msgid "JQL Query"
+msgstr "JQL-query"
+
+#: templates/sprint/sprint_kanban.html:13 templates/sprint/sprint_toolbar_actions.html:6
+msgid "Kanban"
+msgstr "Kanban"
+
+#: templates/dashboard.html:33 templates/query.html:65 templates/dashboard/_aging_table.html:18 templates/jira/bulk_labels.html:80 templates/jira/bulk_labels.html:136 templates/sprint/sprint_detail.html:29
+msgid "Key"
+msgstr "Sleutel"
+
+#: templates/account/password_reset_from_key_done.html:14
+msgid "La réinitialisation est terminée. Vous pouvez maintenant vous reconnecter avec votre nouveau mot de passe."
+msgstr "La réinitialisation est terminée. Vous pouvez maintenant vous reconnecter avec votre nouveau mot de passe."
+
+#: templates/jira/bulk_labels.html:177
+msgid "Label input format"
+msgstr "Label input format"
+
+#: templates/jira/bulk_operations.html:26
+msgid "Labels by JQL"
+msgstr "Labels by JQL"
+
+#: templates/jira/bulk_labels.html:33
+msgid "Labels to add"
+msgstr "Labels toe te voegen"
+
+#: templates/jira/bulk_labels.html:39
+msgid "Labels to remove"
+msgstr "Labels te verwijderen"
+
+#: JiraFox/forms.py:17
+msgid "Language"
+msgstr "Taal"
+
+#: templates/includes/header.html:53
+msgid "Language switch"
+msgstr "Language switch"
+
+#: templates/jira/partials/jira_config_modal_form.html:77
+msgid "Last error:"
+msgstr "Laatste fout:"
+
+#: templates/jira/bulk_labels.html:131
+msgid "Last execution"
+msgstr "Last execution"
+
+#: JiraFox/forms.py:15 templates/settings.html:43
+msgid "Last name"
+msgstr "Achternaam"
+
+#: templates/jira/partials/jira_config_modal_form.html:67
+msgid "Last test:"
+msgstr "Laatste test:"
+
+#: templates/account/password_reset_from_key.html:30
+#, python-format
+msgid ""
+"Le lien de réinitialisation est invalide, probablement parce qu'il a déjà été utilisé. Merci de faire une <a href=\"%(passwd_reset_url)s\">nouvelle demande</a>."
+msgstr ""
+"Le lien de réinitialisation est invalide, probablement parce qu'il a déjà été utilisé. Merci de faire une <a href=\"%(passwd_reset_url)s\">nouvelle demande</a>."
+
+#: templates/account/password_reset_done.html:14
+msgid "Le lien de réinitialisation part par email. Vous pouvez revenir ici si besoin dans quelques minutes."
+msgstr "Le lien de réinitialisation part par email. Vous pouvez revenir ici si besoin dans quelques minutes."
+
+#: templates/issue/issue_detail.html:11
+msgid "Lead time"
+msgstr "Lead time"
+
+#: templates/dashboard.html:41 templates/dashboard/_kpis.html:35
+msgid "Lead Time (P50)"
+msgstr "Lead Time (P50)"
+
+#: templates/account/password_reset_from_key.html:13
+msgid "Lien invalide"
+msgstr "Lien invalide"
+
+#: templates/query.html:24 templates/jira/bulk_labels.html:45
+msgid "Limit"
+msgstr "Limiet"
+
+#: templates/sprint/sprint_wia.html:62
+msgid "Link"
+msgstr "Link"
+
+#: templates/query.html:71
+msgid "Links"
+msgstr "Links"
+
+#: templates/home.html:86
+msgid "Lister les sprints, naviguer dans leurs details et basculer rapidement vers Jira ou l'export."
+msgstr "Lister les sprints, naviguer dans leurs details et basculer rapidement vers Jira ou l'export."
+
+#: templates/query.html:31
+msgid "Load full issue details"
+msgstr "Load full issue details"
+
+#: templates/dashboard.html:50 templates/dashboard/_toolbar_actions.html:17 templates/dashboard/_toolbar_actions.html:20 templates/sprint/sprint_kanban.html:28 templates/sprint/sprint_wia.html:23 templates/sprint/sprint_wia.html:86
+msgid "Loading..."
+msgstr "Laden..."
+
+#: templates/includes/header.html:111
+msgid "Log in"
+msgstr "Aanmelden"
+
+#: templates/includes/header.html:102
+msgid "Log out"
+msgstr "Afmelden"
+
+#: templates/about.html:37
+msgid "Main capabilities"
+msgstr "Belangrijkste mogelijkheden"
+
+#: templates/settings.html:106
+msgid "Manage Jira connections"
+msgstr "Jira-verbindingen beheren"
+
+#: templates/settings.html:8
+msgid "Manage your account details, preferred language and the Jira configuration currently driving the workspace."
+msgstr "Manage your account details, preferred language and the Jira configuration currently driving the workspace."
+
+#: templates/dashboard.html:32 templates/dashboard/_insights.html:83
+msgid "Max age"
+msgstr "Max. leeftijd"
+
+#: templates/jira/jira_config_list.html:5
+msgid "Mes configurations Jira"
+msgstr "Mijn Jira-configuraties"
+
+#: templates/jira/bulk_labels.html:139
+msgid "Message"
+msgstr "Bericht"
+
+#: templates/account/password_change.html:14
+msgid "Mettez à jour votre mot de passe sans quitter votre session JiraFox."
+msgstr "Mettez à jour votre mot de passe sans quitter votre session JiraFox."
+
+#: templates/account/password_change.html:27
+msgid "Mettre à jour l'accès"
+msgstr "Mettre à jour l'accès"
+
+#: templates/account/login.html:53 templates/account/signup.html:62
+msgid "Mot de passe"
+msgstr "Wachtwoord"
+
+#: templates/account/password_change.html:43
+msgid "Mot de passe actuel"
+msgstr "Huidig wachtwoord"
+
+#: templates/account/password_reset_from_key_done.html:12
+msgid "Mot de passe mis à jour"
+msgstr "Mot de passe mis à jour"
+
+#: templates/account/password_reset.html:12
+msgid "Mot de passe oublié"
+msgstr "Mot de passe oublié"
+
+#: templates/account/login.html:80 templates/account/password_change.html:80
+msgid "Mot de passe oublié ?"
+msgstr "Mot de passe oublié ?"
+
+#: templates/jira/bulk_operations.html:51
+msgid "Move selected issues through a Jira workflow transition."
+msgstr "Move selected issues through a Jira workflow transition."
+
+#: templates/sprint/sprint_list.html:41 templates/sprint/sprint_report.html:22
+msgid "Name"
+msgstr "Naam"
+
+#: templates/jira/bulk_labels.html:83
+msgid "Next labels"
+msgstr "Volgende labels"
+
+#: templates/jira/bulk_labels.html:114
+msgid "No"
+msgstr "Nee"
+
+#: templates/query.html:162
+msgid "No active Jira configuration."
+msgstr "Geen actieve Jira-configuratie."
+
+#: jiramodule/views.py:103
+msgid "No bulk labels preview to apply."
+msgstr "No bulk labels preview to apply."
+
+#: templates/settings.html:109
+msgid "No current Jira configuration is active for this account."
+msgstr "No current Jira configuration is active for this account."
+
+#: templates/issue/issue_detail.html:71
+msgid "No data."
+msgstr "Geen gegevens."
+
+#: templates/dashboard.html:46
+msgid "No Done tickets"
+msgstr "Geen Done tickets"
+
+#: templates/dashboard/_insights.html:58
+msgid "No Done tickets to display."
+msgstr "No Done tickets to display."
+
+#: templates/sprint/sprint_kanban.html:27
+msgid "No issue"
+msgstr "Geen issue"
+
+#: templates/query.html:107 templates/jira/bulk_labels.html:120
+msgid "No issues returned."
+msgstr "Geen issues teruggegeven."
+
+#: templates/query.html:122
+msgid "No presets available."
+msgstr "No presets available."
+
+#: templates/sprint/sprint_list.html:74
+msgid "No sprint found"
+msgstr "Geen sprint gevonden"
+
+#: templates/issue/issue_detail.html:110
+msgid "No status change found."
+msgstr "No status change found."
+
+#: templates/account/signup.html:41
+msgid "Nom d'utilisateur"
+msgstr "Gebruikersnaam"
+
+#: templates/sprint/sprint_weighted_throughput_distribution.html:60 templates/sprint/sprint_weighted_throughput_distribution.html:89
+msgid "Nombre de tickets Done"
+msgstr "Aantal Done tickets"
+
+#: jiramodule/services/kanban_metrics.py:136
+msgid "Not enough information to compute metrics (missing created/status/changelog)."
+msgstr "Not enough information to compute metrics (missing created/status/changelog)."
+
+#: templates/account/password_reset_done.html:29
+msgid ""
+"Nous vous avons envoyé un email. Si vous ne l'avez pas reçu, vérifiez votre dossier spam. Sinon, contactez-nous si rien n'arrive dans quelques minutes."
+msgstr ""
+"Nous vous avons envoyé un email. Si vous ne l'avez pas reçu, vérifiez votre dossier spam. Sinon, contactez-nous si rien n'arrive dans quelques minutes."
+
+#: templates/account/signup.html:32
+msgid "Nouveau compte"
+msgstr "Nieuw account"
+
+#: templates/account/password_change.html:53 templates/account/password_reset_from_key.html:18 templates/account/password_reset_from_key.html:51
+msgid "Nouveau mot de passe"
+msgstr "Nieuw wachtwoord"
+
+#: templates/account/password_reset_from_key.html:34
+msgid "Nouvelle demande"
+msgstr "Nouvelle demande"
+
+#: templates/dashboard.html:48
+msgid "OK (API)"
+msgstr "OK (API)"
+
+#: templates/jira/bulk_labels.html:65
+msgid "Only rows marked as changed will be updated."
+msgstr "Only rows marked as changed will be updated."
+
+#: templates/dashboard.html:51 templates/jira/bulk_operations.html:28
+msgid "Open"
+msgstr "Openen"
+
+#: templates/dashboard.html:22 templates/query.html:36 templates/query_toolbar_actions.html:4 templates/dashboard/_aging_table.html:10 templates/dashboard/_insights.html:13 templates/dashboard/_insights.html:34
+msgid "Open in Jira"
+msgstr "Openen in Jira"
+
+#: templates/about.html:41
+msgid "Operational dashboard for active sprint monitoring"
+msgstr "Operational dashboard for active sprint monitoring"
+
+#: templates/issue/issue_detail.html:48
+msgid "Original estimate"
+msgstr "Original estimate"
+
+#: templates/sprint/sprint_xls_report.html:72
+msgid "Other meetings"
+msgstr "Andere meetings"
+
+#: templates/account/signup.html:15
+msgid "Ouvrez votre accès pour centraliser vos boards, vos métriques de sprint et vos exports d'équipe dans un seul cockpit."
+msgstr "Ouvrez votre accès pour centraliser vos boards, vos métriques de sprint et vos exports d'équipe dans un seul cockpit."
+
+#: templates/home.html:79
+msgid "Ouvrir"
+msgstr "Openen"
+
+#: templates/home.html:21
+msgid "Ouvrir le dashboard"
+msgstr "Dashboard openen"
+
+#: templates/about.html:58
+msgid "Owner"
+msgstr "Eigenaar"
+
+#: templates/home.html:88
+msgid "Parcourir"
+msgstr "Bladeren"
+
+#: templates/home.html:63
+msgid "Parcours"
+msgstr "Parcours"
+
+#: templates/settings.html:87
+msgid "Password management"
+msgstr "Password management"
+
+#: templates/account/password_reset_done.html:17
+msgid "Password reset"
+msgstr "Wachtwoord resetten"
+
+#: templates/account/password_change.html:21
+msgid "Password update"
+msgstr "Password update"
+
+#: templates/account/password_reset_done.html:22
+msgid "Pending"
+msgstr "In behandeling"
+
+#: templates/about.html:43
+msgid "Per-user Jira connection management"
+msgstr "Per-user Jira connection management"
+
+#: templates/home.html:12
+msgid "Pilotage agile"
+msgstr "Pilotage agile"
+
+#: templates/jira/bulk_labels.html:17
+msgid "Prepare operation"
+msgstr "Prepare operation"
+
+#: templates/query.html:114
+msgid "Presets"
+msgstr "Presets"
+
+#: templates/jira/bulk_labels.html:52 templates/jira/bulk_labels.html:62
+msgid "Preview"
+msgstr "Voorbeeld"
+
+#: jiramodule/views.py:90
+#, python-format
+msgid "Preview failed: %(error)s"
+msgstr "Preview failed: %(error)s"
+
+#: templates/jira/bulk_labels.html:20 templates/jira/bulk_operations.html:64
+msgid "Preview first"
+msgstr "Preview first"
+
+#: jiramodule/views.py:94
+#, python-format
+msgid "Preview ready: %(count)s ticket(s) will change."
+msgstr "Preview ready: %(count)s ticket(s) will change."
+
+#: templates/settings.html:7
+msgid "Profile and workspace settings"
+msgstr "Profile and workspace settings"
+
+#: templates/query.html:153 templates/settings.html:102 templates/issue/issue_detail.html:41 templates/jira/jira_config_list.html:37
+msgid "Project"
+msgstr "Project"
+
+#: templates/jira/partials/jira_config_modal_form.html:47
+msgid "Project ID"
+msgstr "Project-ID"
+
+#: templates/about.html:49
+msgid "Project links"
+msgstr "Projectlinks"
+
+#: templates/sprint/sprint_xls_report.html:68
+msgid "Project meetings"
+msgstr "Projectmeetings"
+
+#: templates/about.html:31
+msgid "Quality"
+msgstr "Kwaliteit"
+
+#: templates/query.html:8 templates/includes/header.html:29
+msgid "Query"
+msgstr "Query"
+
+#: templates/query.html:49
+msgid "Query failed"
+msgstr "Query failed"
+
+#: templates/issue/issue_detail.html:118
+msgid "Raw data (debug)"
+msgstr "Raw data (debug)"
+
+#: templates/sprint/sprint_report.html:14
+msgid "Ready-to-open JQL queries by sprint segment."
+msgstr "Ready-to-open JQL queries by sprint segment."
+
+#: templates/query.html:129
+msgid "Recent queries"
+msgstr "Recente queries"
+
+#: JiraFox/views.py:284
+msgid "Recently resolved"
+msgstr "Recently resolved"
+
+#: templates/jira/bulk_operations.html:79
+msgid "Recommended workflow"
+msgstr "Recommended workflow"
+
+#: templates/account/password_reset.html:10 templates/account/password_reset_done.html:10 templates/account/password_reset_from_key.html:10 templates/account/password_reset_from_key_done.html:10
+msgid "Recovery"
+msgstr "Herstel"
+
+#: templates/jira/partials/jira_config_modal_form.html:51
+msgid "Recurrent Epic Key"
+msgstr "Recurrent Epic Key"
+
+#: templates/dashboard.html:21 templates/dashboard/_toolbar_actions.html:23 templates/dashboard/_toolbar_actions.html:23 templates/sprint/sprint_detail.html:21 templates/sprint/sprint_wia.html:24
+msgid "Reload"
+msgstr "Herladen"
+
+#: templates/issue/issue_detail.html:49
+msgid "Remaining"
+msgstr "Resterend"
+
+#: templates/sprint/sprint_xls_report.html:102
+msgid "Remove"
+msgstr "Verwijderen"
+
+#: templates/sprint/sprint_xls_report.html:100
+msgid "Remove developer"
+msgstr "Ontwikkelaar verwijderen"
+
+#: templates/sprint/sprint_xls_report.html:101
+msgid "Remove this developer from the team?"
+msgstr "Remove this developer from the team?"
+
+#: templates/account/signup.html:33
+msgid "Remplissez les informations essentielles pour démarrer."
+msgstr "Remplissez les informations essentielles pour démarrer."
+
+#: templates/account/password_reset_done.html:33
+msgid "Renvoyer la demande"
+msgstr "Renvoyer la demande"
+
+#: templates/sprint/sprint_xls_report.html:39
+msgid "Reordonner le dev"
+msgstr "Reordonner le dev"
+
+#: templates/sprint/sprint_toolbar_actions.html:9
+msgid "Report"
+msgstr "Rapport"
+
+#: templates/jira/bulk_labels.html:138
+msgid "Result"
+msgstr "Resultaat"
+
+#: templates/query.html:57
+msgid "Results"
+msgstr "Resultaten"
+
+#: templates/sprint/sprint_xls_report.html:45
+msgid "Retirer de la team"
+msgstr "Retirer de la team"
+
+#: templates/account/password_change.html:79 templates/account/password_reset_from_key_done.html:23
+msgid "Retour à l'accueil"
+msgstr "Retour à l'accueil"
+
+#: templates/account/password_reset.html:46 templates/account/password_reset_done.html:32 templates/account/password_reset_from_key.html:33 templates/account/password_reset_from_key.html:84
+msgid "Retour à la connexion"
+msgstr "Retour à la connexion"
+
+#: templates/account/login.html:15
+msgid ""
+"Retrouvez votre cockpit Jira, vos métriques de flux et vos configurations de board dans une interface pensée pour aller vite."
+msgstr ""
+"Retrouvez votre cockpit Jira, vos métriques de flux et vos configurations de board dans une interface pensée pour aller vite."
+
+#: templates/jira/bulk_operations.html:84
+msgid "Review the execution result."
+msgstr "Review the execution result."
+
+#: templates/jira/bulk_operations.html:36 templates/jira/bulk_operations.html:44 templates/jira/bulk_operations.html:52
+msgid "Roadmap"
+msgstr "Roadmap"
+
+#: templates/query.html:40
+msgid "Run"
+msgstr "Uitvoeren"
+
+#: templates/jira/bulk_operations.html:82
+msgid "Run preview and inspect changed rows."
+msgstr "Run preview and inspect changed rows."
+
+#: templates/account/password_reset_from_key.html:28
+msgid "Réinitialisation impossible"
+msgstr "Réinitialisation impossible"
+
+#: templates/account/password_reset.html:26
+msgid "Réinitialiser l'accès"
+msgstr "Réinitialiser l'accès"
+
+#: templates/jira/bulk_operations.html:61
+msgid "Safety model"
+msgstr "Safety model"
+
+#: templates/jira/bulk_labels.html:183
+msgid "Safety rules"
+msgstr "Safety rules"
+
+#: templates/account/password_reset_from_key.html:38
+msgid "Saisissez puis confirmez votre nouveau mot de passe."
+msgstr "Saisissez puis confirmez votre nouveau mot de passe."
+
+#: templates/account/password_change.html:29
+msgid "Saisissez votre mot de passe actuel, puis choisissez un nouveau mot de passe."
+msgstr "Saisissez votre mot de passe actuel, puis choisissez un nouveau mot de passe."
+
+#: templates/jira/partials/jira_config_modal_form.html:93
+msgid "Save"
+msgstr "Opslaan"
+
+#: templates/settings.html:74
+msgid "Save settings"
+msgstr "Instellingen opslaan"
+
+#: templates/jira/jira_config_list.html:126
+msgid "Saving..."
+msgstr "Opslaan..."
+
+#: templates/issue/issue_detail.html:46
+msgid "Scrum / effort"
+msgstr "Scrum / effort"
+
+#: templates/home.html:28 templates/account/login.html:76 templates/account/password_reset_from_key_done.html:22 templates/account/signup.html:86
+msgid "Se connecter"
+msgstr "Aanmelden"
+
+#: templates/account/logout.html:19
+msgid "Se déconnecter"
+msgstr "Se déconnecter"
+
+#: templates/account/login.html:67
+msgid "Se souvenir de moi"
+msgstr "Onthoud mij"
+
+#: templates/sprint/sprint_wia.html:50
+msgid "Search, sorting and pagination."
+msgstr "Zoeken, sorteren en pagineren."
+
+#: templates/account/password_change.html:22
+msgid "Secure"
+msgstr "Secure"
+
+#: templates/account/login.html:11
+msgid "Secure access"
+msgstr "Secure access"
+
+#: templates/settings.html:84 templates/account/password_change.html:10
+msgid "Security"
+msgstr "Beveiliging"
+
+#: templates/settings.html:4 templates/settings.html:14 templates/includes/header.html:79
+msgid "Settings"
+msgstr "Instellingen"
+
+#: JiraFox/views.py:132
+msgid "Settings updated."
+msgstr "Instellingen bijgewerkt."
+
+#: templates/jira/bulk_labels.html:149
+msgid "Skipped"
+msgstr "Overgeslagen"
+
+#: templates/jira/bulk_operations.html:72
+msgid "Small batches"
+msgstr "Small batches"
+
+#: templates/issue/issue_detail.html:50
+msgid "Spent"
+msgstr "Besteed"
+
+#: templates/includes/header.html:26
+msgid "Sprint"
+msgstr "Sprint"
+
+#: templates/sprint/sprint_header.html:2
+#, python-format
+msgid "Sprint %(sprint_id)s"
+msgstr "Sprint %(sprint_id)s"
+
+#: templates/sprint/sprint_detail.html:17
+msgid "Sprint backlog"
+msgstr "Sprint backlog"
+
+#: templates/account/signup.html:26
+msgid "Sprint detail"
+msgstr "Sprintdetail"
+
+#: templates/dashboard/_toolbar_actions.html:2
+msgid "Sprint links"
+msgstr "Sprint links"
+
+#: templates/about.html:39
+msgid "Sprint list and sprint detail views"
+msgstr "Sprint list and sprint detail views"
+
+#: templates/sprint/sprint_list.html:12
+msgid "Sprint map"
+msgstr "Sprint map"
+
+#: templates/sprint/sprint_report.html:13
+msgid "Sprint report"
+msgstr "Sprintrapport"
+
+#: templates/dashboard/_toolbar.html:3
+#, python-format
+msgid "Sprint: %(sprint_name)s"
+msgstr "Sprint: %(sprint_name)s"
+
+#: templates/home.html:84 templates/sprint/sprint_list.html:11
+msgid "Sprints"
+msgstr "Sprints"
+
+#: templates/sprint/sprint_list.html:43
+msgid "Start"
+msgstr "Start"
+
+#: templates/jira/bulk_operations.html:73
+msgid "Start with a small limit, validate the result, then increase the scope."
+msgstr "Start with a small limit, validate the result, then increase the scope."
+
+#: templates/issue/issue_detail.html:39 templates/sprint/sprint_detail.html:32 templates/sprint/sprint_list.html:42
+msgid "State"
+msgstr "Status"
+
+#: templates/dashboard.html:29 templates/query.html:68 templates/dashboard/_aging_table.html:20 templates/dashboard/_insights.html:31 templates/dashboard/_insights.html:80 templates/sprint/sprint_wia.html:38
+msgid "Status"
+msgstr "Status"
+
+#: templates/dashboard.html:55
+msgid "status"
+msgstr "status"
+
+#: templates/issue/issue_detail.html:81
+msgid "Status changes"
+msgstr "Status changes"
+
+#: templates/dashboard.html:44 templates/issue/issue_detail.html:47 templates/sprint/sprint_weighted_throughput_distribution.html:83
+msgid "Story points"
+msgstr "Story points"
+
+#: templates/sprint/sprint_weighted_throughput_distribution.html:76
+msgid "story points"
+msgstr "story points"
+
+#: templates/query.html:66 templates/jira/bulk_labels.html:81 templates/jira/bulk_labels.html:137 templates/sprint/sprint_detail.html:30
+msgid "Summary"
+msgstr "Samenvatting"
+
+#: templates/dashboard.html:52
+msgid "Summary API unavailable, using local fallback."
+msgstr "Summary API unavailable, using local fallback."
+
+#: templates/jira/jira_config_list.html:96
+msgid "Supprimer"
+msgstr "Verwijderen"
+
+#: templates/dashboard/_aging_table.html:5
+msgid "Table"
+msgstr "Tabel"
+
+#: templates/query.html:157 templates/settings.html:103 templates/sprint/sprint_xls_report.html:17
+msgid "Team"
+msgstr "Team"
+
+#: templates/about.html:15
+msgid "Technical overview"
+msgstr "Technisch overzicht"
+
+#: templates/about.html:26
+msgid "Technology stack"
+msgstr "Technologiestack"
+
+#: templates/jira/bulk_labels.html:168
+msgid "Template documentation"
+msgstr "Template documentation"
+
+#: templates/jira/partials/jira_config_modal_form.html:89
+msgid "Test connection"
+msgstr "Verbinding testen"
+
+#: templates/jira/jira_config_list.html:84
+msgid "Tester la connexion"
+msgstr "Verbinding testen"
+
+#: templates/jira/jira_config_list.html:127
+msgid "Testing..."
+msgstr "Testen..."
+
+#: templates/about.html:20
+msgid "The project has been progressively refactored to separate service logic, Django views, templates and frontend scripts."
+msgstr "The project has been progressively refactored to separate service logic, Django views, templates and frontend scripts."
+
+#: templates/settings.html:26
+msgid "These values are used for your account and interface preferences."
+msgstr "These values are used for your account and interface preferences."
+
+#: templates/dashboard.html:42 templates/dashboard/_kpis.html:45
+msgid "Throughput (7d)"
+msgstr "Throughput (7d)"
+
+#: templates/sprint/sprint_weighted_throughput_distribution.html:77
+msgid "ticket(s) Done"
+msgstr "ticket(s) Done"
+
+#: templates/issue/issue_detail.html:55
+msgid "Time in status"
+msgstr "Time in status"
+
+#: templates/dashboard/_insights.html:91
+msgid "Tip: thickening statuses typically indicate a bottleneck."
+msgstr "Tip: thickening statuses typically indicate a bottleneck."
+
+#: templates/dashboard.html:34 templates/dashboard/_aging_table.html:19 templates/sprint/sprint_wia.html:57
+msgid "Title"
+msgstr "Titel"
+
+#: templates/includes/header.html:44 templates/includes/header.html:45
+msgid "Toggle dark mode"
+msgstr "Donkere modus wisselen"
+
+#: templates/jira/partials/jira_config_modal_form.html:36
+msgid "Token"
+msgstr "Token"
+
+#: templates/dashboard.html:28 templates/dashboard/_aging_table.html:6
+msgid "Top aging items"
+msgstr "Oudste items"
+
+#: templates/sprint/sprint_weighted_throughput_distribution.html:23
+msgid "Total tickets Done"
+msgstr "Total tickets Done"
+
+#: templates/jira/bulk_operations.html:50
+msgid "Transition by JQL"
+msgstr "Transition by JQL"
+
+#: templates/home.html:67
+msgid "Trois acces penses pour aller du signal au detail sans detour."
+msgstr "Trois acces penses pour aller du signal au detail sans detour."
+
+#: templates/query.html:67 templates/issue/issue_detail.html:40 templates/sprint/sprint_detail.html:31
+msgid "Type"
+msgstr "Type"
+
+#: templates/home.html:39
+msgid "Un cockpit plus qu'une homepage."
+msgstr "Un cockpit plus qu'une homepage."
+
+#: templates/sprint/sprint_xls_report.html:99
+msgid "Unable to create developer."
+msgstr "Kan ontwikkelaar niet aanmaken."
+
+#: templates/sprint/sprint_kanban.html:30
+msgid "Unable to load Kanban"
+msgstr "Kan Kanban niet laden"
+
+#: templates/sprint/sprint_wia.html:88
+msgid "Unable to load WIA data"
+msgstr "Kan WIA-gegevens niet laden"
+
+#: templates/sprint/sprint_xls_report.html:104
+msgid "Unable to remove developer."
+msgstr "Kan ontwikkelaar niet verwijderen."
+
+#: templates/sprint/sprint_xls_report.html:106
+msgid "Unable to save column order."
+msgstr "Unable to save column order."
+
+#: templates/jira/jira_config_list.html:142
+msgid "Unable to save current configuration."
+msgstr "Unable to save current configuration."
+
+#: templates/sprint/sprint_xls_report.html:92
+msgid "Unable to save value."
+msgstr "Kan waarde niet opslaan."
+
+#: templates/jira/jira_config_list.html:143
+msgid "Unexpected response format"
+msgstr "Unexpected response format"
+
+#: templates/sprint/sprint_kanban.html:29
+msgid "Unexpected response."
+msgstr "Onverwachte respons."
+
+#: templates/jira/jira_config_list.html:131
+msgid "unknown error"
+msgstr "onbekende fout"
+
+#: templates/settings.html:88
+msgid "Update your password from an authenticated session."
+msgstr "Update your password from an authenticated session."
+
+#: templates/query.html:145 templates/settings.html:100 templates/jira/jira_config_list.html:34
+msgid "URL"
+msgstr "URL"
+
+#: templates/jira/bulk_labels.html:185
+msgid "Use a small limit first. Review the Change column. Apply only when the preview matches exactly what you expect."
+msgstr "Use a small limit first. Review the Change column. Apply only when the preview matches exactly what you expect."
+
+#: templates/jira/bulk_labels.html:179
+msgid "Use comma-separated labels. New lines are accepted too. Duplicate labels are removed before preview."
+msgstr "Use comma-separated labels. New lines are accepted too. Duplicate labels are removed before preview."
+
+#: templates/settings.html:25
+msgid "User profile"
+msgstr "Gebruikersprofiel"
+
+#: templates/base.html:86
+msgid "Value"
+msgstr "Waarde"
+
+#: templates/sprint/sprint_xls_report.html:91
+msgid "Value saved."
+msgstr "Waarde opgeslagen."
+
+#: templates/dashboard.html:23
+msgid "View details"
+msgstr "Details bekijken"
+
+#: templates/dashboard/_toolbar_actions.html:10 templates/dashboard/_toolbar_actions.html:11
+msgid "View sprint detail"
+msgstr "Sprintdetail bekijken"
+
+#: templates/home.html:14
+msgid "Voir le flux avant qu'il ne se grippe."
+msgstr "Zie de flow voordat die vastloopt."
+
+#: templates/account/password_reset_from_key_done.html:20
+msgid "Votre mot de passe a bien été modifié."
+msgstr "Votre mot de passe a bien été modifié."
+
+#: templates/dashboard.html:54
+msgid "vs last week"
+msgstr "t.o.v. vorige week"
+
+#: templates/home.html:77
+msgid "Vue synthetique du sprint courant, avec KPIs, WIA chart, bottlenecks et top aging items."
+msgstr "Vue synthetique du sprint courant, avec KPIs, WIA chart, bottlenecks et top aging items."
+
+#: templates/account/password_reset_done.html:27
+msgid "Vérifiez votre boîte mail"
+msgstr "Vérifiez votre boîte mail"
+
+#: templates/dashboard.html:43 templates/dashboard/_insights.html:51 templates/sprint/sprint_toolbar_actions.html:15
+msgid "Weighted throughput"
+msgstr "Gewogen throughput"
+
+#: templates/about.html:42
+msgid "WIA, kanban and XLS reporting screens"
+msgstr "WIA, kanban and XLS reporting screens"
+
+#: templates/dashboard.html:38 templates/dashboard/_kpis.html:5
+msgid "WIP Items"
+msgstr "WIP-items"
+
+#: templates/dashboard.html:26 templates/dashboard/_insights.html:8
+msgid "Work Item Age"
+msgstr "Work Item Age"
+
+#: templates/sprint/sprint_wia.html:19
+msgid "Work Item Age Diagram"
+msgstr "Work Item Age-diagram"
+
+#: templates/home.html:44
+msgid "Work item aging"
+msgstr "Work item aging"
+
+#: templates/sprint/sprint_xls_report.html:56
+msgid "Workload"
+msgstr "Werklast"
+
+#: templates/account/signup.html:11
+msgid "Workspace access"
+msgstr "Workspacetoegang"
+
+#: templates/jira/bulk_operations.html:81
+msgid "Write or select a precise JQL query."
+msgstr "Write or select a precise JQL query."
+
+#: templates/jira/bulk_labels.html:112
+msgid "Yes"
+msgstr "Ja"
+
+#: templates/jira/partials/jira_config_modal_form.html:84
+msgid "You can save and then test, or test directly after editing."
+msgstr "You can save and then test, or test directly after editing."
+
+#: templates/account/logout.html:12
+msgid "Êtes-vous sûr de vouloir vous déconnecter ?"
+msgstr "Êtes-vous sûr de vouloir vous déconnecter ?"
+
+#: jiramodule/services/bulk_operations.py:103 jiramodule/services/bulk_operations.py:114
+msgid "No change"
+msgstr "Geen wijziging"
+
+#: jiramodule/services/bulk_operations.py:103 jiramodule/services/bulk_operations.py:114
+msgid "Updated"
+msgstr "Bijgewerkt"

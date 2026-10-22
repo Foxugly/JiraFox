@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}JiraFox - {% trans "Bulk operations" %}{% endblock %}
+
+{% block content %}
+<section class="page-shell glass-panel section-stack">
+    {% trans "Jira automation" as bulk_kicker %}
+    {% trans "Bulk operations" as bulk_title %}
+    {% include "includes/page_toolbar.html" with toolbar_icon="fa-solid fa-layer-group" toolbar_kicker=bulk_kicker toolbar_title=bulk_title %}
+
+    <div class="row g-3">
+        <div class="col-12 col-lg-8">
+            <div class="utility-panel">
+                <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+                    <div>
+                        <h2 class="h4 mb-1">{% trans "Available operations" %}</h2>
+                        <div class="inline-note">{% trans "Browser-driven Jira operations with preview before apply." %}</div>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <a class="feature-card d-block h-100 text-decoration-none" href="{% url 'jira_bulk_labels' %}">
+                            <span class="feature-icon"><i class="fa-solid fa-tags"></i></span>
+                            <h3 class="h5 mb-2">{% trans "Labels by JQL" %}</h3>
+                            <p class="inline-note mb-3">{% trans "Add or remove labels from a frozen preview of JQL-selected issues." %}</p>
+                            <span class="btn btn-sm btn-primary">{% trans "Open" %}</span>
+                        </a>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <div class="feature-card h-100">
+                            <span class="feature-icon"><i class="fa-solid fa-plus"></i></span>
+                            <h3 class="h5 mb-2">{% trans "Bulk create issues" %}</h3>
+                            <p class="inline-note mb-3">{% trans "Create multiple tasks, bugs or epics from structured input." %}</p>
+                            <span class="badge text-bg-secondary">{% trans "Roadmap" %}</span>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <div class="feature-card h-100">
+                            <span class="feature-icon"><i class="fa-solid fa-user-check"></i></span>
+                            <h3 class="h5 mb-2">{% trans "Assign by JQL" %}</h3>
+                            <p class="inline-note mb-3">{% trans "Assign selected issues to a developer after preview." %}</p>
+                            <span class="badge text-bg-secondary">{% trans "Roadmap" %}</span>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <div class="feature-card h-100">
+                            <span class="feature-icon"><i class="fa-solid fa-route"></i></span>
+                            <h3 class="h5 mb-2">{% trans "Transition by JQL" %}</h3>
+                            <p class="inline-note mb-3">{% trans "Move selected issues through a Jira workflow transition." %}</p>
+                            <span class="badge text-bg-secondary">{% trans "Roadmap" %}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-4">
+            <div class="utility-panel mb-3">
+                <h2 class="h5 mb-3">{% trans "Safety model" %}</h2>
+                <div class="vstack gap-3">
+                    <div>
+                        <h3 class="h6 mb-1">{% trans "Preview first" %}</h3>
+                        <p class="inline-note mb-0">{% trans "Every operation should show affected issues and computed changes before Jira is modified." %}</p>
+                    </div>
+                    <div>
+                        <h3 class="h6 mb-1">{% trans "Frozen target set" %}</h3>
+                        <p class="inline-note mb-0">{% trans "Apply should use the previewed issue list, not a freshly evaluated JQL query." %}</p>
+                    </div>
+                    <div>
+                        <h3 class="h6 mb-1">{% trans "Small batches" %}</h3>
+                        <p class="inline-note mb-0">{% trans "Start with a small limit, validate the result, then increase the scope." %}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="utility-panel">
+                <h2 class="h5 mb-3">{% trans "Recommended workflow" %}</h2>
+                <ol class="mb-0 ps-3 text-secondary">
+                    <li>{% trans "Write or select a precise JQL query." %}</li>
+                    <li>{% trans "Run preview and inspect changed rows." %}</li>
+                    <li>{% trans "Apply only when the preview is exact." %}</li>
+                    <li>{% trans "Review the execution result." %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

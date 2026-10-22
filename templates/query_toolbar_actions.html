@@ -1,0 +1,6 @@
+{% load i18n %}
+{% if jira_url_jql %}
+    <a class="btn btn-sm btn-outline-primary" href="{{ jira_url_jql }}" target="_blank" rel="noopener">
+        <i class="fa-brands fa-jira me-2"></i>{% trans "Open in Jira" %}
+    </a>
+{% endif %}
