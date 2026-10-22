@@ -2,10 +2,13 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 
+from JiraFox.services.dashboard import build_dashboard_kpis
+from JiraFox.services.issue_data import is_issue_done
 from jiramodule.models import JiraConfiguration
+from jiramodule.utils.datetime_utils import WORKDAY_HOURS, hours_to_business_days
 
 
 class PublicPagesTests(TestCase):
@@ -156,3 +159,25 @@ class AuthPagesTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["items"][0]["key"], "ABC-1")
+
+
+class FlowMetricsConsistencyTests(SimpleTestCase):
+    def test_workday_matches_the_business_hours_week(self):
+        # 4 x 8 h + 4 h on Friday = 36 h over 5 working days.
+        self.assertEqual(WORKDAY_HOURS, 7.2)
+        self.assertEqual(hours_to_business_days(36), 5)
+
+    def test_done_follows_the_status_category_not_the_status_name(self):
+        self.assertTrue(is_issue_done({"state": "Closed", "status_category": "done"}))
+        self.assertFalse(is_issue_done({"state": "Done", "status_category": "indeterminate"}))
+        # Issues cached before status_category existed.
+        self.assertTrue(is_issue_done({"state": "Done"}))
+
+    def test_wip_excludes_every_done_category_status(self):
+        issues = [
+            {"state": "Closed", "status_category": "done"},
+            {"state": "Resolved", "status_category": "done"},
+            {"state": "In Progress", "status_category": "indeterminate"},
+        ]
+
+        self.assertEqual(build_dashboard_kpis(issues, throughput_7d=0)["wip"], 1)

@@ -5,6 +5,14 @@ def get_issue_status(issue: dict, default: str = "Unknown") -> str:
     return (issue.get("state") or "").strip() or default
 
 
+def is_issue_done(issue: dict) -> bool:
+    category = issue.get("status_category")
+    if category:
+        return category == "done"
+    # Issues cached before status_category existed only carry the status name.
+    return get_issue_status(issue, default="") == "Done"
+
+
 def get_issue_assignee_name(issue: dict) -> str:
     assignee = issue.get("assignee") or {}
     return assignee.get("displayName") or ""

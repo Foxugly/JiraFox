@@ -12,6 +12,12 @@ from ..utils.datetime_utils import _to_hours
 from .kanban_metrics import KanbanMetricsService
 
 
+def _status_category_key(fields: Any) -> Optional[str]:
+    """'new', 'indeterminate' or 'done': unlike status and category names, the key is never renamed or translated."""
+    category = getattr(getattr(fields, "status", None), "statusCategory", None)
+    return getattr(category, "key", None)
+
+
 class JiraManager:
     JIRA_ONLY_STANDARD_TYPES = "issuetype in standardIssueTypes()"
     # (connect, read) seconds, passed to requests by the jira client.
@@ -336,6 +342,7 @@ class JiraManager:
             "project": getattr(getattr(fields, "project", None), "key", None),
             "issueType": getattr(getattr(fields, "issuetype", None), "name", None),
             "state": getattr(getattr(fields, "status", None), "name", None),
+            "status_category": _status_category_key(fields),
             "assignee": self._serialize_assignee(getattr(fields, "assignee", None)),
             "url": self.get_issue_url(issue.key),
         }
@@ -353,6 +360,7 @@ class JiraManager:
             "project": getattr(getattr(fields, "project", None), "key", None),
             "issueType": getattr(getattr(fields, "issuetype", None), "name", None),
             "state": getattr(getattr(fields, "status", None), "name", None),
+            "status_category": _status_category_key(fields),
             "assignee": self._serialize_assignee(getattr(fields, "assignee", None)),
             "estimation": {
                 "story_points": self._get_story_points(issue),
@@ -400,7 +408,7 @@ class JiraManager:
         query = (
             f"project = {self.cfg.jira_project_id} "
             f"AND issuetype in standardIssueTypes() "
-            f"AND status = Done "
+            f"AND statusCategory = Done "
             f"AND resolved >= -{int(days)}d "
             "ORDER BY resolved DESC"
         )

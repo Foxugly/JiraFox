@@ -4,6 +4,10 @@ from typing import Optional
 from django.utils import timezone
 from django.utils.formats import date_format
 
+# Business hours per weekday (Mon..Sun): 36 h a week, i.e. 7.2 h per average working day.
+DAILY_BUSINESS_HOURS = (8.0, 8.0, 8.0, 8.0, 4.0, 0.0, 0.0)
+WORKDAY_HOURS = sum(DAILY_BUSINESS_HOURS) / 5
+
 
 def serialize_dt(dt):
     if not dt:
@@ -41,7 +45,7 @@ def _parse_jira_dt(s: Optional[str]) -> Optional[datetime]:
     return None
 
 
-def hours_to_business_days(hours: Optional[float], *, day_hours: float = 8.0) -> Optional[float]:
+def hours_to_business_days(hours: Optional[float], *, day_hours: float = WORKDAY_HOURS) -> Optional[float]:
     if hours is None:
         return None
     return round(hours / day_hours, 2)

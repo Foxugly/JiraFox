@@ -184,3 +184,25 @@ class JiraErrorPageTests(TestCase):
         self.assertTemplateUsed(response, "jira/jira_unavailable.html")
         self.assertContains(response, "401", status_code=503)
         self.assertNotContains(response, "s3cr3t-token", status_code=503)
+
+
+class JiraManagerQueryTests(TestCase):
+    def test_throughput_counts_every_done_category_status(self):
+        user = CustomUser.objects.create_user(username="frank", password="secret")
+        config = JiraConfiguration.objects.create(user=user, jira_url="https://jira.example/", jira_project_id=7)
+        manager = JiraManager(config)
+
+        with patch.object(manager, "run_jql", return_value=[]) as run_jql:
+            manager.throughput_7d()
+
+        jql = run_jql.call_args.args[0]
+        self.assertIn("statusCategory = Done", jql)
+        self.assertNotIn("status = Done", jql)
+
+    def test_serialized_issue_carries_the_status_category_key(self):
+        user = CustomUser.objects.create_user(username="gina", password="secret")
+        manager = JiraManager(JiraConfiguration.objects.create(user=user, jira_url="https://jira.example/"))
+        status = SimpleNamespace(name="Closed", statusCategory=SimpleNamespace(key="done", name="Terminé"))
+        issue = SimpleNamespace(key="ABC-1", fields=SimpleNamespace(status=status))
+
+        self.assertEqual(manager._ticket_info_from_issue(issue)["status_category"], "done")
