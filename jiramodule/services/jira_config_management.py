@@ -3,6 +3,7 @@ import logging
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 
+from jiramodule.exceptions import describe_jira_error
 from jiramodule.forms import JiraConfigurationForm
 from jiramodule.models import JiraConfiguration
 from jiramodule.services.jira_client import JiraManager
@@ -23,23 +24,28 @@ def build_jira_config_form(*, data=None, instance=None) -> JiraConfigurationForm
 
 
 def save_jira_config_form(*, form: JiraConfigurationForm, user) -> JiraConfiguration:
-    config = form.save(commit=False)
-    config.user = user
-    config.is_active = False
-    config.save()
+    with transaction.atomic():
+        config = form.save(commit=False)
+        config.user = user
+        config.is_active = False
+        config.save()
+        # Ticking "current" in the form must behave like the toggle: only one current config per user.
+        if config.current:
+            config.set_as_current()
     return config
 
 def test_jira_configuration(config: JiraConfiguration, *, user_pk: int | None = None) -> tuple[bool, str]:
     try:
         jira = JiraManager(config)
-        jira.connect()
+        jira.connect(force=True)
         jira.server_info()
         ok = True
         error = ""
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         ok = False
-        error = str(exc)
-        logger.exception("jira_config_test failed for cfg=%s user=%s", config.pk, user_pk)
+        # str(JIRAError) contains the request headers (Bearer token): never store, log or return it.
+        error = describe_jira_error(exc)
+        logger.warning("jira_config_test failed for cfg=%s user=%s: %s", config.pk, user_pk, error)
 
     config.mark_test_result(ok=ok, error=error)
 

@@ -70,9 +70,15 @@
             </div>
 
             <form id="csrf-form" class="d-none">{% csrf_token %}</form>
-            <a class="btn btn-primary mt-3" href="{% url 'sprint-xls-export' sprint_id %}">
-                <i class="fa-regular fa-file-excel me-2"></i>{% trans "Generer le Capacity Sheet" %}
-            </a>
+            <div class="d-flex flex-wrap justify-content-between gap-2 mt-3">
+                <a class="btn btn-primary" href="{% url 'sprint-xls-export' sprint_id %}">
+                    <i class="fa-regular fa-file-excel me-2"></i>{% trans "Generer le Capacity Sheet" %}
+                </a>
+                <a class="btn btn-outline-primary ms-auto" href="{% url 'sprint-logged-xls-export' sprint_id %}"
+                   title="{% trans 'One tab per developer: planned vs logged hours and ticket status at sprint start and end.' %}">
+                    <i class="fa-regular fa-clock me-2"></i>{% trans "Generate logged sheet" %}
+                </a>
+            </div>
         </div>
     </section>
 {% endblock %}

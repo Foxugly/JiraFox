@@ -27,7 +27,6 @@ class SprintWorkbookBuilder:
         self.member_names = [teamdev.dev.name for teamdev in self.teamdevs]
         self.state_col = self.start_col + len(self.member_names)
         self.sum_rows: list[int] = []
-        self.done_statuses = self._build_done_statuses()
         self.current_sprint_id = sprint_id
         self.next_sprint_id = (self.jira.get_next_sprint(self.jira.cfg.jira_board_id) or {}).get("id")
         self.project_id = self.jira.cfg.jira_project_id
@@ -46,11 +45,6 @@ class SprintWorkbookBuilder:
         self.workbook.save(buffer)
         buffer.seek(0)
         return buffer.getvalue()
-
-    def _build_done_statuses(self) -> str:
-        status_groups = self.jira.get_dict_statuses()
-        done_statuses = status_groups.get("Done", {}).get("statuses", [])
-        return ",".join(f'"{status["name"]}"' for status in done_statuses)
 
     def _populate_capacity_sheet(self, worksheet) -> None:
         row = self._write_header(worksheet, 1)
@@ -227,7 +221,7 @@ class SprintWorkbookBuilder:
         return self._jql_cache[jql]
 
     def _jql_recurrents(self) -> str:
-        if self.next_sprint_id is None:
+        if self.next_sprint_id is None or not self.recurrent_epic_key:
             return "issuekey is EMPTY"
         return (
             f"project = {self.project_id} and sprint = {self.next_sprint_id} "
@@ -237,7 +231,7 @@ class SprintWorkbookBuilder:
     def _jql_projects_current(self) -> str:
         return (
             f"project != {self.project_id} and sprint = {self.current_sprint_id} "
-            f"and status not in ({self.done_statuses}) and "
+            f"and statusCategory != Done and "
             f"(labels = \"ASSU_POPU_SPRINT\" or issuetype in standardIssueTypes())"
         )
 
@@ -252,12 +246,14 @@ class SprintWorkbookBuilder:
     def _jql_backlog_remaining(self) -> str:
         return (
             f"project = {self.project_id} and sprint = {self.current_sprint_id} and "
-            f"status not in ({self.done_statuses}) and {self.jira.JIRA_ONLY_STANDARD_TYPES} ORDER BY status ASC"
+            f"statusCategory != Done and {self.jira.JIRA_ONLY_STANDARD_TYPES} ORDER BY status ASC"
         )
 
     def _jql_new_backlog(self) -> str:
         if self.next_sprint_id is None:
             return "issuekey is EMPTY"
+        if not self.recurrent_epic_key:
+            return f"project = {self.project_id} and sprint = {self.next_sprint_id}"
         return (
             f"project = {self.project_id} and sprint = {self.next_sprint_id} and "
             f"('Epic Link' != {self.recurrent_epic_key} OR 'Epic Link' is EMPTY)"
@@ -266,13 +262,13 @@ class SprintWorkbookBuilder:
     def _jql_backlog_done(self) -> str:
         return (
             f"project = {self.project_id} and sprint = {self.current_sprint_id} and "
-            f"status in ({self.done_statuses}) and {self.jira.JIRA_ONLY_STANDARD_TYPES} ORDER BY status ASC"
+            f"statusCategory = Done and {self.jira.JIRA_ONLY_STANDARD_TYPES} ORDER BY status ASC"
         )
 
     def _jql_non_backlog_done(self) -> str:
         return (
             f"project != {self.project_id} and sprint = {self.current_sprint_id} and "
-            f"status in ({self.done_statuses}) and {self.jira.JIRA_ONLY_STANDARD_TYPES} ORDER BY status ASC"
+            f"statusCategory = Done and {self.jira.JIRA_ONLY_STANDARD_TYPES} ORDER BY status ASC"
         )
 
 

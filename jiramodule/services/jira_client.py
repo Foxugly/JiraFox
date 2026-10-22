@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional
 from django.core.cache import cache
 from jira import JIRA
 
+from ..exceptions import is_transient_jira_error
 from ..models import JiraConfiguration
 from ..utils.datetime_utils import _to_hours
 from .kanban_metrics import KanbanMetricsService
@@ -13,10 +14,12 @@ from .kanban_metrics import KanbanMetricsService
 
 class JiraManager:
     JIRA_ONLY_STANDARD_TYPES = "issuetype in standardIssueTypes()"
-    JIRA_REQUEST_TIMEOUT_SECONDS = 30
+    # (connect, read) seconds, passed to requests by the jira client.
+    JIRA_REQUEST_TIMEOUT_SECONDS = (5, 30)
     SPRINT_ISSUES_CACHE_TTL_SECONDS = 300
+    CONNECTION_CACHE_TTL_SECONDS = 3600
     THROUGHPUT_DEFAULT_DAYS = 7
-    RETRY_ATTEMPTS = 3
+    RETRY_ATTEMPTS = 2
     RETRY_DELAY_SECONDS = 1
 
     def __init__(self, jc: JiraConfiguration) -> None:
@@ -32,16 +35,15 @@ class JiraManager:
         return self._jira
 
     def _with_retries(self, func, *args, **kwargs):
-        last_error = None
+        # 4xx (bad token, missing permission, unknown issue) are never retried: retrying a 401
+        # only slows the page down and can trigger Jira's CAPTCHA / account lockout.
         for attempt in range(1, self.RETRY_ATTEMPTS + 1):
             try:
                 return func(*args, **kwargs)
             except Exception as exc:  # noqa: BLE001
-                last_error = exc
-                if attempt == self.RETRY_ATTEMPTS:
+                if attempt == self.RETRY_ATTEMPTS or not is_transient_jira_error(exc):
                     raise
                 time.sleep(self.RETRY_DELAY_SECONDS)
-        raise last_error
 
     def _issue_fields(self, detailed: bool) -> str:
         fields = [
@@ -67,20 +69,56 @@ class JiraManager:
             "name": getattr(assignee_obj, "name", None),
         }
 
-    def connect(self) -> None:
+    def _connection_cache_key(self) -> str:
+        fingerprint = hashlib.sha256(f"{self.cfg.jira_url}|{self.cfg.jira_token}".encode()).hexdigest()[:24]
+        return f"jira_connection:{self.cfg.pk}:{fingerprint}"
+
+    def _build_client(self, *, get_server_info: bool) -> JIRA:
+        return JIRA(
+            options={"server": self.cfg.jira_url, "verify": True},
+            token_auth=self.cfg.jira_token,
+            timeout=self.JIRA_REQUEST_TIMEOUT_SECONDS,
+            get_server_info=get_server_info,
+            # The library's own retry waits 20-60 s per attempt on network errors; _with_retries is enough.
+            max_retries=0,
+        )
+
+    def connect(self, *, force: bool = False) -> None:
+        """
+        Open the Jira client. The first connection validates the credentials and detects the
+        server version and story points field; that metadata is cached for an hour (keyed on the
+        URL + token) so later requests skip those three round-trips.
+        """
         if not self.cfg.jira_url:
             raise RuntimeError("Missing jira_url configuration.")
         if not self.cfg.jira_token:
             raise RuntimeError("Missing jira_token configuration.")
 
-        options: Dict[str, Any] = {
-            "server": self.cfg.jira_url,
-            "verify": True,
-            "timeout": self.JIRA_REQUEST_TIMEOUT_SECONDS,
-        }
-        self._jira = JIRA(options=options, token_auth=self.cfg.jira_token)
+        key = self._connection_cache_key()
+        cached = None if force else cache.get(key)
+        if cached:
+            self._jira = self._build_client(get_server_info=False)
+            # Restore what get_server_info=True would have fetched (drives Cloud vs Server API choices).
+            self._jira._version = tuple(cached["version"])
+            self._jira.deploymentType = cached["deployment_type"]
+            self._story_points_field_id = cached["story_points_field_id"]
+            return
+
+        self._jira = self._with_retries(self._build_client, get_server_info=True)
         self._with_retries(self.jira.myself)
         self._story_points_field_id = self._detect_story_points_field_id()
+        cache.set(
+            key,
+            {
+                "version": list(self._jira._version),
+                "deployment_type": self._jira.deploymentType,
+                "story_points_field_id": self._story_points_field_id,
+            },
+            self.CONNECTION_CACHE_TTL_SECONDS,
+        )
+
+    def forget_connection(self) -> None:
+        cache.delete(self._connection_cache_key())
 
     def server_info(self) -> dict[str, Any]:
         return self._with_retries(self.jira.server_info)
@@ -230,7 +268,7 @@ class JiraManager:
     def get_cached_sprint_issues(self, sprint_id, jql_extra=JIRA_ONLY_STANDARD_TYPES, full=True, max_results: int = 1000):
         extra = (jql_extra or "").strip()
         extra_hash = hashlib.md5(extra.encode()).hexdigest()
-        key = f"sprint_issues:{self.cfg.user_id}:{sprint_id}:{int(full)}:{max_results}:{extra_hash}"
+        key = f"sprint_issues:{self.cfg.user_id}:{self.cfg.pk}:{sprint_id}:{int(full)}:{max_results}:{extra_hash}"
         data = cache.get(key)
         if data is None:
             data = self.get_sprint_issues(
@@ -357,6 +395,8 @@ class JiraManager:
             return None
 
     def throughput_7d(self, days: int = THROUGHPUT_DEFAULT_DAYS):
+        if not self.cfg.jira_project_id:
+            return []
         query = (
             f"project = {self.cfg.jira_project_id} "
             f"AND issuetype in standardIssueTypes() "
@@ -365,3 +405,59 @@ class JiraManager:
             "ORDER BY resolved DESC"
         )
         return self.run_jql(query, full=False)
+
+    def get_sprint_issues_with_worklogs(self, sprint_id: int, max_results: int = 1000) -> List[Dict[str, Any]]:
+        """
+        Every issue of the sprint (sub-tasks included, since that is where time is often logged)
+        with its status changes and all its worklogs.
+        """
+        issues = self._with_retries(
+            self.jira.search_issues,
+            f"sprint = {int(sprint_id)} ORDER BY key ASC",
+            maxResults=max_results,
+            fields="summary,status,assignee,created,timetracking,worklog",
+            expand="changelog",
+        )
+        out: List[Dict[str, Any]] = []
+        for issue in issues:
+            fields = issue.fields
+            worklog_page = getattr(fields, "worklog", None)
+            worklogs = list(getattr(worklog_page, "worklogs", None) or [])
+            # Search results only embed the first 20 worklogs of an issue.
+            if (getattr(worklog_page, "total", 0) or 0) > len(worklogs):
+                worklogs = self._with_retries(self.jira.worklogs, issue.key)
+
+            timetracking = getattr(fields, "timetracking", None)
+            histories = getattr(getattr(issue, "changelog", None), "histories", None) or []
+            out.append(
+                {
+                    "key": issue.key,
+                    "summary": getattr(fields, "summary", None) or "",
+                    "state": getattr(getattr(fields, "status", None), "name", None),
+                    "created": getattr(fields, "created", None),
+                    "assignee": self._serialize_assignee(getattr(fields, "assignee", None)),
+                    "original_estimate_hours": _to_hours(
+                        getattr(timetracking, "originalEstimateSeconds", None) if timetracking else None
+                    ),
+                    "status_changes": [
+                        {
+                            "at": getattr(history, "created", None),
+                            "from": getattr(item, "fromString", None),
+                            "to": getattr(item, "toString", None),
+                        }
+                        for history in histories
+                        for item in (getattr(history, "items", None) or [])
+                        if getattr(item, "field", "") == "status"
+                    ],
+                    "worklogs": [
+                        {
+                            "author": self._serialize_assignee(getattr(worklog, "author", None)),
+                            "started": getattr(worklog, "started", None),
+                            "hours": _to_hours(getattr(worklog, "timeSpentSeconds", None)) or 0.0,
+                        }
+                        for worklog in worklogs
+                    ],
+                    "url": self.get_issue_url(issue.key),
+                }
+            )
+        return out

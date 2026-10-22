@@ -4,6 +4,15 @@
 
     window.AppUI?.initTooltips();
 
+    function escapeHtml(value) {
+        return String(value ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
+
     const badgeSummary = document.getElementById("statusSummaryBadge");
     const badgeItems = document.getElementById("statusItemsBadge");
     const reloadButton = document.getElementById("reloadBtn");
@@ -159,10 +168,10 @@
         (rows || []).forEach((row) => {
             const tr = document.createElement("tr");
             tr.innerHTML = `
-                <td class="fw-semibold">${row.status ?? ""}</td>
-                <td class="text-end">${row.count ?? ""}</td>
-                <td class="text-end">${row.avgAge ?? ""}</td>
-                <td class="text-end">${row.maxAge ?? ""}</td>
+                <td class="fw-semibold">${escapeHtml(row.status ?? "")}</td>
+                <td class="text-end">${escapeHtml(row.count ?? "")}</td>
+                <td class="text-end">${escapeHtml(row.avgAge ?? "")}</td>
+                <td class="text-end">${escapeHtml(row.maxAge ?? "")}</td>
             `;
             body.appendChild(tr);
         });
