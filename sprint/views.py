@@ -5,10 +5,11 @@ from django.views import View
 from django.views.decorators.http import require_GET
 from django.views.generic import ListView, TemplateView
 from JiraFox.services.issue_data import build_sprint_issue_item, get_issue_status
-from jiramodule.services.jira_config_service import get_connected_jira_for_user
+from jiramodule.services.jira_config_service import get_connected_jira_for_user, require_config_fields
 from jiramodule.status import CANONICAL_ORDER, STATUS_EXCLUDED
 from jiramodule.utils.datetime_utils import hours_to_business_days
 from team.models import TeamDev
+from .logged_report import create_logged_xlsx_bytes
 from .report import create_xlsx_bytes
 
 DONE_STATUS_NAMES = {
@@ -106,11 +107,10 @@ class SprintReportView(LoginRequiredMixin, TemplateView):
         sprint_id = kwargs["sprint_id"]
         jira  = get_connected_jira_for_user(self.request.user)
         context["statuses"] = []
-        for name, data in sorted(jira.get_dict_statuses().items(), key=lambda item: item[1]["order"]):
-            statuses = ",".join([f'"{s["name"]}"' for s in data['statuses']])
-            jql = f"sprint = {sprint_id} and status in ({statuses}) and {jira.JIRA_ONLY_STANDARD_TYPES} ORDER BY status ASC"
-            d = {"name": name, "jql": jql, "url_jql": jira.get_url_jql(jql)}
-            context["statuses"].append(d)
+        # statusCategory avoids building "status in ()" when a category has no status.
+        for name in ("To Do", "In Progress", "Done"):
+            jql = f'sprint = {sprint_id} and statusCategory = "{name}" and {jira.JIRA_ONLY_STANDARD_TYPES} ORDER BY status ASC'
+            context["statuses"].append({"name": name, "jql": jql, "url_jql": jira.get_url_jql(jql)})
 
         fastlane_jql = f"sprint = {sprint_id} and labels in ('fastlane', 'Fastlane') and {jira.JIRA_ONLY_STANDARD_TYPES} ORDER BY status ASC"
         d = {"name": "Fastlane", "jql": fastlane_jql, "url_jql": jira.get_url_jql(fastlane_jql)}
@@ -126,6 +126,7 @@ class SprintDetailXLSExportView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         sprint_id = kwargs.get("sprint_id")
         jira = get_connected_jira_for_user(self.request.user)
+        require_config_fields(jira.cfg, ["team"])
         team = jira.cfg.team
         context["team"] = team
         context["sprint"] = jira.get_sprint(sprint_id)
@@ -146,14 +147,25 @@ class SprintXLSExportView(LoginRequiredMixin, View):
 
     def get(self, request, sprint_id):
         jira = get_connected_jira_for_user(request.user)
-        content = create_xlsx_bytes(jira, sprint_id)
-        # Prépare la réponse HTTP
-        response = HttpResponse(
-            content,
-            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
-        response['Content-Disposition'] = f'attachment; filename="sprint_{sprint_id}.xlsx"'
-        return response
+        require_config_fields(jira.cfg, ["jira_project_id"])
+        return xlsx_response(create_xlsx_bytes(jira, sprint_id), f"sprint_{sprint_id}.xlsx")
+
+
+class SprintLoggedXLSExportView(LoginRequiredMixin, View):
+
+    def get(self, request, sprint_id):
+        jira = get_connected_jira_for_user(request.user)
+        require_config_fields(jira.cfg, ["team"])
+        return xlsx_response(create_logged_xlsx_bytes(jira, sprint_id), f"sprint_{sprint_id}_logged.xlsx")
+
+
+def xlsx_response(content: bytes, filename: str) -> HttpResponse:
+    response = HttpResponse(
+        content,
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response
 
 
 @require_GET

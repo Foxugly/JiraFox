@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}JiraFox - {% trans "Jira unavailable" %}{% endblock %}
+
+{% block content %}
+    <section class="page-shell glass-panel section-stack">
+        <div class="page-hero">
+            <div class="d-flex justify-content-start mb-3 page-hero-kicker-row">
+                <span class="page-kicker">
+                    {% if not_configured %}
+                        <i class="fa-solid fa-sliders"></i>
+                        {% trans "Configuration required" %}
+                    {% elif not_found %}
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        {% trans "Not found" %}
+                    {% else %}
+                        <i class="fa-solid fa-plug-circle-xmark"></i>
+                        {% trans "Jira connection failed" %}
+                    {% endif %}
+                </span>
+            </div>
+            <div class="page-hero-copy mx-auto">
+                <h1 class="hero-title fs-1 mt-0 mb-2">{{ error.message }}</h1>
+                {% if not_configured %}
+                    <p class="text-secondary mb-0">{% trans "JiraFox reads everything live from Jira: complete your Jira configuration to use this page." %}</p>
+                {% elif not not_found %}
+                    <p class="text-secondary mb-0">{% trans "Jira could not be reached or refused the request. Check the URL and the API token, then try again." %}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="utility-panel">
+            {% if error.detail %}
+                <div class="alert alert-warning mb-3">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i>{{ error.detail }}
+                </div>
+            {% endif %}
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-primary" href="{% url 'jira_config_list' %}">
+                    <i class="fa-brands fa-jira me-2"></i>{% trans "Open my Jira configurations" %}
+                </a>
+                {% if not not_configured %}
+                    <a class="btn btn-outline-secondary" href="{{ request.get_full_path }}">
+                        <i class="fa-solid fa-rotate-right me-2"></i>{% trans "Try again" %}
+                    </a>
+                {% endif %}
+                <a class="btn btn-outline-secondary" href="{% url 'home' %}">
+                    <i class="fa-solid fa-house me-2"></i>{% trans "Home" %}
+                </a>
+            </div>
+        </div>
+    </section>
+{% endblock %}

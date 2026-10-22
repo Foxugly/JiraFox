@@ -6,6 +6,19 @@ from team.models import Team, TeamDev
 ALLOWED_INT_FIELDS = {"workload", "holidays", "fastlane", "project_meetings", "other_meetings"}
 
 
+# A user may only touch the teams linked to one of their Jira configurations.
+def teams_for_user(user):
+    return Team.objects.filter(jira_configs__user=user).distinct()
+
+
+def devs_for_user(user):
+    return Dev.objects.filter(teamdevs__team__jira_configs__user=user).distinct()
+
+
+def teamdevs_for_user(user):
+    return TeamDev.objects.filter(team__jira_configs__user=user).distinct()
+
+
 def parse_dev_int_update(field: str | None, value: str | None) -> tuple[str, int]:
     if field not in ALLOWED_INT_FIELDS:
         raise ValueError("Invalid field")

@@ -21,5 +21,6 @@ urlpatterns = [
     path("<int:sprint_id>/report/", SprintReportView.as_view(), name="sprint-report"),
     path("<int:sprint_id>/exportXLSX/", SprintXLSExportView.as_view(), name="sprint-xls-export"),
     path("<int:sprint_id>/reportXLSX/", SprintDetailXLSExportView.as_view(), name="sprint_xls_report"),
+    path("<int:sprint_id>/loggedXLSX/", SprintLoggedXLSExportView.as_view(), name="sprint-logged-xls-export"),
 
 ]

@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional
 from django.core.cache import cache
 from jira import JIRA
 
+from ..exceptions import is_transient_jira_error
 from ..models import JiraConfiguration
 from ..utils.datetime_utils import _to_hours
 from .jql import JqlBuilder, STANDARD_ISSUE_TYPES
@@ -13,11 +14,13 @@ from .kanban_metrics import KanbanMetricsService
 
 
 class JiraManager:
-    JIRA_ONLY_STANDARD_TYPES = STANDARD_ISSUE_TYPES
-    JIRA_REQUEST_TIMEOUT_SECONDS = 30
+    JIRA_ONLY_STANDARD_TYPES = "issuetype in standardIssueTypes()"
+    # (connect, read) seconds, passed to requests by the jira client.
+    JIRA_REQUEST_TIMEOUT_SECONDS = (5, 30)
     SPRINT_ISSUES_CACHE_TTL_SECONDS = 300
+    CONNECTION_CACHE_TTL_SECONDS = 3600
     THROUGHPUT_DEFAULT_DAYS = 7
-    RETRY_ATTEMPTS = 3
+    RETRY_ATTEMPTS = 2
     RETRY_DELAY_SECONDS = 1
 
     def __init__(self, jc: JiraConfiguration) -> None:
@@ -33,22 +36,20 @@ class JiraManager:
         return self._jira
 
     def _with_retries(self, func, *args, **kwargs):
-        last_error = None
+        # 4xx (bad token, missing permission, unknown issue) are never retried: retrying a 401
+        # only slows the page down and can trigger Jira's CAPTCHA / account lockout.
         for attempt in range(1, self.RETRY_ATTEMPTS + 1):
             try:
                 return func(*args, **kwargs)
             except Exception as exc:  # noqa: BLE001
-                last_error = exc
-                if attempt == self.RETRY_ATTEMPTS:
+                if attempt == self.RETRY_ATTEMPTS or not is_transient_jira_error(exc):
                     raise
                 time.sleep(self.RETRY_DELAY_SECONDS)
-        raise last_error
 
     def _issue_fields(self, detailed: bool) -> str:
         fields = [
             "summary",
             "status",
-            "labels",
             "assignee",
             "issuetype",
             "project",
@@ -69,20 +70,56 @@ class JiraManager:
             "name": getattr(assignee_obj, "name", None),
         }
 
-    def connect(self) -> None:
+    def _connection_cache_key(self) -> str:
+        fingerprint = hashlib.sha256(f"{self.cfg.jira_url}|{self.cfg.jira_token}".encode()).hexdigest()[:24]
+        return f"jira_connection:{self.cfg.pk}:{fingerprint}"
+
+    def _build_client(self, *, get_server_info: bool) -> JIRA:
+        return JIRA(
+            options={"server": self.cfg.jira_url, "verify": True},
+            token_auth=self.cfg.jira_token,
+            timeout=self.JIRA_REQUEST_TIMEOUT_SECONDS,
+            get_server_info=get_server_info,
+            # The library's own retry waits 20-60 s per attempt on network errors; _with_retries is enough.
+            max_retries=0,
+        )
+
+    def connect(self, *, force: bool = False) -> None:
+        """
+        Open the Jira client. The first connection validates the credentials and detects the
+        server version and story points field; that metadata is cached for an hour (keyed on the
+        URL + token) so later requests skip those three round-trips.
+        """
         if not self.cfg.jira_url:
             raise RuntimeError("Missing jira_url configuration.")
         if not self.cfg.jira_token:
             raise RuntimeError("Missing jira_token configuration.")
 
-        options: Dict[str, Any] = {
-            "server": self.cfg.jira_url,
-            "verify": True,
-            "timeout": self.JIRA_REQUEST_TIMEOUT_SECONDS,
-        }
-        self._jira = JIRA(options=options, token_auth=self.cfg.jira_token)
+        key = self._connection_cache_key()
+        cached = None if force else cache.get(key)
+        if cached:
+            self._jira = self._build_client(get_server_info=False)
+            # Restore what get_server_info=True would have fetched (drives Cloud vs Server API choices).
+            self._jira._version = tuple(cached["version"])
+            self._jira.deploymentType = cached["deployment_type"]
+            self._story_points_field_id = cached["story_points_field_id"]
+            return
+
+        self._jira = self._with_retries(self._build_client, get_server_info=True)
         self._with_retries(self.jira.myself)
         self._story_points_field_id = self._detect_story_points_field_id()
+        cache.set(
+            key,
+            {
+                "version": list(self._jira._version),
+                "deployment_type": self._jira.deploymentType,
+                "story_points_field_id": self._story_points_field_id,
+            },
+            self.CONNECTION_CACHE_TTL_SECONDS,
+        )
+
+    def forget_connection(self) -> None:
+        cache.delete(self._connection_cache_key())
 
     def server_info(self) -> dict[str, Any]:
         return self._with_retries(self.jira.server_info)
@@ -229,25 +266,20 @@ class JiraManager:
             expand=expand,
         )
 
-    def get_cached_jql_issues(self, jql: str, *, full: bool = True, max_results: int = 1000) -> List[Dict[str, Any]]:
-        normalized_jql = (jql or "").strip()
-        jql_hash = hashlib.md5(normalized_jql.encode()).hexdigest()
-        key = f"jql_issues:{self.cfg.user_id}:{int(full)}:{max_results}:{jql_hash}"
+    def get_cached_sprint_issues(self, sprint_id, jql_extra=JIRA_ONLY_STANDARD_TYPES, full=True, max_results: int = 1000):
+        extra = (jql_extra or "").strip()
+        extra_hash = hashlib.md5(extra.encode()).hexdigest()
+        key = f"sprint_issues:{self.cfg.user_id}:{self.cfg.pk}:{sprint_id}:{int(full)}:{max_results}:{extra_hash}"
         data = cache.get(key)
         if data is None:
-            data = self.run_jql(normalized_jql, max_results=max_results, full=full)
+            data = self.get_sprint_issues(
+                sprint_id,
+                jql_extra=jql_extra,
+                max_results=max_results,
+                full=full,
+            )
             cache.set(key, data, self.SPRINT_ISSUES_CACHE_TTL_SECONDS)
         return data
-
-    def get_cached_sprint_issues(self, sprint_id, jql_extra=JIRA_ONLY_STANDARD_TYPES, full=True, max_results: int = 1000):
-        return self.get_cached_jql_issues(
-            self.build_sprint_jql(sprint_id, jql_extra=jql_extra),
-            full=full,
-            max_results=max_results,
-        )
-
-    def build_sprint_jql(self, sprint_id: int, *, jql_extra: str = "") -> str:
-        return JqlBuilder.sprint(sprint_id).where(jql_extra).build()
 
     def get_sprint_issues(
         self,
@@ -257,34 +289,11 @@ class JiraManager:
         max_results: int = 1000,
         full: bool = False,
     ) -> List[Dict[str, Any]]:
-        return self.run_jql(
-            self.build_sprint_jql(sprint_id, jql_extra=jql_extra),
-            max_results=max_results,
-            full=full,
-        )
+        jql = f"sprint = {int(sprint_id)}"
+        if jql_extra.strip():
+            jql = f"({jql}) AND ({jql_extra.strip()})"
 
-    def get_sprint_standard_issues(self, sprint_id: int, *, full: bool = True, max_results: int = 1000) -> List[Dict[str, Any]]:
-        return self.get_cached_sprint_issues(
-            sprint_id,
-            jql_extra=self.JIRA_ONLY_STANDARD_TYPES,
-            full=full,
-            max_results=max_results,
-        )
-
-    def get_sprint_done_issues(self, sprint_id: int, *, full: bool = True, max_results: int = 1000) -> List[Dict[str, Any]]:
-        jql = (
-            JqlBuilder.sprint(sprint_id)
-            .standard_issue_types()
-            .status_category("Done")
-            .build()
-        )
-        return self.get_cached_jql_issues(jql, full=full, max_results=max_results)
-
-    def get_current_sprint_issues(self, *, full: bool = True, max_results: int = 1000) -> tuple[dict | None, list[dict]]:
-        sprint = self.get_current_sprint(self.cfg.jira_board_id)
-        if not sprint:
-            return None, []
-        return sprint, self.get_sprint_standard_issues(sprint["id"], full=full, max_results=max_results)
+        return self.run_jql(jql, max_results=max_results, full=full)
 
     def run_jql(self, jql: str, *, max_results: int = 1000, full: bool = True) -> List[Dict[str, Any]]:
         issues = self._search_issues(jql, max_results=max_results, detailed=full)
@@ -320,11 +329,6 @@ class JiraManager:
     def ticket_info(self, issue_key: str) -> Dict[str, Any]:
         return self.get_issue(issue_key, full=False)
 
-    def _serialize_status_category(self, issue: Any) -> Optional[str]:
-        status = getattr(issue.fields, "status", None)
-        category = getattr(status, "statusCategory", None)
-        return getattr(category, "name", None)
-
     def _ticket_info_from_issue(self, issue: Any) -> Dict[str, Any]:
         fields = issue.fields
         return {
@@ -333,8 +337,6 @@ class JiraManager:
             "project": getattr(getattr(fields, "project", None), "key", None),
             "issueType": getattr(getattr(fields, "issuetype", None), "name", None),
             "state": getattr(getattr(fields, "status", None), "name", None),
-            "statusCategory": self._serialize_status_category(issue),
-            "labels": list(getattr(fields, "labels", None) or []),
             "assignee": self._serialize_assignee(getattr(fields, "assignee", None)),
             "url": self.get_issue_url(issue.key),
         }
@@ -352,8 +354,6 @@ class JiraManager:
             "project": getattr(getattr(fields, "project", None), "key", None),
             "issueType": getattr(getattr(fields, "issuetype", None), "name", None),
             "state": getattr(getattr(fields, "status", None), "name", None),
-            "statusCategory": self._serialize_status_category(issue),
-            "labels": list(getattr(fields, "labels", None) or []),
             "assignee": self._serialize_assignee(getattr(fields, "assignee", None)),
             "estimation": {
                 "story_points": self._get_story_points(issue),
@@ -421,6 +421,8 @@ class JiraManager:
         return self.update_issue_fields(issue_key, {"labels": next_labels})
 
     def throughput_7d(self, days: int = THROUGHPUT_DEFAULT_DAYS):
+        if not self.cfg.jira_project_id:
+            return []
         query = (
             JqlBuilder.project(self.cfg.jira_project_id)
             .standard_issue_types()
@@ -430,6 +432,62 @@ class JiraManager:
             .build()
         )
         return self.run_jql(query, full=False)
+
+    def get_sprint_issues_with_worklogs(self, sprint_id: int, max_results: int = 1000) -> List[Dict[str, Any]]:
+        """
+        Every issue of the sprint (sub-tasks included, since that is where time is often logged)
+        with its status changes and all its worklogs.
+        """
+        issues = self._with_retries(
+            self.jira.search_issues,
+            f"sprint = {int(sprint_id)} ORDER BY key ASC",
+            maxResults=max_results,
+            fields="summary,status,assignee,created,timetracking,worklog",
+            expand="changelog",
+        )
+        out: List[Dict[str, Any]] = []
+        for issue in issues:
+            fields = issue.fields
+            worklog_page = getattr(fields, "worklog", None)
+            worklogs = list(getattr(worklog_page, "worklogs", None) or [])
+            # Search results only embed the first 20 worklogs of an issue.
+            if (getattr(worklog_page, "total", 0) or 0) > len(worklogs):
+                worklogs = self._with_retries(self.jira.worklogs, issue.key)
+
+            timetracking = getattr(fields, "timetracking", None)
+            histories = getattr(getattr(issue, "changelog", None), "histories", None) or []
+            out.append(
+                {
+                    "key": issue.key,
+                    "summary": getattr(fields, "summary", None) or "",
+                    "state": getattr(getattr(fields, "status", None), "name", None),
+                    "created": getattr(fields, "created", None),
+                    "assignee": self._serialize_assignee(getattr(fields, "assignee", None)),
+                    "original_estimate_hours": _to_hours(
+                        getattr(timetracking, "originalEstimateSeconds", None) if timetracking else None
+                    ),
+                    "status_changes": [
+                        {
+                            "at": getattr(history, "created", None),
+                            "from": getattr(item, "fromString", None),
+                            "to": getattr(item, "toString", None),
+                        }
+                        for history in histories
+                        for item in (getattr(history, "items", None) or [])
+                        if getattr(item, "field", "") == "status"
+                    ],
+                    "worklogs": [
+                        {
+                            "author": self._serialize_assignee(getattr(worklog, "author", None)),
+                            "started": getattr(worklog, "started", None),
+                            "hours": _to_hours(getattr(worklog, "timeSpentSeconds", None)) or 0.0,
+                        }
+                        for worklog in worklogs
+                    ],
+                    "url": self.get_issue_url(issue.key),
+                }
+            )
+        return out
 
     def create_issue(
             self,

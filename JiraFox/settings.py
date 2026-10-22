@@ -64,6 +64,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # Add the account middleware:
     "allauth.account.middleware.AccountMiddleware",
+    "jiramodule.middleware.JiraErrorMiddleware",
 ]
 
 ROOT_URLCONF = 'JiraFox.urls'
