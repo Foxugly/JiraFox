@@ -14,9 +14,6 @@ def env_bool(name: str, default: bool = False) -> bool:
         return default
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
-#SECRET_KEY = 'django-insecure-w*fbnkw+lhu^ixu@h=p_3n0*pqu8s426gfrqfc$ut^hrz5=d0x'
-#DEBUG = True
-
 DEBUG = env_bool("DJANGO_DEBUG", default=False)
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 if not SECRET_KEY:

@@ -25,14 +25,7 @@
                     <div class="form-text">{% trans "Ex:" %} https://jira.sm-ms.lan/</div>
                 {% endif %}
             </div>
-            <div class="col-md-6">
-                <label class="form-label" for="{{ form.jira_email.id_for_label }}">{% trans "Email" %}</label>
-                {{ form.jira_email }}
-                {% if form.jira_email.errors %}
-                    <div class="invalid-feedback d-block">{{ form.jira_email.errors|striptags }}</div>
-                {% endif %}
-            </div>
-            <div class="col-md-6">
+            <div class="col-12">
                 <label class="form-label" for="{{ form.jira_token.id_for_label }}">{% trans "Token" %}</label>
                 {{ form.jira_token }}
                 {% if form.jira_token.errors %}
