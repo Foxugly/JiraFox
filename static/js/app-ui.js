@@ -177,6 +177,38 @@
         });
     }
 
+    function initThemeToggle() {
+        const button = document.getElementById("themeToggle");
+        if (!button) return;
+
+        const icon = button.querySelector("i");
+        const setTheme = (theme) => {
+            document.documentElement.dataset.theme = theme;
+            localStorage.setItem("jirafox-theme", theme);
+            applyChartTheme();
+            if (icon) {
+                icon.className = theme === "dark" ? "fa-solid fa-sun" : "fa-solid fa-moon";
+            }
+            window.dispatchEvent(new CustomEvent("jirafox:themechange", {detail: {theme}}));
+        };
+
+        setTheme(document.documentElement.dataset.theme || "light");
+        button.addEventListener("click", () => {
+            setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
+        });
+    }
+
+    function applyChartTheme() {
+        if (!window.Chart) return;
+        const isDark = document.documentElement.dataset.theme === "dark";
+        Chart.defaults.color = isDark ? "#c7b8bc" : "#6f6a6c";
+        Chart.defaults.borderColor = isDark ? "rgba(255,255,255,0.12)" : "rgba(35,31,32,0.11)";
+    }
+
+    applyChartTheme();
+    initThemeToggle();
+    initTooltips();
+
     window.AppUI = {
         showToast,
         confirmAction,

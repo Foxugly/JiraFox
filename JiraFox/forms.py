@@ -1,12 +1,20 @@
 from django import forms
 from django.conf import settings
+from django.utils.translation import gettext_lazy as _
+
+
+LANGUAGE_CHOICES = [
+    ("fr", _("French")),
+    ("nl", _("Dutch")),
+    ("en", _("English")),
+]
 
 
 class UserSettingsForm(forms.Form):
-    first_name = forms.CharField(max_length=150, required=False)
-    last_name = forms.CharField(max_length=150, required=False)
-    email = forms.EmailField(required=True)
-    language = forms.ChoiceField(choices=settings.LANGUAGES)
+    first_name = forms.CharField(label=_("First name"), max_length=150, required=False)
+    last_name = forms.CharField(label=_("Last name"), max_length=150, required=False)
+    email = forms.EmailField(label=_("Email"), required=True)
+    language = forms.ChoiceField(label=_("Language"), choices=LANGUAGE_CHOICES)
 
     def __init__(self, *args, user=None, **kwargs):
         self.user = user

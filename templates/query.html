@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}JiraFox - {% trans "JQL Query" %}{% endblock %}
+
+{% block content %}
+<section class="page-shell glass-panel section-stack">
+    {% trans "Query" as query_kicker %}
+    {% trans "Jira Query Console" as query_title %}
+    {% include "includes/page_toolbar.html" with toolbar_icon="fa-solid fa-magnifying-glass" toolbar_kicker=query_kicker toolbar_title=query_title toolbar_actions_template="query_toolbar_actions.html" %}
+
+    <div class="row g-3">
+        <div class="col-12 col-xl-8">
+            <div class="utility-panel">
+                <form method="get" class="vstack gap-3">
+                    <div>
+                        <label for="jql" class="form-label fw-semibold">JQL</label>
+                        <textarea id="jql" name="jql" class="form-control font-monospace" rows="5" spellcheck="false"
+                                  placeholder="sprint = 2420 AND issuetype in standardIssueTypes() ORDER BY status ASC">{{ jql }}</textarea>
+                    </div>
+
+                    <div class="d-flex flex-wrap align-items-end gap-2">
+                        <div>
+                            <label for="max_results" class="form-label fw-semibold">{% trans "Limit" %}</label>
+                            <input id="max_results" name="max_results" type="number" min="1" max="500"
+                                   class="form-control" value="{{ max_results }}">
+                        </div>
+                        <div class="form-check mb-2">
+                            <input id="full" name="full" value="1" class="form-check-input" type="checkbox"
+                                   {% if full %}checked{% endif %}>
+                            <label class="form-check-label" for="full">{% trans "Load full issue details" %}</label>
+                        </div>
+                        <div class="ms-auto d-flex flex-wrap gap-2">
+                            {% if jira_url_jql %}
+                                <a class="btn btn-outline-primary" href="{{ jira_url_jql }}" target="_blank" rel="noopener">
+                                    <i class="fa-brands fa-jira me-2"></i>{% trans "Open in Jira" %}
+                                </a>
+                            {% endif %}
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa-solid fa-play me-2"></i>{% trans "Run" %}
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            {% if error %}
+                <div class="utility-panel mt-3 border-danger">
+                    <h2 class="h5 text-danger mb-2">{% trans "Query failed" %}</h2>
+                    <pre class="mb-0 pre-wrap-break">{{ error }}</pre>
+                </div>
+            {% endif %}
+
+            {% if issues %}
+                <div class="utility-panel mt-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2 class="h4 mb-0">{% trans "Results" %}</h2>
+                        <span class="badge text-bg-primary">{{ result_count }} {% trans "issue(s)" %}</span>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped table-hover align-middle">
+                            <thead>
+                            <tr>
+                                <th>{% trans "Key" %}</th>
+                                <th>{% trans "Summary" %}</th>
+                                <th>{% trans "Type" %}</th>
+                                <th>{% trans "Status" %}</th>
+                                <th>{% trans "Category" %}</th>
+                                <th>{% trans "Assignee" %}</th>
+                                <th class="text-end">{% trans "Links" %}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for issue in issues %}
+                                <tr>
+                                    <td class="fw-semibold mono">{{ issue.key }}</td>
+                                    <td>{{ issue.summary }}</td>
+                                    <td>{{ issue.issueType|default:"-" }}</td>
+                                    <td><span class="badge text-bg-secondary">{{ issue.state|default:"-" }}</span></td>
+                                    <td>{{ issue.statusCategory|default:"-" }}</td>
+                                    <td>
+                                        {% if issue.assignee %}
+                                            {{ issue.assignee.displayName }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="btn-group btn-group-sm">
+                                            <a class="btn btn-outline-primary" href="{{ issue.url }}" target="_blank" rel="noopener">
+                                                <i class="fa-brands fa-jira"></i>
+                                            </a>
+                                            <a class="btn btn-outline-secondary" href="{% url 'issue-detail' issue.key %}">
+                                                <i class="fa-solid fa-eye"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            {% elif jql and not error %}
+                <div class="utility-panel mt-3">
+                    <p class="inline-note mb-0">{% trans "No issues returned." %}</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="col-12 col-xl-4">
+            <div class="utility-panel mb-3">
+                <h2 class="h5 mb-3">{% trans "Presets" %}</h2>
+                <div class="vstack gap-2">
+                    {% for preset in presets %}
+                        <a class="btn btn-outline-secondary text-start" href="?jql={{ preset.jql|urlencode }}&max_results={{ max_results }}">
+                            <span class="fw-semibold d-block">{{ preset.name }}</span>
+                            <code class="small text-wrap">{{ preset.jql }}</code>
+                        </a>
+                    {% empty %}
+                        <p class="inline-note mb-0">{% trans "No presets available." %}</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            {% if query_history %}
+                <div class="utility-panel mb-3">
+                    <h2 class="h5 mb-3">{% trans "Recent queries" %}</h2>
+                    <div class="vstack gap-2">
+                        {% for item in query_history %}
+                            <a class="btn btn-outline-secondary text-start" href="?jql={{ item|urlencode }}&max_results={{ max_results }}">
+                                <code class="small text-wrap">{{ item }}</code>
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="utility-panel mb-3">
+                <h2 class="h5 mb-3">{% trans "Current Jira configuration" %}</h2>
+                {% if current_jira_config %}
+                    <div class="vstack gap-2">
+                        <div class="d-flex justify-content-between gap-3">
+                            <span class="inline-note">{% trans "URL" %}</span>
+                            <strong class="text-break text-end">{{ current_jira_config.jira_url }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between gap-3">
+                            <span class="inline-note">{% trans "Board" %}</span>
+                            <strong>{{ current_jira_config.jira_board_id|default:"-" }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between gap-3">
+                            <span class="inline-note">{% trans "Project" %}</span>
+                            <strong>{{ current_jira_config.jira_project_id|default:"-" }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between gap-3">
+                            <span class="inline-note">{% trans "Team" %}</span>
+                            <strong>{{ current_jira_config.team.name|default:"-" }}</strong>
+                        </div>
+                    </div>
+                {% else %}
+                    <p class="text-secondary mb-0">{% trans "No active Jira configuration." %}</p>
+                {% endif %}
+            </div>
+
+            <div class="utility-panel">
+                <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                    <h2 class="h5 mb-0">{% trans "Epic bootstrap" %}</h2>
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="create_epics">
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">
+                            {% trans "Create epics" %}
+                        </button>
+                    </form>
+                </div>
+                <div class="accordion" id="epicAccordion">
+                    {% for epic in todo %}
+                        <div class="accordion-item">
+                            <h3 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                        data-bs-target="#epic-{{ forloop.counter }}">
+                                    {{ epic.summary }}
+                                </button>
+                            </h3>
+                            <div id="epic-{{ forloop.counter }}" class="accordion-collapse collapse" data-bs-parent="#epicAccordion">
+                                <div class="accordion-body">
+                                    <pre class="mb-0 pre-wrap-break">{{ epic.description }}</pre>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

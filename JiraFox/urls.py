@@ -21,8 +21,10 @@ from JiraFox.views import (
     DashboardView,
     HomeView,
     SettingsView,
+    QueryView,
     dashboard_items_api,
     dashboard_summary_api,
+    set_language_preference,
 )
 
 urlpatterns = [
@@ -33,6 +35,8 @@ urlpatterns = [
 
     path("dashboard/", DashboardView.as_view(), name="dashboard"),
     path("settings/", SettingsView.as_view(), name="settings"),
+    path("query/", QueryView.as_view(), name="query"),
+    path("language/", set_language_preference, name="set_language_preference"),
     path('admin/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
     path('jira/', include('jiramodule.urls')),

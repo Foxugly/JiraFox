@@ -10,6 +10,7 @@ from JiraFox.services.dashboard import (
     build_dashboard_items,
     build_dashboard_kpis,
 )
+from sprint.views import build_weighted_throughput_distribution
 
 
 class DashboardServicesTests(SimpleTestCase):
@@ -154,3 +155,45 @@ class SprintPagesTests(TestCase):
         payload = response.json()
         self.assertEqual(payload["statuses"], ["In Progress"])
         self.assertEqual(payload["items"][0]["key"], "ABC-1")
+
+    def test_weighted_throughput_distribution_groups_done_by_story_points(self):
+        jira = SimpleNamespace(
+            JIRA_ONLY_STANDARD_TYPES="issuetype in standardIssueTypes()",
+            get_cached_sprint_issues=lambda sprint_id, jql_extra=None, full=None: [
+                {"state": "Done", "estimation": {"story_points": 3}},
+                {"state": "Done", "estimation": {"story_points": 3}},
+                {"state": "Done", "estimation": {"story_points": 5}},
+                {"state": "Done", "estimation": {"story_points": None}},
+                {"state": "Closed", "estimation": {"story_points": 8}},
+                {"state": "In Progress", "estimation": {"story_points": 8}},
+            ],
+        )
+
+        result = build_weighted_throughput_distribution(jira, 12)
+
+        self.assertEqual(result["distribution"], {"labels": ["0", "3", "5", "8"], "counts": [1, 2, 1, 1]})
+        self.assertEqual(result["done_count"], 5)
+        self.assertEqual(result["estimated_done_count"], 5)
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_weighted_throughput_distribution_page_renders(self, mock_get_jira):
+        mock_get_jira.return_value = SimpleNamespace(
+            JIRA_ONLY_STANDARD_TYPES="issuetype in standardIssueTypes()",
+            get_sprint=lambda sprint_id: {
+                "id": sprint_id,
+                "name": "Sprint 12",
+                "state": "active",
+                "startDate": "2026-03-01T08:00:00.000+0000",
+                "endDate": "2026-03-14T18:00:00.000+0000",
+            },
+            get_url_jql=lambda jql: f"https://jira.example/issues/?jql={jql}",
+            get_cached_sprint_issues=lambda sprint_id, jql_extra=None, full=None: [
+                {"state": "Done", "estimation": {"story_points": 3}},
+            ],
+        )
+
+        response = self.client.get(reverse("sprint-weighted-throughput-distribution", args=[12]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "sprint/sprint_weighted_throughput_distribution.html")
+        self.assertContains(response, "Distribution du débit par pondération")

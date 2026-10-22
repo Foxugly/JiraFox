@@ -7,6 +7,8 @@
     const badgeSummary = document.getElementById("statusSummaryBadge");
     const badgeItems = document.getElementById("statusItemsBadge");
     const reloadButton = document.getElementById("reloadBtn");
+    const reloadIcon = reloadButton?.querySelector('[data-role="reload-icon"]');
+    const reloadSpinner = reloadButton?.querySelector('[data-role="reload-spinner"]');
     const tooltipEl = document.getElementById("chartTooltip");
     const ttKey = document.getElementById("ttKey");
     const ttTitle = document.getElementById("ttTitle");
@@ -23,7 +25,11 @@
 
     function setBadge(element, text, kind) {
         if (!element) return;
-        element.className = `badge text-bg-${kind || "secondary"}`;
+        if (element.dataset.dashboardStatus) {
+            element.className = `btn disabled dashboard-status dashboard-status-${kind || "secondary"}`;
+        } else {
+            element.className = `badge text-bg-${kind || "secondary"}`;
+        }
         element.textContent = text;
     }
 
@@ -111,7 +117,7 @@
         setBadge(badgeSummary, i18n.loading || "Loading...", "secondary");
         try {
             const data = await loadJson(page.apiSummaryUrl);
-            setBadge(badgeSummary, i18n.ok_api || "OK (API)", "success");
+            setBadge(badgeSummary, "API", "success");
             return data;
         } catch (error) {
             console.warn("summary fallback", error);
@@ -125,7 +131,7 @@
         setBadge(badgeItems, i18n.loading || "Loading...", "secondary");
         try {
             const data = await loadJson(page.apiItemsUrl);
-            setBadge(badgeItems, `Issues - ${i18n.ok_api || "OK (API)"}`, "success");
+            setBadge(badgeItems, "Issues", "success");
             return data;
         } catch (error) {
             console.warn("items fallback", error);
@@ -196,6 +202,7 @@
     Chart.register(countPlugin);
 
     let wiaChart = null;
+    let weightedThroughputChart = null;
 
     function buildWiaChart(wia, links) {
         const items = wia?.items || [];
@@ -277,6 +284,7 @@
                 }
             }
         });
+        requestAnimationFrame(() => wiaChart?.resize());
 
         if (!canvas.dataset.tooltipBound) {
             canvas.addEventListener("mouseleave", () => scheduleHideTooltip(220));
@@ -302,6 +310,67 @@
         if (hint) {
             hint.textContent = statuses.length ? `${statuses.length} ${i18n.status_word || i18n.status || "status"} / ${items.length} ${i18n.items || "items"}` : "-";
         }
+    }
+
+    function renderWeightedThroughput(weightedThroughput) {
+        const canvas = document.getElementById("weightedThroughputChart");
+        if (!canvas) return;
+
+        const labels = weightedThroughput?.distribution?.labels || [];
+        const counts = weightedThroughput?.distribution?.counts || [];
+        const doneCount = safeNum(weightedThroughput?.done_count, 0);
+        const hasData = labels.length > 0 && counts.some((count) => safeNum(count, 0) > 0);
+        const hint = document.getElementById("weightedThroughputHint");
+        const emptyState = document.getElementById("weightedThroughputEmpty");
+        if (hint) {
+            hint.textContent = doneCount ? `${doneCount} ${i18n.done_tickets || "Done tickets"}` : (i18n.no_done_tickets || "No Done tickets");
+        }
+
+        if (weightedThroughputChart) weightedThroughputChart.destroy();
+        canvas.classList.toggle("d-none", !hasData);
+        canvas.parentElement?.classList.toggle("d-none", !hasData);
+        emptyState?.classList.toggle("d-none", hasData);
+        if (!hasData) return;
+
+        weightedThroughputChart = new Chart(canvas, {
+            type: "bar",
+            data: {
+                labels,
+                datasets: [{
+                    label: i18n.done_tickets || "Done tickets",
+                    data: counts,
+                    backgroundColor: "rgba(47, 125, 225, 0.72)",
+                    borderColor: "rgba(31, 88, 143, 1)",
+                    borderWidth: 1,
+                    borderRadius: 6,
+                    maxBarThickness: 72
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {display: false},
+                    tooltip: {
+                        callbacks: {
+                            title: (items) => `${items[0].label} ${i18n.story_points || "Story points"}`,
+                            label: (item) => `${item.raw} ${i18n.done_tickets || "Done tickets"}`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {display: true, text: i18n.story_points || "Story points"},
+                        grid: {display: false}
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: {precision: 0, stepSize: 1},
+                        title: {display: true, text: i18n.done_tickets || "Done tickets"}
+                    }
+                }
+            }
+        });
     }
 
     let dataTable = null;
@@ -357,27 +426,40 @@
                                 <i class="fa-brands fa-jira"></i>
                             </a>
                             <a class="btn btn-outline-secondary" href="${row.detail_url || "#"}" title="${i18n.view_details || "View details"}">
-                                <i class="fa-solid fa-up-right-from-square"></i>
+                                <i class="fa-solid fa-eye"></i>
                             </a>
                         </div>`
                 }
             ]
         });
+
     }
 
     async function render() {
         reloadButton?.setAttribute("disabled", "disabled");
+        reloadIcon?.classList.add("d-none");
+        reloadSpinner?.classList.remove("d-none");
         try {
             const summary = await loadSummary();
             const itemsPayload = await loadItems();
             const links = summary?.links || {};
-            renderKpis(summary?.kpis || {});
-            renderBottlenecks(summary?.bottlenecks || [], links);
-            buildWiaChart(summary?.wia || {}, links);
-            renderDataTable(itemsPayload?.items || [], links);
-            setBadge(badgeSummary, i18n.ok_api || "OK (API)", "success");
+            const renderStep = (name, callback) => {
+                try {
+                    callback();
+                } catch (error) {
+                    console.error(`dashboard render failed: ${name}`, error);
+                }
+            };
+            renderStep("kpis", () => renderKpis(summary?.kpis || {}));
+            renderStep("bottlenecks", () => renderBottlenecks(summary?.bottlenecks || [], links));
+            renderStep("wia", () => buildWiaChart(summary?.wia || {}, links));
+            renderStep("weighted-throughput", () => renderWeightedThroughput(summary?.weightedThroughput || {}));
+            renderStep("aging-table", () => renderDataTable(itemsPayload?.items || [], links));
+            setBadge(badgeSummary, "API", "success");
         } finally {
             reloadButton?.removeAttribute("disabled");
+            reloadSpinner?.classList.add("d-none");
+            reloadIcon?.classList.remove("d-none");
         }
     }
 

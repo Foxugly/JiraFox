@@ -33,12 +33,19 @@
                     <tr id="dev-header">
                         <th class="text-muted dev-col-spacer">&nbsp;</th>
                         {% for td in teamdevs %}
-                            <th class="dev-col" draggable="true" data-teamdev-id="{{ td.id }}" data-dev-id="{{ td.dev.id }}">
-                                <div class="fw-semibold"><i class="fa-solid fa-grip-vertical me-1"></i>{{ td.dev.name }}</div>
-                                <div class="dev-actions">
-                                    <button class="btn btn-outline-danger btn-sm delete-dev" title="{% trans 'Retirer de la team' %}" data-delete-url="{% url 'delete_dev_from_team' td.id %}">
-                                        <i class="fa-solid fa-trash"></i>
-                                    </button>
+                            <th class="dev-col" data-teamdev-id="{{ td.id }}" data-dev-id="{{ td.dev.id }}">
+                                <div class="dev-col-card">
+                                    <div class="dev-col-title">
+                                        <span class="dev-drag-handle" draggable="true" title="{% trans 'Reordonner le dev' %}">
+                                            <i class="fa-solid fa-grip-vertical"></i>
+                                        </span>
+                                        <span class="fw-semibold dev-col-name">{{ td.dev.name }}</span>
+                                    </div>
+                                    <div class="dev-actions">
+                                        <button class="btn btn-link btn-sm link-danger text-decoration-none p-0 delete-dev" type="button" title="{% trans 'Retirer de la team' %}" data-delete-url="{% url 'delete_dev_from_team' td.id %}">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </th>
                         {% endfor %}

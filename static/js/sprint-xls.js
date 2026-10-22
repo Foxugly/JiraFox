@@ -73,6 +73,12 @@
     });
 
     document.querySelectorAll("#dev-header .delete-dev").forEach((button) => {
+        button.addEventListener("dragstart", (event) => {
+            event.preventDefault();
+        });
+        button.addEventListener("mousedown", (event) => {
+            event.stopPropagation();
+        });
         button.addEventListener("click", async (event) => {
             event.stopPropagation();
             const confirmed = await window.AppUI?.confirmAction(i18n.remove_developer_question || "Remove this developer from the team?", {
@@ -121,7 +127,9 @@
     }
 
     headerRow.addEventListener("dragstart", (event) => {
-        const headerCell = event.target.closest("th.dev-col");
+        const dragHandle = event.target.closest(".dev-drag-handle");
+        if (!dragHandle) return;
+        const headerCell = dragHandle.closest("th.dev-col");
         if (!headerCell) return;
         draggingHeader = headerCell;
         draggingIndex = getHeaderIndex(headerCell);

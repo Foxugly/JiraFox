@@ -12,6 +12,8 @@
     const ttAge = document.getElementById("ttAge");
     const ttLink = document.getElementById("ttLink");
     const countState = {statuses: [], counts: {}};
+    let tooltipHideTimeout = null;
+    let isTooltipHovered = false;
 
     function notify(message, kind, delay) {
         window.AppUI?.showToast(message, kind, delay);
@@ -50,14 +52,33 @@
     }
 
     function hideTooltip() {
+        if (tooltipHideTimeout) {
+            window.clearTimeout(tooltipHideTimeout);
+            tooltipHideTimeout = null;
+        }
         if (tooltipEl) tooltipEl.style.display = "none";
+    }
+
+    function cancelScheduledHide() {
+        if (tooltipHideTimeout) {
+            window.clearTimeout(tooltipHideTimeout);
+            tooltipHideTimeout = null;
+        }
+    }
+
+    function scheduleHideTooltip(delay) {
+        cancelScheduledHide();
+        tooltipHideTimeout = window.setTimeout(() => {
+            tooltipHideTimeout = null;
+            if (!isTooltipHovered) hideTooltip();
+        }, delay || 150);
     }
 
     function externalTooltipHandler(context) {
         const {chart, tooltip} = context;
         if (!tooltipEl) return;
         if (tooltip.opacity === 0) {
-            hideTooltip();
+            scheduleHideTooltip(180);
             return;
         }
 
@@ -69,6 +90,8 @@
 
         const raw = point.raw || {};
         const age = raw.y ?? raw.ageDays ?? "?";
+        const xScale = chart.scales.x;
+        const yScale = chart.scales.y;
         ttKey.textContent = raw.key ?? "-";
         ttTitle.textContent = raw.title ?? "";
         ttStatus.textContent = raw.status ?? "-";
@@ -76,10 +99,10 @@
         ttAge.className = `badge badge-age ${ageBadgeClass(Number(age) || 999)}`;
         ttLink.href = raw.url || "#";
         ttLink.style.pointerEvents = raw.url ? "auto" : "none";
+        cancelScheduledHide();
 
-        const rect = chart.canvas.getBoundingClientRect();
-        tooltipEl.style.left = `${window.scrollX + rect.left + tooltip.caretX}px`;
-        tooltipEl.style.top = `${window.scrollY + rect.top + tooltip.caretY}px`;
+        tooltipEl.style.left = `${xScale.getPixelForValue(point.parsed.x)}px`;
+        tooltipEl.style.top = `${yScale.getPixelForValue(point.parsed.y)}px`;
         tooltipEl.style.display = "block";
     }
 
@@ -249,6 +272,20 @@
                     }
                 }
             });
+
+            if (!canvas.dataset.tooltipBound) {
+                canvas.addEventListener("mouseleave", () => scheduleHideTooltip(220));
+                canvas.addEventListener("touchend", () => scheduleHideTooltip(120));
+                tooltipEl?.addEventListener("mouseenter", () => {
+                    isTooltipHovered = true;
+                    cancelScheduledHide();
+                });
+                tooltipEl?.addEventListener("mouseleave", () => {
+                    isTooltipHovered = false;
+                    scheduleHideTooltip(120);
+                });
+                canvas.dataset.tooltipBound = "1";
+            }
         } finally {
             reloadButton?.removeAttribute("disabled");
         }

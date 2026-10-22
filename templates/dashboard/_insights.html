@@ -1,6 +1,6 @@
 {% load i18n %}
 <div class="row g-3 mb-3">
-    <div class="col-12 col-xl-7">
+    <div class="col-12">
         <div class="card p-3 h-100">
             <div class="d-flex align-items-center justify-content-between mb-2">
                 <div>
@@ -13,12 +13,12 @@
                         <i class="fa-brands fa-jira me-2"></i> {% trans "Open in Jira" %}
                     </a>
                     <a class="btn btn-outline-secondary" href="{% url 'sprint-detail' sprint.id %}">
-                        <i class="fa-solid fa-up-right-from-square"></i>
+                        <i class="fa-solid fa-eye"></i>
                     </a>
                 </div>
             </div>
 
-            <div id="wiaChartWrap">
+            <div id="wiaChartWrap" class="dashboard-chart-frame dashboard-chart-frame-lg">
                 <canvas id="wiaChart"></canvas>
                 <div id="chartTooltip">
                     <div class="tt-card">
@@ -40,8 +40,29 @@
             <div class="text-secondary small mt-2" id="wiaHint">-</div>
         </div>
     </div>
+</div>
 
-    <div class="col-12 col-xl-5">
+<div class="dashboard-split-row mb-3">
+    <div class="dashboard-col-60">
+        <div class="card p-3 h-100">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <div>
+                    <div class="text-uppercase text-secondary small">{% trans "Chart" %}</div>
+                    <div class="fw-semibold">{% trans "Weighted throughput" %}</div>
+                </div>
+                <div class="text-secondary small" id="weightedThroughputHint">-</div>
+            </div>
+
+            <div class="dashboard-chart-frame dashboard-chart-frame-sm">
+                <canvas id="weightedThroughputChart"></canvas>
+            </div>
+            <div id="weightedThroughputEmpty" class="text-secondary small text-center py-4 d-none">
+                {% trans "No Done tickets to display." %}
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-col-40">
         <div class="card p-3 h-100">
             <div class="d-flex align-items-center justify-content-between mb-2">
                 <div>

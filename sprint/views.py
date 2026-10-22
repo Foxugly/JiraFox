@@ -11,12 +11,30 @@ from jiramodule.utils.datetime_utils import hours_to_business_days
 from team.models import TeamDev
 from .report import create_xlsx_bytes
 
+DONE_STATUS_NAMES = {
+    "resolved",
+    "completed",
+    "issue completed",
+    "closed",
+    "done",
+}
+
 
 def _to_float(v, default=0.0) -> float:
     try:
         return float(v)
     except (TypeError, ValueError):
         return float(default)
+
+
+def _get_sprint_standard_issues(jira, sprint_id: int, *, full: bool = True):
+    if hasattr(jira, "get_sprint_standard_issues"):
+        return jira.get_sprint_standard_issues(sprint_id, full=full)
+    return jira.get_cached_sprint_issues(
+        sprint_id,
+        jql_extra=jira.JIRA_ONLY_STANDARD_TYPES,
+        full=full,
+    )
 
 
 class SprintListView(LoginRequiredMixin, ListView):
@@ -64,11 +82,7 @@ class SprintDetailView(LoginRequiredMixin, TemplateView):
 @login_required
 def get_api_sprint_issues(request, sprint_id: int) -> JsonResponse:
     jira = get_connected_jira_for_user(request.user)
-    issues = jira.get_cached_sprint_issues(
-        sprint_id,
-        jql_extra=jira.JIRA_ONLY_STANDARD_TYPES,
-        full=True,
-    )
+    issues = _get_sprint_standard_issues(jira, sprint_id, full=True)
     return JsonResponse({"items": [build_sprint_issue_item(issue) for issue in issues]})
 
 
@@ -147,7 +161,7 @@ class SprintXLSExportView(LoginRequiredMixin, View):
 def get_api_sprint_kanban_issues(request, sprint_id: int) -> JsonResponse:
     jira = get_connected_jira_for_user(request.user)
     data_issues = {}
-    for i in jira.get_cached_sprint_issues(sprint_id, jql_extra=jira.JIRA_ONLY_STANDARD_TYPES):
+    for i in _get_sprint_standard_issues(jira, sprint_id, full=False):
         state = get_issue_status(i)
         if state in data_issues:
             data_issues[state].append(i)
@@ -168,18 +182,73 @@ class SprintWiaView(LoginRequiredMixin, TemplateView):
 
         jira = get_connected_jira_for_user(self.request.user)
         context["sprint"] = jira.get_sprint(sprint_id)
+        context["sprint_id"] = sprint_id
         return context
 
 
+class SprintWeightedThroughputDistributionView(LoginRequiredMixin, TemplateView):
+    template_name = "sprint/sprint_weighted_throughput_distribution.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        sprint_id = kwargs.get("sprint_id")
+        jira = get_connected_jira_for_user(self.request.user)
+        context["sprint"] = jira.get_sprint(sprint_id)
+        context["jira_sprint_url"] = jira.get_url_jql(f"sprint={sprint_id}")
+        context.update(build_weighted_throughput_distribution(jira, sprint_id))
+        return context
+
+
+def _format_story_points(value: float) -> str:
+    return str(int(value)) if value.is_integer() else str(value)
+
+
+def build_weighted_throughput_distribution(jira, sprint_id: int) -> dict:
+    issues = _get_sprint_standard_issues(jira, sprint_id, full=True)
+    return build_weighted_throughput_distribution_from_issues(issues)
+
+
+def build_weighted_throughput_distribution_from_issues(issues: list[dict]) -> dict:
+    counts_by_points: dict[float, int] = {}
+    done_count = 0
+
+    for issue in issues:
+        if (issue.get("statusCategory") or "").strip() != "Done" and (issue.get("state") or "").strip().lower() not in DONE_STATUS_NAMES:
+            continue
+
+        done_count += 1
+        story_points = (issue.get("estimation") or {}).get("story_points")
+        if story_points is None or story_points == "":
+            points = 0.0
+        else:
+            try:
+                points = float(story_points)
+            except (TypeError, ValueError):
+                points = 0.0
+
+        counts_by_points[points] = counts_by_points.get(points, 0) + 1
+
+    sorted_points = sorted(counts_by_points)
+    labels = [_format_story_points(points) for points in sorted_points]
+    counts = [counts_by_points[points] for points in sorted_points]
+
+    return {
+        "distribution": {
+            "labels": labels,
+            "counts": counts,
+        },
+        "done_count": done_count,
+        "estimated_done_count": sum(counts),
+    }
+
+
 def build_wia_data(jira, sprint_id: int) -> dict:
+    issues = _get_sprint_standard_issues(jira, sprint_id, full=True)
+    return build_wia_data_from_issues(issues)
+
+
+def build_wia_data_from_issues(issues: list[dict]) -> dict:
     mapped_items: list[dict] = []
-
-    issues = jira.get_cached_sprint_issues(
-        sprint_id,
-        jql_extra=jira.JIRA_ONLY_STANDARD_TYPES,
-        full=True,
-    )
-
     for i in issues:
         status = (i.get("state") or "").strip() or "Unknown"
         if status in STATUS_EXCLUDED:

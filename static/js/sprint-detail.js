@@ -43,7 +43,7 @@
                                 <i class="fa-brands fa-jira"></i>
                             </a>
                             <a class="btn btn-outline-secondary" href="${detailUrl}">
-                                <i class="fa-solid fa-up-right-from-square"></i>
+                                <i class="fa-solid fa-eye"></i>
                             </a>
                         </div>`;
                     }

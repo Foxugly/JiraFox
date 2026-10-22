@@ -1,10 +1,17 @@
 {% load static i18n %}
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="{{ request.LANGUAGE_CODE|default:LANGUAGE_CODE|default:'fr' }}" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}JiraFox{% endblock %}</title>
+    <script>
+        (function () {
+            const stored = localStorage.getItem("jirafox-theme");
+            const preferred = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+            document.documentElement.dataset.theme = stored || preferred;
+        })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
@@ -35,15 +42,15 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="appConfirmTitle">Confirmation</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title" id="appConfirmTitle">{% trans "Confirmation" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
             </div>
             <div class="modal-body">
                 <p id="appConfirmMessage" class="mb-0"></p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-action="cancel">Cancel</button>
-                <button type="button" class="btn btn-primary" data-action="confirm">Confirm</button>
+                <button type="button" class="btn btn-outline-secondary" data-action="cancel">{% trans "Cancel" %}</button>
+                <button type="button" class="btn btn-primary" data-action="confirm">{% trans "Confirm" %}</button>
             </div>
         </div>
     </div>
@@ -53,16 +60,16 @@
         <div class="modal-content">
             <form id="appPromptForm">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="appPromptTitle">Input</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title" id="appPromptTitle">{% trans "Input" %}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
                 </div>
                 <div class="modal-body">
-                    <label for="appPromptInput" id="appPromptLabel" class="form-label">Value</label>
+                    <label for="appPromptInput" id="appPromptLabel" class="form-label">{% trans "Value" %}</label>
                     <input id="appPromptInput" name="value" class="form-control" autocomplete="off">
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-action="cancel">Cancel</button>
-                    <button type="submit" class="btn btn-primary" data-action="confirm">Confirm</button>
+                    <button type="button" class="btn btn-outline-secondary" data-action="cancel">{% trans "Cancel" %}</button>
+                    <button type="submit" class="btn btn-primary" data-action="confirm">{% trans "Confirm" %}</button>
                 </div>
             </form>
         </div>

@@ -8,18 +8,10 @@
 {% block title %}JiraFox - Sprint{% endblock %}
 
 {% block content %}
-    {% trans "Sprints" as sprint_list_hero_title %}
-    {% trans "Filtrer les cycles visibles, parcourir l'historique et ouvrir directement le sprint utile." as sprint_list_hero_description %}
+    {% trans "Sprints" as sprint_list_title %}
+    {% trans "Sprint map" as sprint_list_kicker %}
     <section class="page-shell glass-panel section-stack">
-        <div class="page-hero">
-            <div class="d-flex justify-content-start mb-3 page-hero-kicker-row">
-                <span class="page-kicker">
-                    <i class="fa-brands fa-trello"></i>
-                    {% trans "Sprint map" %}
-                </span>
-            </div>
-            {% include "includes/page_hero_copy.html" with hero_title=sprint_list_hero_title hero_description=sprint_list_hero_description %}
-        </div>
+        {% include "includes/page_toolbar.html" with toolbar_icon="fa-brands fa-trello" toolbar_kicker=sprint_list_kicker toolbar_title=sprint_list_title %}
 
         <div class="content-panel">
             <div class="d-flex justify-content-end mb-3">
@@ -72,7 +64,7 @@
                                         <i class="fa-brands fa-jira"></i>
                                     </a>
                                     <a class="btn btn-outline-secondary" href="{% url 'sprint-detail' sprint.id %}">
-                                        <i class="fa-solid fa-up-right-from-square"></i>
+                                        <i class="fa-solid fa-eye"></i>
                                     </a>
                                 </div>
                             </td>

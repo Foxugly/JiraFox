@@ -8,11 +8,12 @@ from jira import JIRA
 
 from ..models import JiraConfiguration
 from ..utils.datetime_utils import _to_hours
+from .jql import JqlBuilder, STANDARD_ISSUE_TYPES
 from .kanban_metrics import KanbanMetricsService
 
 
 class JiraManager:
-    JIRA_ONLY_STANDARD_TYPES = "issuetype in standardIssueTypes()"
+    JIRA_ONLY_STANDARD_TYPES = STANDARD_ISSUE_TYPES
     JIRA_REQUEST_TIMEOUT_SECONDS = 30
     SPRINT_ISSUES_CACHE_TTL_SECONDS = 300
     THROUGHPUT_DEFAULT_DAYS = 7
@@ -47,6 +48,7 @@ class JiraManager:
         fields = [
             "summary",
             "status",
+            "labels",
             "assignee",
             "issuetype",
             "project",
@@ -227,20 +229,25 @@ class JiraManager:
             expand=expand,
         )
 
-    def get_cached_sprint_issues(self, sprint_id, jql_extra=JIRA_ONLY_STANDARD_TYPES, full=True, max_results: int = 1000):
-        extra = (jql_extra or "").strip()
-        extra_hash = hashlib.md5(extra.encode()).hexdigest()
-        key = f"sprint_issues:{self.cfg.user_id}:{sprint_id}:{int(full)}:{max_results}:{extra_hash}"
+    def get_cached_jql_issues(self, jql: str, *, full: bool = True, max_results: int = 1000) -> List[Dict[str, Any]]:
+        normalized_jql = (jql or "").strip()
+        jql_hash = hashlib.md5(normalized_jql.encode()).hexdigest()
+        key = f"jql_issues:{self.cfg.user_id}:{int(full)}:{max_results}:{jql_hash}"
         data = cache.get(key)
         if data is None:
-            data = self.get_sprint_issues(
-                sprint_id,
-                jql_extra=jql_extra,
-                max_results=max_results,
-                full=full,
-            )
+            data = self.run_jql(normalized_jql, max_results=max_results, full=full)
             cache.set(key, data, self.SPRINT_ISSUES_CACHE_TTL_SECONDS)
         return data
+
+    def get_cached_sprint_issues(self, sprint_id, jql_extra=JIRA_ONLY_STANDARD_TYPES, full=True, max_results: int = 1000):
+        return self.get_cached_jql_issues(
+            self.build_sprint_jql(sprint_id, jql_extra=jql_extra),
+            full=full,
+            max_results=max_results,
+        )
+
+    def build_sprint_jql(self, sprint_id: int, *, jql_extra: str = "") -> str:
+        return JqlBuilder.sprint(sprint_id).where(jql_extra).build()
 
     def get_sprint_issues(
         self,
@@ -250,11 +257,34 @@ class JiraManager:
         max_results: int = 1000,
         full: bool = False,
     ) -> List[Dict[str, Any]]:
-        jql = f"sprint = {int(sprint_id)}"
-        if jql_extra.strip():
-            jql = f"({jql}) AND ({jql_extra.strip()})"
+        return self.run_jql(
+            self.build_sprint_jql(sprint_id, jql_extra=jql_extra),
+            max_results=max_results,
+            full=full,
+        )
 
-        return self.run_jql(jql, max_results=max_results, full=full)
+    def get_sprint_standard_issues(self, sprint_id: int, *, full: bool = True, max_results: int = 1000) -> List[Dict[str, Any]]:
+        return self.get_cached_sprint_issues(
+            sprint_id,
+            jql_extra=self.JIRA_ONLY_STANDARD_TYPES,
+            full=full,
+            max_results=max_results,
+        )
+
+    def get_sprint_done_issues(self, sprint_id: int, *, full: bool = True, max_results: int = 1000) -> List[Dict[str, Any]]:
+        jql = (
+            JqlBuilder.sprint(sprint_id)
+            .standard_issue_types()
+            .status_category("Done")
+            .build()
+        )
+        return self.get_cached_jql_issues(jql, full=full, max_results=max_results)
+
+    def get_current_sprint_issues(self, *, full: bool = True, max_results: int = 1000) -> tuple[dict | None, list[dict]]:
+        sprint = self.get_current_sprint(self.cfg.jira_board_id)
+        if not sprint:
+            return None, []
+        return sprint, self.get_sprint_standard_issues(sprint["id"], full=full, max_results=max_results)
 
     def run_jql(self, jql: str, *, max_results: int = 1000, full: bool = True) -> List[Dict[str, Any]]:
         issues = self._search_issues(jql, max_results=max_results, detailed=full)
@@ -290,6 +320,11 @@ class JiraManager:
     def ticket_info(self, issue_key: str) -> Dict[str, Any]:
         return self.get_issue(issue_key, full=False)
 
+    def _serialize_status_category(self, issue: Any) -> Optional[str]:
+        status = getattr(issue.fields, "status", None)
+        category = getattr(status, "statusCategory", None)
+        return getattr(category, "name", None)
+
     def _ticket_info_from_issue(self, issue: Any) -> Dict[str, Any]:
         fields = issue.fields
         return {
@@ -298,6 +333,8 @@ class JiraManager:
             "project": getattr(getattr(fields, "project", None), "key", None),
             "issueType": getattr(getattr(fields, "issuetype", None), "name", None),
             "state": getattr(getattr(fields, "status", None), "name", None),
+            "statusCategory": self._serialize_status_category(issue),
+            "labels": list(getattr(fields, "labels", None) or []),
             "assignee": self._serialize_assignee(getattr(fields, "assignee", None)),
             "url": self.get_issue_url(issue.key),
         }
@@ -315,6 +352,8 @@ class JiraManager:
             "project": getattr(getattr(fields, "project", None), "key", None),
             "issueType": getattr(getattr(fields, "issuetype", None), "name", None),
             "state": getattr(getattr(fields, "status", None), "name", None),
+            "statusCategory": self._serialize_status_category(issue),
+            "labels": list(getattr(fields, "labels", None) or []),
             "assignee": self._serialize_assignee(getattr(fields, "assignee", None)),
             "estimation": {
                 "story_points": self._get_story_points(issue),
@@ -356,12 +395,70 @@ class JiraManager:
         except Exception:  # noqa: BLE001
             return None
 
+    def update_issue_fields(self, issue_key: str, fields: dict[str, Any]) -> Dict[str, Any]:
+        issue = self._with_retries(self.jira.issue, issue_key)
+        self._with_retries(issue.update, fields=fields)
+        return self.get_issue(issue_key, full=False)
+
+    def update_issue_labels(
+        self,
+        issue_key: str,
+        *,
+        add_labels: list[str] | None = None,
+        remove_labels: list[str] | None = None,
+        current_labels: list[str] | None = None,
+    ) -> Dict[str, Any]:
+        labels = current_labels
+        if labels is None:
+            issue = self._with_retries(self.jira.issue, issue_key, fields="labels")
+            labels = list(getattr(issue.fields, "labels", None) or [])
+
+        next_labels = [label for label in labels if label not in set(remove_labels or [])]
+        for label in add_labels or []:
+            if label not in next_labels:
+                next_labels.append(label)
+
+        return self.update_issue_fields(issue_key, {"labels": next_labels})
+
     def throughput_7d(self, days: int = THROUGHPUT_DEFAULT_DAYS):
         query = (
-            f"project = {self.cfg.jira_project_id} "
-            f"AND issuetype in standardIssueTypes() "
-            f"AND status = Done "
-            f"AND resolved >= -{int(days)}d "
-            "ORDER BY resolved DESC"
+            JqlBuilder.project(self.cfg.jira_project_id)
+            .standard_issue_types()
+            .status_category("Done")
+            .resolved_since_days(days)
+            .order_by("resolved DESC")
+            .build()
         )
         return self.run_jql(query, full=False)
+
+    def create_issue(
+            self,
+            *,
+            project_key: str,
+            summary: str,
+            issue_type: str = "Task",
+            description: str = "",
+            assignee_account_id: str | None = None,
+    ) -> Dict[str, Any]:
+        payload = {
+            "project": {"key": project_key},
+            "summary": summary,
+            "issuetype": {"name": issue_type},
+        }
+
+        if description:
+            payload["description"] = description
+
+        if assignee_account_id:
+            payload["assignee"] = {
+                "accountId": assignee_account_id,
+            }
+        if issue_type == "Epic":
+            payload["customfield_10102"] = summary
+
+        issue = self._with_retries(
+            self.jira.create_issue,
+            fields=payload,
+        )
+
+        return self.get_issue(issue.key)

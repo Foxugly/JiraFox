@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import SprintListView, SprintDetailView, SprintKanbanView, SprintReportView, SprintXLSExportView, \
     get_api_sprint_kanban_issues, SprintWiaView, get_api_sprint_wia_issues, get_api_sprint_issues, \
-    SprintDetailXLSExportView
+    SprintDetailXLSExportView, SprintWeightedThroughputDistributionView
 
 urlpatterns = [
     path("list/", SprintListView.as_view(), name="sprint-list"),
@@ -11,6 +11,11 @@ urlpatterns = [
 
     path("<int:sprint_id>/api/kanban/", get_api_sprint_kanban_issues, name="sprint-api-kanban"),
     path("<int:sprint_id>/wia/", SprintWiaView.as_view(), name="sprint-wia"),
+    path(
+        "<int:sprint_id>/weighted-throughput-distribution/",
+        SprintWeightedThroughputDistributionView.as_view(),
+        name="sprint-weighted-throughput-distribution",
+    ),
 
     path("<int:sprint_id>/api/wia/", get_api_sprint_wia_issues, name="sprint-api-wia"),
     path("<int:sprint_id>/report/", SprintReportView.as_view(), name="sprint-report"),

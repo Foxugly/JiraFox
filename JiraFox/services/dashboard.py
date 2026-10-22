@@ -6,21 +6,28 @@ from JiraFox.services.issue_data import build_dashboard_item, get_issue_status, 
 AGING_WIP_THRESHOLD_DAYS = 10
 
 
+def get_dashboard_status_bucket(issue: dict) -> str:
+    if (issue.get("statusCategory") or "").strip() == "Done":
+        return "Done"
+    return get_issue_status(issue)
+
+
 def get_current_sprint_with_issues(jira) -> tuple[dict | None, list[dict]]:
+    if hasattr(jira, "get_current_sprint_issues"):
+        return jira.get_current_sprint_issues(full=True)
+
     sprint = jira.get_current_sprint(jira.cfg.jira_board_id)
     if not sprint:
         return None, []
-
-    issues = jira.get_cached_sprint_issues(
-        sprint["id"],
-        jql_extra=jira.JIRA_ONLY_STANDARD_TYPES,
-        full=True,
-    )
-    return sprint, issues
+    return sprint, jira.get_cached_sprint_issues(sprint["id"], jql_extra=jira.JIRA_ONLY_STANDARD_TYPES, full=True)
 
 
 def build_dashboard_kpis(issues: list[dict], throughput_7d: int) -> dict:
-    wip_items = [issue for issue in issues if get_issue_status(issue, default="") != "Done"]
+    wip_items = [
+        issue
+        for issue in issues
+        if (issue.get("statusCategory") or get_issue_status(issue, default="")) != "Done"
+    ]
     aging_wip = [
         issue
         for issue in wip_items
@@ -62,7 +69,7 @@ def build_dashboard_kpis(issues: list[dict], throughput_7d: int) -> dict:
 def build_dashboard_bottlenecks(issues: list[dict]) -> list[dict]:
     status_stats: dict[str, list[float]] = defaultdict(list)
     for issue in issues:
-        status_stats[get_issue_status(issue)].append(
+        status_stats[get_dashboard_status_bucket(issue)].append(
             get_kanban_metric(issue, "current_wip_age_days", 0) or 0
         )
 
