@@ -146,8 +146,12 @@ def build_unassigned_rows(
             if any(person_matches_dev(author, dev_name) for dev_name in dev_names):
                 continue
             hours_by_author[author_label(author)] += float(worklog.get("hours") or 0)
-        for author, hours in sorted(hours_by_author.items()):
-            rows.append({**issue_row(issue, round(hours, 2), start, end), "author": author})
+        for index, (author, hours) in enumerate(sorted(hours_by_author.items())):
+            row = {**issue_row(issue, round(hours, 2), start, end), "author": author}
+            if index:
+                # Planned time belongs to the ticket: count it once, not once per author.
+                row["planned_hours"] = None
+            rows.append(row)
     return rows
 
 

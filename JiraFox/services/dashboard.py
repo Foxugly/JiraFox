@@ -1,7 +1,7 @@
 from collections import defaultdict
 from statistics import median
 
-from JiraFox.services.issue_data import build_dashboard_item, get_issue_status, get_kanban_metric
+from JiraFox.services.issue_data import build_dashboard_item, get_issue_status, get_kanban_metric, is_issue_done
 
 AGING_WIP_THRESHOLD_DAYS = 10
 
@@ -23,11 +23,7 @@ def get_current_sprint_with_issues(jira) -> tuple[dict | None, list[dict]]:
 
 
 def build_dashboard_kpis(issues: list[dict], throughput_7d: int) -> dict:
-    wip_items = [
-        issue
-        for issue in issues
-        if (issue.get("statusCategory") or get_issue_status(issue, default="")) != "Done"
-    ]
+    wip_items = [issue for issue in issues if not is_issue_done(issue)]
     aging_wip = [
         issue
         for issue in wip_items

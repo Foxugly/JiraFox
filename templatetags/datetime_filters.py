@@ -1,5 +1,4 @@
 from django import template
-from datetime import datetime
 import dateutil.parser  # très utile pour ISO-8601 Jira
 
 register = template.Library()

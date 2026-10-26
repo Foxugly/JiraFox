@@ -21,7 +21,6 @@ class JiraConfigurationForm(forms.ModelForm):
         model = JiraConfiguration
         fields = [
             "jira_url",
-            "jira_email",
             "jira_token",
             "jira_board_id",
             "jira_project_id",
@@ -32,10 +31,6 @@ class JiraConfigurationForm(forms.ModelForm):
             "jira_url": forms.URLInput(attrs={
                 "class": "form-control",
                 "placeholder": "https://jira.example.com",
-            }),
-            "jira_email": forms.EmailInput(attrs={
-                "class": "form-control",
-                "placeholder": "user@company.com",
             }),
             "jira_token": forms.PasswordInput(render_value=False, attrs={
                 "class": "form-control",

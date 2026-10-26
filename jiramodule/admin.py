@@ -14,4 +14,4 @@ class JiraConfigurationAdmin(admin.ModelAdmin):
         "last_tested_at",
     )
     list_filter = ("current", "last_test_ok", "is_active")
-    search_fields = ("jira_url", "jira_email", "user__username")
+    search_fields = ("jira_url", "user__username")

@@ -13,6 +13,12 @@ from .jql import JqlBuilder, STANDARD_ISSUE_TYPES
 from .kanban_metrics import KanbanMetricsService
 
 
+def _status_category_key(fields: Any) -> Optional[str]:
+    """'new', 'indeterminate' or 'done': unlike status and category names, the key is never renamed or translated."""
+    category = getattr(getattr(fields, "status", None), "statusCategory", None)
+    return getattr(category, "key", None)
+
+
 class JiraManager:
     JIRA_ONLY_STANDARD_TYPES = "issuetype in standardIssueTypes()"
     # (connect, read) seconds, passed to requests by the jira client.
@@ -337,6 +343,7 @@ class JiraManager:
             "project": getattr(getattr(fields, "project", None), "key", None),
             "issueType": getattr(getattr(fields, "issuetype", None), "name", None),
             "state": getattr(getattr(fields, "status", None), "name", None),
+            "status_category": _status_category_key(fields),
             "assignee": self._serialize_assignee(getattr(fields, "assignee", None)),
             "url": self.get_issue_url(issue.key),
         }
@@ -354,6 +361,7 @@ class JiraManager:
             "project": getattr(getattr(fields, "project", None), "key", None),
             "issueType": getattr(getattr(fields, "issuetype", None), "name", None),
             "state": getattr(getattr(fields, "status", None), "name", None),
+            "status_category": _status_category_key(fields),
             "assignee": self._serialize_assignee(getattr(fields, "assignee", None)),
             "estimation": {
                 "story_points": self._get_story_points(issue),
@@ -424,12 +432,11 @@ class JiraManager:
         if not self.cfg.jira_project_id:
             return []
         query = (
-            JqlBuilder.project(self.cfg.jira_project_id)
-            .standard_issue_types()
-            .status_category("Done")
-            .resolved_since_days(days)
-            .order_by("resolved DESC")
-            .build()
+            f"project = {self.cfg.jira_project_id} "
+            f"AND issuetype in standardIssueTypes() "
+            f"AND statusCategory = Done "
+            f"AND resolved >= -{int(days)}d "
+            "ORDER BY resolved DESC"
         )
         return self.run_jql(query, full=False)
 

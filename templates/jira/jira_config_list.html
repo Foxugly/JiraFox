@@ -32,7 +32,6 @@
                     <thead>
                     <tr>
                         <th>{% trans "URL" %}</th>
-                        <th>{% trans "Email" %}</th>
                         <th>{% trans "Board" %}</th>
                         <th>{% trans "Project" %}</th>
                         <th>{% trans "Epic" %}</th>
@@ -45,7 +44,6 @@
                     {% for c in configs %}
                         <tr data-row-id="{{ c.id }}">
                             <td class="text-truncate jira-cell-url">{{ c.jira_url|default:"-" }}</td>
-                            <td class="text-truncate jira-cell-email">{{ c.jira_email|default:"-" }}</td>
                             <td>{{ c.jira_board_id|default:"-" }}</td>
                             <td>{{ c.jira_project_id|default:"-" }}</td>
                             <td class="text-truncate jira-cell-epic">{{ c.jira_recurrent_epic_key|default:"-" }}</td>
@@ -102,7 +100,7 @@
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="8" class="text-center text-muted py-4">{% trans "Aucune configuration." %}</td>
+                            <td colspan="7" class="text-center text-muted py-4">{% trans "Aucune configuration." %}</td>
                         </tr>
                     {% endfor %}
                     </tbody>

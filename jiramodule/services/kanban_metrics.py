@@ -5,7 +5,12 @@ from django.utils import timezone
 from django.utils.formats import date_format
 from django.utils.translation import gettext as _
 
-from jiramodule.utils.datetime_utils import serialize_dt, _parse_jira_dt, hours_to_business_days
+from jiramodule.utils.datetime_utils import (
+    DAILY_BUSINESS_HOURS,
+    _parse_jira_dt,
+    hours_to_business_days,
+    serialize_dt,
+)
 
 
 class KanbanMetricsService:
@@ -40,12 +45,7 @@ class KanbanMetricsService:
             return 0.0
 
         def daily_cap(dt: datetime) -> float:
-            wd = dt.weekday()  # 0=Mon ... 4=Fri ... 6=Sun
-            if wd <= 3:
-                return 8.0
-            if wd == 4:
-                return 4.0
-            return 0.0
+            return DAILY_BUSINESS_HOURS[dt.weekday()]
 
         total = 0.0
         cur = start

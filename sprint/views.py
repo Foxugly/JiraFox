@@ -270,8 +270,8 @@ def build_wia_data_from_issues(issues: list[dict]) -> dict:
         age_hours = _to_float(km.get("current_wip_age_hours"), 0.0)
         cycle_hours = _to_float(km.get("cycle_time_hours"), 0.0)
 
-        age_days = max(0, int(hours_to_business_days(age_hours, day_hours=7.2) or 0))
-        cycle_days = max(0, int(hours_to_business_days(cycle_hours, day_hours=7.2) or 0))
+        age_days = max(0, int(hours_to_business_days(age_hours) or 0))
+        cycle_days = max(0, int(hours_to_business_days(cycle_hours) or 0))
 
         mapped_items.append({
             "key": i.get("key"),

@@ -272,10 +272,11 @@ class LoggedReportTests(SimpleTestCase):
         rows = build_unassigned_rows(ISSUES, ["Alice"], start, end)
 
         self.assertEqual(
-            [(row["ticket"], row["author"], row["logged_hours"]) for row in rows],
+            [(row["ticket"], row["author"], row["planned_hours"], row["logged_hours"]) for row in rows],
             [
-                ("ABC-1 - Login page", "Dupont, Bob (BDUPONT)", 1.0),
-                ("ABC-1 - Login page", "Extern, Carl (CEXTERN)", 2.0),
+                ("ABC-1 - Login page", "Dupont, Bob (BDUPONT)", 8.0, 1.0),
+                # The ticket's planned time is only counted on its first row.
+                ("ABC-1 - Login page", "Extern, Carl (CEXTERN)", None, 2.0),
             ],
         )
 
