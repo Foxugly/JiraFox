@@ -28,6 +28,7 @@ class JiraManager:
     CONNECTION_CACHE_TTL_SECONDS = 3600
     THROUGHPUT_DEFAULT_DAYS = 7
     WORKLOG_SEARCH_PAGE_SIZE = 50
+    STATUS_HISTORY_CHUNK_SIZE = 20
     RETRY_ATTEMPTS = 2
     RETRY_DELAY_SECONDS = 1
 
@@ -360,7 +361,8 @@ class JiraManager:
         their status at any moment. Only the status field and the changelog are fetched.
         """
         out: Dict[str, Dict[str, Any]] = {}
-        page_size = self.WORKLOG_SEARCH_PAGE_SIZE
+        # A changelog can be very long: few issues per request keeps each answer small.
+        page_size = self.STATUS_HISTORY_CHUNK_SIZE
         for index in range(0, len(keys), page_size):
             chunk = keys[index:index + page_size]
             issues = self._with_retries(
@@ -532,8 +534,9 @@ class JiraManager:
         return self._issues_with_worklogs(jql, max_results)
 
     def _issues_with_worklogs(self, jql: str, max_results: int) -> List[Dict[str, Any]]:
-        # Worklogs and changelogs make each issue heavy: one request for hundreds of issues
-        # outlasts the read timeout. Small pages keep every request short.
+        # Asking for worklogs and changelogs inside the search made each page huge (long-lived
+        # issues carry years of history) and outlasted the read timeout. Three light steps instead:
+        # the issues alone, their status changes by small chunks, their worklogs one issue at a time.
         issues = []
         while len(issues) < max_results:
             page = self._with_retries(
@@ -541,24 +544,19 @@ class JiraManager:
                 jql,
                 startAt=len(issues),
                 maxResults=min(self.WORKLOG_SEARCH_PAGE_SIZE, max_results - len(issues)),
-                fields="summary,status,assignee,created,timetracking,worklog",
-                expand="changelog",
+                fields="summary,status,assignee,created,timetracking",
             )
             issues.extend(page)
             total = getattr(page, "total", None)
             if not page or (total is not None and len(issues) >= total):
                 break
+
+        histories = self.get_status_histories([issue.key for issue in issues])
         out: List[Dict[str, Any]] = []
         for issue in issues:
             fields = issue.fields
-            worklog_page = getattr(fields, "worklog", None)
-            worklogs = list(getattr(worklog_page, "worklogs", None) or [])
-            # Search results only embed the first 20 worklogs of an issue.
-            if (getattr(worklog_page, "total", 0) or 0) > len(worklogs):
-                worklogs = self._with_retries(self.jira.worklogs, issue.key)
-
+            worklogs = self._with_retries(self.jira.worklogs, issue.key)
             timetracking = getattr(fields, "timetracking", None)
-            histories = getattr(getattr(issue, "changelog", None), "histories", None) or []
             out.append(
                 {
                     "key": issue.key,
@@ -569,16 +567,7 @@ class JiraManager:
                     "original_estimate_hours": _to_hours(
                         getattr(timetracking, "originalEstimateSeconds", None) if timetracking else None
                     ),
-                    "status_changes": [
-                        {
-                            "at": getattr(history, "created", None),
-                            "from": getattr(item, "fromString", None),
-                            "to": getattr(item, "toString", None),
-                        }
-                        for history in histories
-                        for item in (getattr(history, "items", None) or [])
-                        if getattr(item, "field", "") == "status"
-                    ],
+                    "status_changes": (histories.get(issue.key) or {}).get("status_changes") or [],
                     "worklogs": [
                         {
                             "author": self._serialize_assignee(getattr(worklog, "author", None)),
@@ -587,7 +576,7 @@ class JiraManager:
                             # Exact time: summing the rounded hours drifts (3 x 20 min = 0.99 h).
                             "seconds": getattr(worklog, "timeSpentSeconds", None) or 0,
                         }
-                        for worklog in worklogs
+                        for worklog in worklogs or []
                     ],
                     "url": self.get_issue_url(issue.key),
                 }

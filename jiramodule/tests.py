@@ -167,7 +167,7 @@ class JiraManagerStatusHistoryTests(SimpleTestCase):
         result = manager.get_status_histories([f"ABC-{i}" for i in range(60)])
 
         self.assertEqual(len(result), 60)
-        self.assertEqual(len(queries), 2)
+        self.assertEqual(len(queries), 3)
         self.assertEqual(queries[0][1]["fields"], "status,created")
         self.assertEqual(queries[0][1]["expand"], "changelog")
         self.assertEqual(
@@ -177,24 +177,44 @@ class JiraManagerStatusHistoryTests(SimpleTestCase):
 
 
 class JiraManagerWorklogSearchTests(SimpleTestCase):
-    def test_issues_with_worklogs_are_fetched_in_small_pages(self):
+    def test_issues_with_worklogs_are_fetched_in_light_steps(self):
         issues = [
-            SimpleNamespace(key=f"ABC-{i}", fields=SimpleNamespace(worklog=None, timetracking=None))
+            SimpleNamespace(key=f"ABC-{i}", fields=SimpleNamespace(timetracking=None, status=None))
             for i in range(120)
         ]
-        calls = []
+        searches, worklog_calls = [], []
 
-        def search_issues(jql, startAt, maxResults, **kwargs):
-            calls.append((startAt, maxResults))
+        def search_issues(jql, startAt=0, maxResults=50, **kwargs):
+            searches.append((jql, startAt, maxResults, kwargs))
+            if jql.startswith("key in"):
+                change = SimpleNamespace(field="status", fromString="To Do", toString="Done")
+                history = SimpleNamespace(created="2026-03-05T10:00:00.000+0000", items=[change])
+                return [
+                    SimpleNamespace(key=key, fields=SimpleNamespace(status=None, created=None),
+                                    changelog=SimpleNamespace(histories=[history]))
+                    for key in re.findall(r'"([^"]+)"', jql)
+                ]
             return ResultList(issues[startAt:startAt + maxResults], startAt, maxResults, len(issues))
 
+        def worklogs(key):
+            worklog_calls.append(key)
+            return [SimpleNamespace(author=None, started="2026-03-04T10:00:00.000+0000", timeSpentSeconds=3600)]
+
         manager = JiraManager(SimpleNamespace(jira_url="https://jira.example/"))
-        manager._jira = SimpleNamespace(search_issues=search_issues)
+        manager._jira = SimpleNamespace(search_issues=search_issues, worklogs=worklogs)
 
         result = manager.get_sprint_issues_with_worklogs(2446)
 
         self.assertEqual(len(result), 120)
-        self.assertEqual(calls, [(0, 50), (50, 50), (100, 50)])
+        sprint_pages = [search for search in searches if search[0].startswith("sprint")]
+        self.assertEqual([(start, size) for _, start, size, _ in sprint_pages], [(0, 50), (50, 50), (100, 50)])
+        # The sprint search stays light: no worklog field, no changelog.
+        self.assertNotIn("worklog", sprint_pages[0][3]["fields"])
+        self.assertNotIn("expand", sprint_pages[0][3])
+        self.assertEqual(len(searches) - len(sprint_pages), 6)  # 120 status histories, 20 per search
+        self.assertEqual(len(worklog_calls), 120)
+        self.assertEqual(result[0]["status_changes"][0]["to"], "Done")
+        self.assertEqual(result[0]["worklogs"][0]["seconds"], 3600)
 
 
 class BulkOperationsServiceTests(TestCase):
