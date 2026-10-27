@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import SprintListView, SprintDetailView, SprintKanbanView, SprintReportView, SprintXLSExportView, \
     get_api_sprint_kanban_issues, SprintWiaView, get_api_sprint_wia_issues, get_api_sprint_issues, \
-    SprintDetailXLSExportView, SprintLoggedXLSExportView, SprintWeightedThroughputDistributionView
+    SprintDetailXLSExportView, SprintLoggedXLSExportView, SprintPeriodView, SprintWeightedThroughputDistributionView
 
 urlpatterns = [
     path("list/", SprintListView.as_view(), name="sprint-list"),
@@ -22,5 +22,6 @@ urlpatterns = [
     path("<int:sprint_id>/exportXLSX/", SprintXLSExportView.as_view(), name="sprint-xls-export"),
     path("<int:sprint_id>/reportXLSX/", SprintDetailXLSExportView.as_view(), name="sprint_xls_report"),
     path("<int:sprint_id>/loggedXLSX/", SprintLoggedXLSExportView.as_view(), name="sprint-logged-xls-export"),
+    path("<int:sprint_id>/period/", SprintPeriodView.as_view(), name="sprint-period"),
 
 ]

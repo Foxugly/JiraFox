@@ -5,18 +5,21 @@ from django.urls import reverse
 from dev.models import Dev
 from jiramodule.models import JiraConfiguration
 from team.models import Team, TeamDev
-from team.services import parse_dev_int_update, parse_teamdev_order
+from team.services import parse_dev_update, parse_teamdev_order
 
 
 class TeamServicesTests(SimpleTestCase):
-    def test_parse_dev_int_update_returns_clean_values(self):
-        field, value = parse_dev_int_update("workload", "12")
+    def test_parse_dev_update_returns_clean_values(self):
+        field, value = parse_dev_update("workload", "12")
         self.assertEqual(field, "workload")
         self.assertEqual(value, 12)
 
-    def test_parse_dev_int_update_rejects_unknown_field(self):
+    def test_parse_dev_update_rejects_unknown_field(self):
         with self.assertRaisesMessage(ValueError, "Invalid field"):
-            parse_dev_int_update("unknown", "12")
+            parse_dev_update("unknown", "12")
+
+    def test_parse_dev_update_accepts_the_jira_username(self):
+        self.assertEqual(parse_dev_update("jira_username", " TDPTAV "), ("jira_username", "TDPTAV"))
 
     def test_parse_teamdev_order_rejects_invalid_ids(self):
         with self.assertRaisesMessage(ValueError, "Invalid ids"):

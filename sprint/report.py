@@ -8,6 +8,8 @@ from openpyxl.utils import get_column_letter
 from jiramodule.services.jira_client import JiraManager
 from team.models import TeamDev
 
+from .logged_report import DevIdentity, resolve_dev
+
 
 class SprintWorkbookBuilder:
     start_col = 3
@@ -25,6 +27,7 @@ class SprintWorkbookBuilder:
             TeamDev.objects.filter(team=jira.cfg.team).select_related("dev").order_by("order", "id")
         )
         self.member_names = [teamdev.dev.name for teamdev in self.teamdevs]
+        self.members = [DevIdentity.from_dev(teamdev.dev) for teamdev in self.teamdevs]
         self.state_col = self.start_col + len(self.member_names)
         self.sum_rows: list[int] = []
         self.current_sprint_id = sprint_id
@@ -132,11 +135,12 @@ class SprintWorkbookBuilder:
         return self._write_sum_row(worksheet, row, first_row)
 
     def _write_issue_row(self, worksheet, row: int, issue: dict, diff_spent_hours: bool) -> int:
-        first_name = self._get_firstname(issue)
+        # Same matching as the logged sheet: Jira username first, then the developer's name.
+        member = resolve_dev(issue.get("assignee"), self.members)
 
         worksheet.cell(row=row, column=self.title_col, value=self._issue_title(issue))
-        if first_name and first_name in self.member_names:
-            column = self.start_col + self.member_names.index(first_name)
+        if member:
+            column = self.start_col + self.members.index(member)
             worksheet.cell(
                 row=row,
                 column=column,
@@ -195,14 +199,6 @@ class SprintWorkbookBuilder:
         for row_cells in worksheet.iter_rows(min_row=1, max_row=end_row, min_col=1, max_col=end_column):
             for cell in row_cells:
                 cell.border = border
-
-    def _get_firstname(self, issue: dict) -> str | None:
-        assignee = issue.get("assignee") or {}
-        display_name = assignee.get("displayName")
-        if not display_name:
-            return None
-        parts = display_name.split(", ")
-        return parts[1] if len(parts) > 1 else display_name
 
     def _issue_title(self, issue: dict) -> str:
         estimate = issue.get("estimation", {}).get("original_estimate_hours") or 0

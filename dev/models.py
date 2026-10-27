@@ -3,6 +3,11 @@ from django.db import models
 
 class Dev(models.Model):
     name = models.CharField(max_length=100)
+    jira_username = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Jira username (e.g. TDPTAV): matches worklogs and assignees exactly, instead of by name",
+    )
     workload = models.IntegerField(default=36, help_text='Hours of workloads per sprint')
     holidays = models.IntegerField(default=0, help_text='Hours of holidays per sprint')
     fastlane = models.IntegerField(default=7, help_text='Hours of planned fastlane per sprint')

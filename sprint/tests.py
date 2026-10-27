@@ -1,4 +1,4 @@
-from datetime import datetime, timezone as dt_timezone
+from datetime import date, datetime, timezone as dt_timezone
 from io import BytesIO
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -6,12 +6,14 @@ from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
+from django.utils import timezone
 from openpyxl import load_workbook
 
 from dev.models import Dev
 from sprint.logged_report import (
     HEADERS,
     UNASSIGNED_HEADERS,
+    DevIdentity,
     LoggedWorkbookBuilder,
     build_dev_rows,
     build_unassigned_rows,
@@ -22,6 +24,7 @@ from sprint.logged_report import (
     sprint_window,
     status_at,
 )
+from sprint.models import SprintPeriod
 from team.models import Team, TeamDev
 
 from JiraFox.services.dashboard import (
@@ -246,19 +249,20 @@ class LoggedReportTests(SimpleTestCase):
         self.assertFalse(person_matches_dev(ALICE, "Bob"))
 
     def test_workbook_has_one_tab_per_dev_with_totals(self):
-        content = LoggedWorkbookBuilder(sprint=SPRINT, issues=ISSUES, dev_names=["Alice", "Bob"], now=NOW).build()
+        content = LoggedWorkbookBuilder(sprint=SPRINT, issues=ISSUES, devs=["Alice", "Bob"], now=NOW).build()
         workbook = load_workbook(BytesIO(content))
 
-        self.assertEqual(workbook.sheetnames, ["Alice", "Bob", "Unassigned"])
+        self.assertEqual(workbook.sheetnames, ["Alice", "Bob", "Unassigned", "Period"])
         alice = [[cell.value for cell in row] for row in workbook["Alice"].iter_rows()]
         self.assertEqual(alice[0], list(HEADERS))
-        self.assertEqual(alice[1], ["ABC-1 - Login page", 8.0, "Ready", 5.5, "Done"])
-        self.assertEqual(alice[2], ["Total", "=SUM(B2:B2)", None, "=SUM(D2:D2)", None])
+        self.assertEqual(alice[1], ["ABC-1 - Login page", 8.0, "Ready", 5.5, "Done", "Yes"])
+        self.assertEqual(alice[2], ["Total", "=SUM(B2:B2)", None, "=SUM(D2:D2)", None, None])
+        self.assertEqual(alice[3], ["Outside sprint", None, None, '=SUMIF(F2:F2,"No",D2:D2)', None, None])
 
         bob = [[cell.value for cell in row] for row in workbook["Bob"].iter_rows()]
         # ABC-1 because Bob logged on it, ABC-2 because it is assigned to him.
-        self.assertEqual(bob[1], ["ABC-1 - Login page", 8.0, "Ready", 1.0, "Done"])
-        self.assertEqual(bob[2], ["ABC-2 - Hotfix", 0.0, "Created during sprint", 0.0, "In Progress"])
+        self.assertEqual(bob[1], ["ABC-1 - Login page", 8.0, "Ready", 1.0, "Done", "Yes"])
+        self.assertEqual(bob[2], ["ABC-2 - Hotfix", 0.0, "Created during sprint", 0.0, "In Progress", "Yes"])
         self.assertEqual(bob[3][:4], ["Total", "=SUM(B2:B3)", None, "=SUM(D2:D3)"])
 
         unassigned = [[cell.value for cell in row] for row in workbook["Unassigned"].iter_rows()]
@@ -310,15 +314,61 @@ class LoggedReportTests(SimpleTestCase):
 
     def test_each_worklog_is_attributed_to_one_developer_only(self):
         alice_bis = {"displayName": "Durand, Alice", "name": "ADURAND"}
-        self.assertEqual(resolve_dev(ALICE, ["Alice", "AMARTIN"]), "AMARTIN")  # exact match wins
+        self.assertEqual(resolve_dev(ALICE, ["Alice", "AMARTIN"]), DevIdentity("AMARTIN"))  # exact match wins
         self.assertIsNone(resolve_dev(alice_bis, ["Alice", "alice"]))  # ambiguous first name
-        self.assertEqual(resolve_dev(alice_bis, ["Alice", "Bob"]), "Alice")
+        self.assertEqual(resolve_dev(alice_bis, ["Alice", "Bob"]), DevIdentity("Alice"))
         self.assertIsNone(resolve_dev(CARL, ["Alice", "Bob"]))
 
         start, end = sprint_window(SPRINT, NOW)
         dev_names = ["Alice", "AMARTIN"]
         self.assertEqual(logged_hours(ISSUES[0], "AMARTIN", start, end, dev_names), 5.5)
         self.assertEqual(logged_hours(ISSUES[0], "Alice", start, end, dev_names), 0)
+
+    def test_jira_username_matches_exactly_and_beats_names(self):
+        alice = DevIdentity("Alice", jira_username="amartin")
+        alice_bis = {"displayName": "Durand, Alice", "name": "ADURAND"}
+
+        self.assertTrue(person_matches_dev(ALICE, alice))
+        # With a Jira ID, a namesake is no longer taken for the developer...
+        self.assertFalse(person_matches_dev(alice_bis, alice))
+        self.assertIsNone(resolve_dev(alice_bis, [alice, "Bob"]))
+        # ...and the ID wins over another developer matching by name.
+        self.assertEqual(resolve_dev(ALICE, [alice, "Martin, Alice"]), alice)
+
+    def test_time_logged_outside_the_sprint_is_listed_without_planned_time(self):
+        start, end = sprint_window(SPRINT, NOW)
+        support = {
+            **ISSUES[1],
+            "key": "SUP-9",
+            "summary": "Support",
+            "original_estimate_hours": 5.0,
+            "assignee": BOB,
+            "worklogs": [
+                {"author": ALICE, "started": "2026-03-04T14:00:00.000+0100", "seconds": 5400},
+                {"author": ALICE, "started": "2026-03-20T10:00:00.000+0100", "seconds": 3600},  # after the sprint
+            ],
+        }
+
+        rows = build_dev_rows(ISSUES, "Alice", start, end, ["Alice", "Bob"], [support])
+        self.assertEqual(
+            [(row["ticket"], row["planned_hours"], row["logged_hours"], row["in_sprint"]) for row in rows],
+            [("ABC-1 - Login page", 8.0, 5.5, True), ("SUP-9 - Support", None, 1.5, False)],
+        )
+        # Bob is the assignee but logged nothing on it: an outside ticket only shows up with logged time.
+        self.assertEqual(len(build_dev_rows(ISSUES, "Bob", start, end, ["Alice", "Bob"], [support])), 2)
+
+    def test_period_set_by_hand_replaces_the_jira_dates(self):
+        period = SprintPeriod(
+            start=datetime(2026, 3, 2, 0, 0, tzinfo=dt_timezone.utc), end=datetime(2026, 3, 4, 0, 0, tzinfo=dt_timezone.utc)
+        )
+        start, end = sprint_window(SPRINT, NOW, period)
+
+        self.assertEqual((start, end), (period.start, period.end))
+        self.assertEqual(logged_hours(ISSUES[0], "Alice", start, end), 3.0)
+
+        content = LoggedWorkbookBuilder(sprint=SPRINT, issues=ISSUES, devs=["Alice"], period=period, now=NOW).build()
+        rows = [[cell.value for cell in row] for row in load_workbook(BytesIO(content))["Period"].iter_rows()]
+        self.assertEqual(rows[3], ["Bounds", "Set by hand"])
 
     def test_dev_tabs_and_unassigned_add_up_to_all_time_logged_in_the_sprint(self):
         start, end = sprint_window(SPRINT, NOW)
@@ -337,11 +387,18 @@ class LoggedSheetViewTests(TestCase):
         self.team = Team.objects.create(name="Core")
         TeamDev.objects.create(team=self.team, dev=Dev.objects.create(name="Alice"), order=0)
 
-    def _fake_jira(self, team):
+    def _fake_jira(self, team, outside_issues=()):
+        self.worklog_queries = []
+
+        def get_issues_with_worklogs_by(usernames, start, end):
+            self.worklog_queries.append((usernames, start, end))
+            return list(outside_issues)
+
         return SimpleNamespace(
             cfg=SimpleNamespace(team=team, jira_project_id=7),
             get_sprint=lambda sprint_id: SPRINT,
             get_sprint_issues_with_worklogs=lambda sprint_id: ISSUES,
+            get_issues_with_worklogs_by=get_issues_with_worklogs_by,
         )
 
     @patch("sprint.views.get_connected_jira_for_user")
@@ -352,7 +409,49 @@ class LoggedSheetViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertIn('filename="sprint_2446_logged.xlsx"', response["Content-Disposition"])
-        self.assertEqual(load_workbook(BytesIO(response.content)).sheetnames, ["Alice", "Unassigned"])
+        self.assertEqual(load_workbook(BytesIO(response.content)).sheetnames, ["Alice", "Unassigned", "Period"])
+        # No developer has a Jira ID: the time logged outside the sprint cannot be looked up.
+        self.assertEqual(self.worklog_queries, [])
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_logged_sheet_adds_time_logged_outside_the_sprint_by_jira_id(self, mock_get_jira):
+        Dev.objects.filter(name="Alice").update(jira_username="AMARTIN")
+        support = {
+            **ISSUES[1],
+            "key": "SUP-9",
+            "summary": "Support",
+            "worklogs": [{"author": ALICE, "started": "2026-03-04T14:00:00.000+0100", "seconds": 7200}],
+        }
+        # ABC-1 is a sprint ticket: returned by both queries, it must be listed once.
+        mock_get_jira.return_value = self._fake_jira(self.team, outside_issues=[ISSUES[0], support])
+
+        response = self.client.get(reverse("sprint-logged-xls-export", args=[2446]))
+
+        self.assertEqual(self.worklog_queries, [(["AMARTIN"], date(2026, 3, 1), date(2026, 3, 14))])
+        alice = [[cell.value for cell in row] for row in load_workbook(BytesIO(response.content))["Alice"].iter_rows()]
+        self.assertEqual([row[0] for row in alice[1:3]], ["ABC-1 - Login page", "SUP-9 - Support"])
+        self.assertEqual(alice[2][1:], [None, "Created during sprint", 2.0, "In Progress", "No"])
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_sprint_bounds_are_saved_and_reset_per_sprint(self, mock_get_jira):
+        mock_get_jira.return_value = self._fake_jira(self.team)
+        url = reverse("sprint-period", args=[2446])
+
+        response = self.client.post(url, {"start": "2026-03-02T00:00", "end": "2026-03-13T23:59"})
+
+        self.assertRedirects(response, reverse("sprint_xls_report", args=[2446]), fetch_redirect_response=False)
+        period = SprintPeriod.objects.get(team=self.team, sprint_id=2446)
+        self.assertEqual(timezone.localtime(period.start).strftime("%Y-%m-%d %H:%M"), "2026-03-02 00:00")
+        self.assertFalse(SprintPeriod.objects.filter(sprint_id=2447).exists())
+
+        page = self.client.get(reverse("sprint_xls_report", args=[2446]))
+        self.assertContains(page, 'value="2026-03-02T00:00"')
+
+        self.client.post(url, {"start": "2026-03-13T00:00", "end": "2026-03-02T00:00"})  # end before start
+        self.assertEqual(SprintPeriod.objects.get(sprint_id=2446).end, period.end)
+
+        self.client.post(url, {"action": "reset"})
+        self.assertFalse(SprintPeriod.objects.filter(sprint_id=2446).exists())
 
     @patch("sprint.views.get_connected_jira_for_user")
     def test_logged_sheet_without_team_explains_what_is_missing(self, mock_get_jira):
@@ -371,6 +470,8 @@ class LoggedSheetViewTests(TestCase):
 
         self.assertContains(response, reverse("sprint-logged-xls-export", args=[2446]))
         self.assertContains(response, "Generate logged sheet")
+        self.assertContains(response, 'data-field="jira_username"')
+        self.assertContains(response, reverse("sprint-period", args=[2446]))
 
     def test_weighted_throughput_distribution_groups_done_by_story_points(self):
         jira = SimpleNamespace(

@@ -53,6 +53,10 @@
                     </thead>
                     <tbody>
                     <tr>
+                        <td class="fw-bold" title="{% trans 'Jira username: matches worklogs and assignees exactly, and adds the time logged outside the sprint to the logged sheet.' %}">{% trans "Jira ID" %}</td>
+                        {% for td in teamdevs %}<td><input type="text" class="form-control form-control-sm dev-input" data-update-url="{% url 'update_dev' td.dev.id %}" data-field="jira_username" value="{{ td.dev.jira_username }}" placeholder="{% trans 'Ex: TDPTAV' %}" maxlength="100"></td>{% endfor %}
+                    </tr>
+                    <tr>
                         <td class="fw-bold">{% trans "Workload" %}</td>
                         {% for td in teamdevs %}<td><input type="number" class="form-control form-control-sm dev-input" data-update-url="{% url 'update_dev' td.dev.id %}" data-field="workload" value="{{ td.dev.workload }}"></td>{% endfor %}
                     </tr>
@@ -77,6 +81,30 @@
             </div>
 
             <form id="csrf-form" class="d-none">{% csrf_token %}</form>
+            <form method="post" action="{% url 'sprint-period' sprint_id %}" class="row g-2 align-items-end mt-3">
+                {% csrf_token %}
+                <div class="col-12">
+                    <span class="fw-bold">{% trans "Logged sheet period" %}</span>
+                    <span class="text-secondary small ms-2">
+                        {% if period %}{% trans "Set by hand." %}{% else %}{% trans "Jira sprint dates." %}{% endif %}
+                        {% trans "Jira:" %} {{ period_jira.start|date:"d/m/Y H:i"|default:"-" }} &rarr; {{ period_jira.end|date:"d/m/Y H:i"|default:"-" }}
+                    </span>
+                </div>
+                <div class="col-auto">
+                    <label class="form-label small mb-1" for="period-start">{% trans "Start" %}</label>
+                    <input id="period-start" type="datetime-local" name="start" class="form-control form-control-sm" value="{{ period_start }}" required>
+                </div>
+                <div class="col-auto">
+                    <label class="form-label small mb-1" for="period-end">{% trans "End" %}</label>
+                    <input id="period-end" type="datetime-local" name="end" class="form-control form-control-sm" value="{{ period_end }}" required>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-outline-primary btn-sm">{% trans "Save bounds" %}</button>
+                    {% if period %}
+                        <button type="submit" name="action" value="reset" class="btn btn-link btn-sm" formnovalidate>{% trans "Reset to Jira dates" %}</button>
+                    {% endif %}
+                </div>
+            </form>
             <div class="d-flex flex-wrap justify-content-between gap-2 mt-3">
                 <a class="btn btn-primary" href="{% url 'sprint-xls-export' sprint_id %}">
                     <i class="fa-regular fa-file-excel me-2"></i>{% trans "Generer le Capacity Sheet" %}

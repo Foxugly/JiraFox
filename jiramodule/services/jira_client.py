@@ -1,6 +1,7 @@
 import hashlib
 import time
 import urllib.parse
+from datetime import date
 from typing import Any, Dict, List, Optional
 
 from django.core.cache import cache
@@ -9,7 +10,7 @@ from jira import JIRA
 from ..exceptions import is_transient_jira_error
 from ..models import JiraConfiguration
 from ..utils.datetime_utils import _to_hours
-from .jql import JqlBuilder, STANDARD_ISSUE_TYPES
+from .jql import JqlBuilder, STANDARD_ISSUE_TYPES, quote_value
 from .kanban_metrics import KanbanMetricsService
 
 
@@ -450,9 +451,23 @@ class JiraManager:
         Every issue of the sprint (sub-tasks included, since that is where time is often logged)
         with its status changes and all its worklogs.
         """
+        return self._issues_with_worklogs(f"sprint = {int(sprint_id)} ORDER BY key ASC", max_results)
+
+    def get_issues_with_worklogs_by(
+        self, usernames: List[str], start: date, end: date, max_results: int = 1000
+    ) -> List[Dict[str, Any]]:
+        """Every issue, in any sprint or none, on which one of `usernames` logged work between the two days."""
+        authors = ", ".join(quote_value(username) for username in usernames)
+        jql = (
+            f"worklogAuthor in ({authors}) "
+            f'AND worklogDate >= "{start:%Y-%m-%d}" AND worklogDate <= "{end:%Y-%m-%d}" ORDER BY key ASC'
+        )
+        return self._issues_with_worklogs(jql, max_results)
+
+    def _issues_with_worklogs(self, jql: str, max_results: int) -> List[Dict[str, Any]]:
         issues = self._with_retries(
             self.jira.search_issues,
-            f"sprint = {int(sprint_id)} ORDER BY key ASC",
+            jql,
             maxResults=max_results,
             fields="summary,status,assignee,created,timetracking,worklog",
             expand="changelog",

@@ -6,7 +6,7 @@ from django.views.decorators.http import require_POST
 from team.services import (
     create_dev_for_team,
     devs_for_user,
-    parse_dev_int_update,
+    parse_dev_update,
     parse_teamdev_order,
     reorder_teamdevs_for_team,
     serialize_dev,
@@ -21,16 +21,16 @@ def update_dev_field(request, dev_id: int):
     dev = get_object_or_404(devs_for_user(request.user), pk=dev_id)
 
     try:
-        field, int_value = parse_dev_int_update(
+        field, value = parse_dev_update(
             request.POST.get("field"),
             request.POST.get("value"),
         )
     except ValueError as exc:
         return HttpResponseBadRequest(str(exc))
 
-    setattr(dev, field, int_value)
+    setattr(dev, field, value)
     dev.save(update_fields=[field])
-    return JsonResponse({"status": "ok", "dev_id": dev.id, "field": field, "value": int_value})
+    return JsonResponse({"status": "ok", "dev_id": dev.id, "field": field, "value": value})
 
 
 @login_required

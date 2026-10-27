@@ -1,6 +1,11 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse, JsonResponse
+from django.shortcuts import redirect
+from django.utils import timezone
+from django.utils.dateparse import parse_datetime
+from django.utils.translation import gettext as _
 from django.views import View
 from django.views.decorators.http import require_GET
 from django.views.generic import ListView, TemplateView
@@ -9,7 +14,8 @@ from jiramodule.services.jira_config_service import get_connected_jira_for_user,
 from jiramodule.status import CANONICAL_ORDER, STATUS_EXCLUDED
 from jiramodule.utils.datetime_utils import hours_to_business_days
 from team.models import TeamDev
-from .logged_report import create_logged_xlsx_bytes
+from .logged_report import create_logged_xlsx_bytes, sprint_window
+from .models import SprintPeriod
 from .report import create_xlsx_bytes
 
 def _to_float(v, default=0.0) -> float:
@@ -122,6 +128,12 @@ class SprintDetailXLSExportView(LoginRequiredMixin, TemplateView):
         context["team"] = team
         context["sprint"] = jira.get_sprint(sprint_id)
         context["teamdevs"] = TeamDev.objects.filter(team=team).select_related("dev").order_by("order", "id")
+        period = SprintPeriod.objects.filter(team=team, sprint_id=sprint_id).first()
+        jira_start, jira_end = sprint_window(context["sprint"], timezone.now())
+        context["period"] = period
+        context["period_jira"] = {"start": jira_start, "end": jira_end}
+        context["period_start"] = _datetime_local(period.start if period else jira_start)
+        context["period_end"] = _datetime_local(period.end if period else jira_end)
         # Champs affichés en lignes
         context["dev_fields"] = [
             ("workload", "Workload"),
@@ -132,6 +144,43 @@ class SprintDetailXLSExportView(LoginRequiredMixin, TemplateView):
         ]
 
         return context
+
+
+def _datetime_local(value) -> str:
+    """Value of an <input type="datetime-local">, in the local time zone."""
+    return timezone.localtime(value).strftime("%Y-%m-%dT%H:%M") if value else ""
+
+
+def _parse_datetime_local(value: str | None):
+    parsed = parse_datetime((value or "").strip())
+    if parsed is None:
+        return None
+    return timezone.make_aware(parsed) if timezone.is_naive(parsed) else parsed
+
+
+class SprintPeriodView(LoginRequiredMixin, View):
+    """Saves (or resets to Jira's dates) the bounds the logged sheet uses for this sprint."""
+
+    def post(self, request, sprint_id):
+        jira = get_connected_jira_for_user(request.user)
+        require_config_fields(jira.cfg, ["team"])
+        team = jira.cfg.team
+
+        if request.POST.get("action") == "reset":
+            SprintPeriod.objects.filter(team=team, sprint_id=sprint_id).delete()
+            messages.success(request, _("Sprint bounds reset to the Jira dates."))
+            return redirect("sprint_xls_report", sprint_id=sprint_id)
+
+        start = _parse_datetime_local(request.POST.get("start"))
+        end = _parse_datetime_local(request.POST.get("end"))
+        if not start or not end or start >= end:
+            messages.error(request, _("Enter a start and an end, the start before the end."))
+        else:
+            SprintPeriod.objects.update_or_create(
+                team=team, sprint_id=sprint_id, defaults={"start": start, "end": end}
+            )
+            messages.success(request, _("Sprint bounds saved."))
+        return redirect("sprint_xls_report", sprint_id=sprint_id)
 
 
 class SprintXLSExportView(LoginRequiredMixin, View):
