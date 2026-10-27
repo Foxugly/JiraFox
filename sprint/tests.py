@@ -8,6 +8,7 @@ from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 from django.utils import timezone
 from openpyxl import load_workbook
+from requests.exceptions import Timeout
 
 from dev.models import Dev
 from sprint.logged_report import (
@@ -387,11 +388,13 @@ class LoggedSheetViewTests(TestCase):
         self.team = Team.objects.create(name="Core")
         TeamDev.objects.create(team=self.team, dev=Dev.objects.create(name="Alice"), order=0)
 
-    def _fake_jira(self, team, outside_issues=()):
+    def _fake_jira(self, team, outside_issues=(), failing_usernames=()):
         self.worklog_queries = []
 
-        def get_issues_with_worklogs_by(usernames, since):
-            self.worklog_queries.append((usernames, since))
+        def get_issues_with_worklogs_by(username, since):
+            self.worklog_queries.append((username, since))
+            if username in failing_usernames:
+                raise Timeout("read timed out")
             return list(outside_issues)
 
         return SimpleNamespace(
@@ -427,10 +430,36 @@ class LoggedSheetViewTests(TestCase):
 
         response = self.client.get(reverse("sprint-logged-xls-export", args=[2446]))
 
-        self.assertEqual(self.worklog_queries, [(["AMARTIN"], date(2026, 3, 1))])
+        self.assertEqual(self.worklog_queries, [("AMARTIN", date(2026, 3, 1))])
         alice = [[cell.value for cell in row] for row in load_workbook(BytesIO(response.content))["Alice"].iter_rows()]
         self.assertEqual([row[0] for row in alice[1:3]], ["ABC-1 - Login page", "SUP-9 - Support"])
         self.assertEqual(alice[2][1:], [None, "Created during sprint", 2.0, "In Progress", "No"])
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_logged_sheet_searches_each_developer_and_survives_a_timeout(self, mock_get_jira):
+        Dev.objects.filter(name="Alice").update(jira_username="AMARTIN")
+        bob = Dev.objects.create(name="Bob", jira_username="BDUPONT")
+        TeamDev.objects.create(team=self.team, dev=bob, order=1)
+        support = {
+            **ISSUES[1],
+            "key": "SUP-9",
+            "summary": "Support",
+            "worklogs": [{"author": ALICE, "started": "2026-03-04T14:00:00.000+0100", "seconds": 7200}],
+        }
+        mock_get_jira.return_value = self._fake_jira(
+            self.team, outside_issues=[support], failing_usernames={"BDUPONT"}
+        )
+
+        response = self.client.get(reverse("sprint-logged-xls-export", args=[2446]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual([username for username, _ in self.worklog_queries], ["AMARTIN", "BDUPONT"])
+        workbook = load_workbook(BytesIO(response.content))
+        self.assertIn("SUP-9 - Support", [row[0].value for row in workbook["Alice"].iter_rows()])
+        period = [[cell.value for cell in row] for row in workbook["Period"].iter_rows()]
+        self.assertEqual(period[-1][0], "Not fetched")
+        self.assertIn("Bob (BDUPONT)", period[-1][1])
+        self.assertIn("timeout", period[-1][1])
 
     @patch("sprint.views.get_connected_jira_for_user")
     def test_sprint_bounds_are_saved_and_reset_per_sprint(self, mock_get_jira):

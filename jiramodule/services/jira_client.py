@@ -463,16 +463,15 @@ class JiraManager:
         return self._issues_with_worklogs(f"sprint = {int(sprint_id)} ORDER BY key ASC", max_results)
 
     def get_issues_with_worklogs_by(
-        self, usernames: List[str], since: date, max_results: int = 1000
+        self, username: str, since: date, max_results: int = 1000
     ) -> List[Dict[str, Any]]:
         """
-        Every issue, in any sprint or none, on which one of `usernames` logged work and that was
+        Every issue, in any sprint or none, on which `username` logged work and that was
         updated since `since`. Logging work updates the issue, so this covers every worklog of the
         period; the caller keeps the worklogs it wants by date.
         """
         # No worklogDate: Jira Server scans every worklog for it and the search times out.
-        authors = ", ".join(quote_value(username) for username in usernames)
-        jql = f'worklogAuthor in ({authors}) AND updated >= "{since:%Y-%m-%d}" ORDER BY key ASC'
+        jql = f'worklogAuthor = {quote_value(username)} AND updated >= "{since:%Y-%m-%d}" ORDER BY key ASC'
         return self._issues_with_worklogs(jql, max_results)
 
     def _issues_with_worklogs(self, jql: str, max_results: int) -> List[Dict[str, Any]]:

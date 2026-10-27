@@ -19,9 +19,12 @@ from typing import Iterable
 
 from dateutil import parser as date_parser
 from django.utils import timezone
+from jira.exceptions import JIRAError
 from openpyxl import Workbook
 from openpyxl.styles import Border, Font, PatternFill, Side
+from requests import RequestException
 
+from jiramodule.exceptions import JiraUnavailable, describe_jira_error
 from jiramodule.services.jira_client import JiraManager
 from team.models import TeamDev
 
@@ -290,8 +293,10 @@ class LoggedWorkbookBuilder:
         outside_issues: list[dict] = (),
         period: SprintPeriod | None = None,
         now: datetime | None = None,
+        warnings: list[str] = (),
     ):
         self.sprint = sprint
+        self.warnings = list(warnings)
         self.issues = issues
         self.devs = [DevIdentity.of(dev) for dev in devs]
         self.outside_issues = list(outside_issues)
@@ -370,6 +375,7 @@ class LoggedWorkbookBuilder:
             ("Start", _excel_datetime(self.start)),
             ("End", _excel_datetime(self.end)),
             ("Bounds", "Set by hand" if self.period else "Jira sprint dates"),
+            *(("Not fetched", f"Time logged outside the sprint by {warning}") for warning in self.warnings),
         )
         for row_index, (label, value) in enumerate(lines, start=1):
             worksheet.cell(row=row_index, column=1, value=label).font = Font(bold=True)
@@ -391,17 +397,32 @@ def create_logged_xlsx_bytes(jira: JiraManager, sprint_id: int, now: datetime | 
     issues = jira.get_sprint_issues_with_worklogs(sprint_id)
 
     start, end = sprint_window(sprint, now or timezone.now(), period)
-    usernames = [dev.jira_username for dev in devs if dev.jira_username]
-    outside_issues = []
-    if usernames and start:
+    outside_issues: dict[str, dict] = {}
+    warnings: list[str] = []
+    if start:
         # Jira compares days in its own time zone: widen by a day, rows filter worklogs exactly.
+        since = (start - timedelta(days=1)).date()
         sprint_keys = {issue.get("key") for issue in issues}
-        outside_issues = [
-            issue
-            for issue in jira.get_issues_with_worklogs_by(usernames, (start - timedelta(days=1)).date())
-            if issue.get("key") not in sprint_keys
-        ]
+        # One search per developer: a single search for the whole team outlasted Jira's timeout.
+        for dev in devs:
+            if not dev.jira_username:
+                continue
+            try:
+                found = jira.get_issues_with_worklogs_by(dev.jira_username, since)
+            except (JIRAError, RequestException, JiraUnavailable) as exc:
+                # The sprint itself is still worth reporting: say what is missing instead.
+                warnings.append(f"{dev.name} ({dev.jira_username}): {describe_jira_error(exc)}")
+                continue
+            for issue in found:
+                if issue.get("key") not in sprint_keys:
+                    outside_issues.setdefault(issue.get("key"), issue)
 
     return LoggedWorkbookBuilder(
-        sprint=sprint, issues=issues, devs=devs, outside_issues=outside_issues, period=period, now=now
+        sprint=sprint,
+        issues=issues,
+        devs=devs,
+        outside_issues=list(outside_issues.values()),
+        period=period,
+        now=now,
+        warnings=warnings,
     ).build()
