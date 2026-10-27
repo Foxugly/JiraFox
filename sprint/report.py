@@ -213,7 +213,8 @@ class SprintWorkbookBuilder:
 
     def _run_jql_cached(self, jql: str) -> Iterable[dict]:
         if jql not in self._jql_cache:
-            self._jql_cache[jql] = self.jira.run_jql(jql)
+            # Estimates only: no changelog, which made the capacity sheet slow.
+            self._jql_cache[jql] = self.jira.run_jql(jql, history=False)
         return self._jql_cache[jql]
 
     def _jql_recurrents(self) -> str:

@@ -266,8 +266,9 @@ class JiraManager:
             "url": self.get_url_jql(f"sprint={sprint_id}"),
         }
 
-    def _search_issues(self, jql: str, *, max_results: int = 1000, detailed: bool = False):
-        expand = "changelog" if detailed else None
+    def _search_issues(self, jql: str, *, max_results: int = 1000, detailed: bool = False, history: bool = True):
+        # The changelog is by far the heaviest part of the answer: only Kanban metrics need it.
+        expand = "changelog" if detailed and history else None
         return self._with_retries(
             self.jira.search_issues,
             jql,
@@ -305,10 +306,14 @@ class JiraManager:
 
         return self.run_jql(jql, max_results=max_results, full=full)
 
-    def run_jql(self, jql: str, *, max_results: int = 1000, full: bool = True) -> List[Dict[str, Any]]:
-        issues = self._search_issues(jql, max_results=max_results, detailed=full)
-        serializer = self._ticket_info_detail_from_issue if full else self._ticket_info_from_issue
-        return [serializer(issue) for issue in issues]
+    def run_jql(
+        self, jql: str, *, max_results: int = 1000, full: bool = True, history: bool = True
+    ) -> List[Dict[str, Any]]:
+        """`full` adds estimates and story points; `history` (with `full`) adds the Kanban metrics."""
+        issues = self._search_issues(jql, max_results=max_results, detailed=full, history=history)
+        if not full:
+            return [self._ticket_info_from_issue(issue) for issue in issues]
+        return [self._ticket_info_detail_from_issue(issue, history=history) for issue in issues]
 
     def get_issue(self, issue_key: str, full: bool = True) -> Dict[str, Any]:
         issue = self._with_retries(
@@ -354,14 +359,14 @@ class JiraManager:
             "url": self.get_issue_url(issue.key),
         }
 
-    def _ticket_info_detail_from_issue(self, issue: Any) -> Dict[str, Any]:
+    def _ticket_info_detail_from_issue(self, issue: Any, history: bool = True) -> Dict[str, Any]:
         fields = issue.fields
         timetracking = getattr(fields, "timetracking", None)
         original_estimate_sec = getattr(timetracking, "originalEstimateSeconds", None) if timetracking else None
         remaining_sec = getattr(timetracking, "remainingEstimateSeconds", None) if timetracking else None
         spent_sec = getattr(timetracking, "timeSpentSeconds", None) if timetracking else None
 
-        return {
+        info = {
             "key": issue.key,
             "summary": getattr(fields, "summary", None),
             "project": getattr(getattr(fields, "project", None), "key", None),
@@ -377,10 +382,12 @@ class JiraManager:
             },
             "remaining_hours": _to_hours(remaining_sec),
             "spent_hours": _to_hours(spent_sec),
-            "kanban_metrics": self.metrics.compute(issue),
-            "history": self.metrics.history(issue),
             "url": self.get_issue_url(issue.key),
         }
+        if history:
+            info["kanban_metrics"] = self.metrics.compute(issue)
+            info["history"] = self.metrics.history(issue)
+        return info
 
     def _detect_story_points_field_id(self) -> Optional[str]:
         try:

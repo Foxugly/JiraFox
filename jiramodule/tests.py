@@ -30,6 +30,7 @@ from jiramodule.services.bulk_operations import (
 )
 from jiramodule.services.jira_client import JiraManager
 from jiramodule.services.jql import JqlBuilder
+from sprint.report import SprintWorkbookBuilder
 
 
 class JqlBuilderTests(TestCase):
@@ -95,6 +96,51 @@ class JiraManagerSprintListTests(SimpleTestCase):
 
         self.assertEqual(len(sprints), 120)
         self.assertEqual(sprints[-1]["name"], "S119")
+
+
+class JiraManagerRunJqlTests(SimpleTestCase):
+    def _manager(self):
+        self.search_kwargs = []
+        fields = SimpleNamespace(
+            summary="Issue summary",
+            project=SimpleNamespace(key="ABC"),
+            issuetype=SimpleNamespace(name="Task"),
+            status=SimpleNamespace(name="Open", statusCategory=SimpleNamespace(name="To Do", key="new")),
+            assignee=None,
+            labels=[],
+            timetracking=SimpleNamespace(
+                originalEstimateSeconds=7200, remainingEstimateSeconds=3600, timeSpentSeconds=3600
+            ),
+        )
+
+        def search_issues(jql, **kwargs):
+            self.search_kwargs.append(kwargs)
+            return [SimpleNamespace(key="ABC-1", fields=fields)]
+
+        manager = JiraManager(SimpleNamespace(jira_url="https://jira.example/"))
+        manager._jira = SimpleNamespace(search_issues=search_issues)
+        return manager
+
+    def test_without_history_skips_the_changelog(self):
+        manager = self._manager()
+
+        result = manager.run_jql("project = ABC", history=False)
+
+        self.assertIsNone(self.search_kwargs[0]["expand"])
+        self.assertIn("timetracking", self.search_kwargs[0]["fields"])
+        self.assertEqual(result[0]["estimation"]["original_estimate_hours"], 2.0)
+        self.assertEqual(result[0]["remaining_hours"], 1.0)
+        self.assertNotIn("kanban_metrics", result[0])
+
+    def test_capacity_sheet_queries_skip_the_changelog(self):
+        manager = self._manager()
+        builder = SprintWorkbookBuilder.__new__(SprintWorkbookBuilder)
+        builder.jira = manager
+        builder._jql_cache = {}
+
+        list(builder._run_jql_cached("project = ABC"))
+
+        self.assertIsNone(self.search_kwargs[0]["expand"])
 
 
 class JiraManagerWorklogSearchTests(SimpleTestCase):
