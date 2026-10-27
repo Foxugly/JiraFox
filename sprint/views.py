@@ -9,7 +9,10 @@ from django.utils.translation import gettext as _
 from django.views import View
 from django.views.decorators.http import require_GET
 from django.views.generic import ListView, TemplateView
+from jira.exceptions import JIRAError
+from requests import RequestException
 from JiraFox.services.issue_data import build_sprint_issue_item, get_issue_status, is_issue_done
+from jiramodule.exceptions import JiraUnavailable, describe_jira_error
 from jiramodule.services.jira_config_service import get_connected_jira_for_user, require_config_fields
 from jiramodule.status import CANONICAL_ORDER, STATUS_EXCLUDED
 from jiramodule.utils.datetime_utils import hours_to_business_days
@@ -17,7 +20,7 @@ from team.models import TeamDev
 from .logged_report import create_logged_xlsx_bytes, sprint_window
 from .models import SprintPeriod
 from .report import create_xlsx_bytes
-from .scope_flow import build_scope_flow
+from .scope_flow import OUTCOMES as SCOPE_OUTCOMES, build_scope_flow
 
 def _to_float(v, default=0.0) -> float:
     try:
@@ -258,8 +261,24 @@ class SprintScopeFlowView(LoginRequiredMixin, TemplateView):
         sprint_id = kwargs["sprint_id"]
         jira = get_connected_jira_for_user(self.request.user)
         require_config_fields(jira.cfg, ["jira_board_id"])
-        context["sprint"] = jira.get_sprint(sprint_id)
-        context["scope"] = build_scope_flow(jira.get_sprint_scope_report(sprint_id), jira.get_issue_url)
+        sprint = jira.get_sprint(sprint_id)
+        report = jira.get_sprint_scope_report(sprint_id)
+        # Jira's own dates: the hand-set period only bounds the logged sheet.
+        start, end = sprint_window(sprint, timezone.now())
+        histories, categories = None, None
+        if start:
+            keys = [issue.get("key") for bucket, _ in SCOPE_OUTCOMES for issue in report.get(bucket) or []]
+            try:
+                histories = jira.get_status_histories(keys)
+                categories = jira.status_category_keys()
+            except (JIRAError, RequestException, JiraUnavailable) as exc:
+                # The diagram still works with current statuses: say what is missing.
+                context["history_error"] = describe_jira_error(exc)
+                histories = None
+        context["sprint"] = sprint
+        context["scope"] = build_scope_flow(
+            report, jira.get_issue_url, histories=histories, start=start, end=end, status_categories=categories
+        )
         return context
 
 

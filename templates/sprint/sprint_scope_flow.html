@@ -17,8 +17,17 @@
                 <div>
                     <h2 class="h4 mb-1">{% trans "Sprint scope" %}</h2>
                     <div class="inline-note">
-                        {% trans "Planned at the sprint start or added during the sprint, how the issues ended (Jira sprint report) and their current status. Sub-tasks are not counted." %}
+                        {% if scope.has_history %}
+                            {% trans "Status of the planned issues at the sprint start, planned or added during the sprint, how the issues ended (Jira sprint report) and their status at the sprint end. Sub-tasks are not counted." %}
+                        {% else %}
+                            {% trans "Planned at the sprint start or added during the sprint, how the issues ended (Jira sprint report) and their current status. Sub-tasks are not counted." %}
+                        {% endif %}
                     </div>
+                    {% if history_error %}
+                        <div class="alert alert-warning py-2 mt-2 mb-0">
+                            {% trans "Status history could not be loaded, current statuses are shown:" %} {{ history_error }}
+                        </div>
+                    {% endif %}
                 </div>
                 <div class="d-flex flex-wrap gap-2 align-items-center">
                     <span class="badge text-bg-primary">{% trans "Planned" %}: {{ scope.totals.planned }}</span>
@@ -57,7 +66,9 @@
                                 <th>{% trans "Key" %}</th>
                                 <th>{% trans "Summary" %}</th>
                                 <th>{% trans "Origin" %}</th>
+                                <th>{% trans "Status at sprint start" %}</th>
                                 <th>{% trans "Outcome" %}</th>
+                                <th>{% trans "Status at sprint end" %}</th>
                                 <th>{% trans "Current status" %}</th>
                                 <th>{% trans "Assignee" %}</th>
                             </tr>
@@ -95,9 +106,15 @@
                 };
                 const statusColors = {new: "#8a94a6", indeterminate: "#4a8fe0", done: "#2e9d5b"};
                 Object.entries(scope.status_categories).forEach(([name, category]) => {
-                    labels[`status:${name}`] = name;
-                    colors[`status:${name}`] = statusColors[category] || "#8a94a6";
+                    ["start", "end"].forEach((side) => {
+                        labels[`${side}:${name}`] = name;
+                        colors[`${side}:${name}`] = statusColors[category] || "#8a94a6";
+                    });
                 });
+                // Statuses missing from Jira's list (renamed or deleted since) still get a label.
+                scope.flows.forEach((flow) => [flow.from, flow.to].forEach((key) => {
+                    if (!(key in labels)) labels[key] = key.split(":").slice(1).join(":");
+                }));
                 // A block holds whatever flows through it: the larger of its inflow and outflow.
                 const inflow = {}, outflow = {};
                 scope.flows.forEach((flow) => {
@@ -110,7 +127,8 @@
                 });
                 const color = (key) => colors[key] || "#8a94a6";
                 const nodeLabel = (key) => labels[key] || key;
-                const issueNodes = (issue) => [`origin:${issue.origin}`, `outcome:${issue.outcome}`, `status:${issue.status}`];
+                const issueNodes = (issue) => [`start:${issue.status_start}`, `origin:${issue.origin}`,
+                    `outcome:${issue.outcome}`, `end:${issue.status_end}`];
 
                 const rows = document.getElementById("scopeIssueRows");
                 const count = document.getElementById("scopeIssueCount");
@@ -136,7 +154,8 @@
                         link.textContent = issue.key;
                         key.appendChild(link);
                         tr.append(key, cell(issue.summary), cell(nodeLabel(`origin:${issue.origin}`)),
-                            cell(nodeLabel(`outcome:${issue.outcome}`)), cell(issue.status), cell(issue.assignee || "-"));
+                            cell(issue.status_start || "-"), cell(nodeLabel(`outcome:${issue.outcome}`)),
+                            cell(issue.status_end), cell(issue.status_current), cell(issue.assignee || "-"));
                         return tr;
                     }));
                     count.textContent = shown.length;
@@ -154,6 +173,7 @@
                         datasets: [{
                             data: scope.flows,
                             labels: chartLabels,
+                            column: scope.columns,
                             colorFrom: (ctx) => color(ctx.dataset.data[ctx.dataIndex].from),
                             colorTo: (ctx) => color(ctx.dataset.data[ctx.dataIndex].to),
                             colorMode: "gradient",

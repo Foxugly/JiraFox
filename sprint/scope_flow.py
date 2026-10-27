@@ -1,9 +1,15 @@
 """
-Sprint scope flow: where the sprint's issues came from (planned at the start or added during the
-sprint), how they ended (Jira's sprint report buckets) and their current status.
+Sprint scope flow: the status of the planned issues at the sprint start, where the sprint's issues
+came from (planned at the start or added during the sprint), how they ended (Jira's sprint report
+buckets) and their status at the sprint end.
 
-Built from Jira's sprint report, which already knows which issues were added after the start.
+Built from Jira's sprint report, which already knows which issues were added after the start;
+statuses at the start and end are rebuilt from each issue's changelog.
 """
+
+from datetime import datetime
+
+from .logged_report import status_at
 
 PLANNED = "planned"
 ADDED = "added"
@@ -17,45 +23,77 @@ OUTCOMES = (
     ("issuesCompletedInAnotherSprint", "done_elsewhere"),
 )
 
+# Diagram columns, left to right.
+COLUMNS = {"start": 0, "origin": 1, "outcome": 2, "end": 3}
 
-def build_scope_flow(report: dict, issue_url) -> dict:
+
+def build_scope_flow(
+    report: dict,
+    issue_url,
+    histories: dict[str, dict] | None = None,
+    start: datetime | None = None,
+    end: datetime | None = None,
+    status_categories: dict[str, str] | None = None,
+) -> dict:
     """
-    Nodes are keyed "origin:<x>", "outcome:<x>" and "status:<name>" so a status never collides
-    with an outcome. Flows are ticket counts: origin -> outcome, then outcome -> current status.
+    Nodes are keyed "start:<status>", "origin:<x>", "outcome:<x>" and "end:<status>" so a status
+    never collides with an outcome. Flows are ticket counts: start status -> planned (planned
+    issues only), origin -> outcome, then outcome -> status at the sprint end.
+
+    Without `histories` (or for an issue missing from it) the end status is the current one and
+    the start status is unknown.
     """
     added_keys = set((report.get("issueKeysAddedDuringSprint") or {}).keys())
     statuses = (report.get("entityData") or {}).get("statuses") or {}
+    categories = dict(status_categories or {})
+    histories = histories or {}
 
     issues = []
     for bucket, outcome in OUTCOMES:
         for raw in report.get(bucket) or []:
             status = statuses.get(str(raw.get("statusId"))) or {}
+            current = status.get("statusName") or str(raw.get("statusId") or "?")
             category = ((status.get("status") or {}).get("statusCategory") or {}).get("key")
+            if category:
+                categories.setdefault(current, category)
+
+            key = raw.get("key")
+            origin = ADDED if key in added_keys else PLANNED
+            history = histories.get(key)
+            status_start = status_at(history, start) if history and start and origin == PLANNED else None
+            status_end = (status_at(history, end) if history and end else None) or current
             issues.append(
                 {
-                    "key": raw.get("key"),
+                    "key": key,
                     "summary": raw.get("summary") or "",
                     "assignee": raw.get("assigneeName") or "",
-                    "origin": ADDED if raw.get("key") in added_keys else PLANNED,
+                    "origin": origin,
                     "outcome": outcome,
-                    "status": status.get("statusName") or str(raw.get("statusId") or "?"),
-                    "status_category": category or "",
-                    "url": issue_url(raw.get("key")),
+                    "status_start": status_start,
+                    "status_end": status_end,
+                    "status_current": current,
+                    "url": issue_url(key),
                 }
             )
 
     counts: dict[tuple[str, str], int] = {}
     for issue in issues:
-        for source, target in (
+        steps = [
             (f"origin:{issue['origin']}", f"outcome:{issue['outcome']}"),
-            (f"outcome:{issue['outcome']}", f"status:{issue['status']}"),
-        ):
-            counts[(source, target)] = counts.get((source, target), 0) + 1
+            (f"outcome:{issue['outcome']}", f"end:{issue['status_end']}"),
+        ]
+        if issue["status_start"]:
+            steps.insert(0, (f"start:{issue['status_start']}", f"origin:{issue['origin']}"))
+        for step in steps:
+            counts[step] = counts.get(step, 0) + 1
 
-    status_categories = {issue["status"]: issue["status_category"] for issue in issues}
+    flows = [{"from": source, "to": target, "flow": count} for (source, target), count in counts.items()]
+    nodes = {node for flow in flows for node in (flow["from"], flow["to"])}
     return {
-        "flows": [{"from": source, "to": target, "flow": count} for (source, target), count in counts.items()],
-        "status_categories": status_categories,
+        "flows": flows,
+        "columns": {node: COLUMNS[node.split(":", 1)[0]] for node in nodes},
+        "status_categories": categories,
         "issues": issues,
         "totals": {origin: sum(1 for issue in issues if issue["origin"] == origin) for origin in ORIGINS},
+        "has_history": bool(histories),
     }

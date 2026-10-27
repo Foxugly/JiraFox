@@ -609,26 +609,78 @@ class SprintScopeFlowTests(TestCase):
                 ("origin:planned", "outcome:removed"): 1,
                 ("origin:added", "outcome:removed"): 1,
                 ("origin:planned", "outcome:done_elsewhere"): 1,
-                ("outcome:done", "status:Done"): 2,
-                ("outcome:done", "status:Canceled"): 1,
-                ("outcome:removed", "status:In Progress"): 2,
-                ("outcome:done_elsewhere", "status:Done"): 1,
+                ("outcome:done", "end:Done"): 2,
+                ("outcome:done", "end:Canceled"): 1,
+                ("outcome:removed", "end:In Progress"): 2,
+                ("outcome:done_elsewhere", "end:Done"): 1,
             },
         )
         self.assertEqual(scope["totals"], {"planned": 4, "added": 2})
         self.assertEqual(scope["status_categories"]["In Progress"], "indeterminate")
+        self.assertFalse(scope["has_history"])
         first = scope["issues"][0]
         self.assertEqual((first["key"], first["origin"], first["assignee"]), ("BKL1-1", "planned", "Martin, Alice"))
 
-    @patch("sprint.views.get_connected_jira_for_user")
-    def test_scope_page_renders(self, mock_get_jira):
+    def test_statuses_at_sprint_start_and_end_come_from_the_changelog(self):
+        start = datetime(2026, 3, 2, 8, tzinfo=dt_timezone.utc)
+        end = datetime(2026, 3, 13, 18, tzinfo=dt_timezone.utc)
+        histories = {
+            # Planned, To Do at the start, done during the sprint.
+            "BKL1-1": {"state": "Done", "created": "2026-02-01T10:00:00.000+0000", "status_changes": [
+                {"at": "2026-03-05T10:00:00.000+0000", "from": "To Do", "to": "Done"},
+            ]},
+            # Planned, already In Progress at the start; reopened after the sprint end.
+            "BKL1-4": {"state": "In Progress", "created": "2026-02-01T10:00:00.000+0000", "status_changes": [
+                {"at": "2026-02-20T10:00:00.000+0000", "from": "To Do", "to": "In Progress"},
+                {"at": "2026-03-10T10:00:00.000+0000", "from": "In Progress", "to": "In Test"},
+                {"at": "2026-03-20T10:00:00.000+0000", "from": "In Test", "to": "In Progress"},
+            ]},
+            # Added during the sprint: no start status.
+            "BKL1-5": {"state": "In Progress", "created": "2026-03-04T10:00:00.000+0000", "status_changes": []},
+        }
+
+        scope = build_scope_flow(
+            SCOPE_REPORT, lambda key: key, histories=histories, start=start, end=end,
+            status_categories={"To Do": "new", "In Test": "indeterminate"},
+        )
+
+        issues = {issue["key"]: issue for issue in scope["issues"]}
+        self.assertEqual((issues["BKL1-1"]["status_start"], issues["BKL1-1"]["status_end"]), ("To Do", "Done"))
+        self.assertEqual(
+            (issues["BKL1-4"]["status_start"], issues["BKL1-4"]["status_end"], issues["BKL1-4"]["status_current"]),
+            ("In Progress", "In Test", "In Progress"),
+        )
+        self.assertIsNone(issues["BKL1-5"]["status_start"])
+        # No history for BKL1-3: its current status stands in for the end status.
+        self.assertEqual(issues["BKL1-3"]["status_end"], "Canceled")
+        flows = {(flow["from"], flow["to"]): flow["flow"] for flow in scope["flows"]}
+        self.assertEqual(flows[("start:To Do", "origin:planned")], 1)
+        self.assertEqual(flows[("start:In Progress", "origin:planned")], 1)
+        self.assertEqual(flows[("outcome:removed", "end:In Test")], 1)
+        self.assertEqual(scope["columns"]["start:To Do"], 0)
+        self.assertEqual(scope["columns"]["end:In Test"], 3)
+        self.assertTrue(scope["has_history"])
+
+    def _login_and_fake_jira(self, mock_get_jira, **overrides):
         user = get_user_model().objects.create_user(username="alice", password="secret")
         self.client.force_login(user)
-        mock_get_jira.return_value = SimpleNamespace(
+        fake = dict(
             cfg=SimpleNamespace(jira_board_id=638),
             get_sprint=lambda sprint_id: {**SPRINT, "name": "Sprint 12", "url": "https://jira.example/"},
             get_sprint_scope_report=lambda sprint_id: SCOPE_REPORT,
             get_issue_url=lambda key: f"https://jira.example/browse/{key}",
+            get_status_histories=lambda keys: {},
+            status_category_keys=lambda: {},
+        )
+        fake.update(overrides)
+        mock_get_jira.return_value = SimpleNamespace(**fake)
+        return user
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_scope_page_renders(self, mock_get_jira):
+        requested = []
+        user = self._login_and_fake_jira(
+            mock_get_jira, get_status_histories=lambda keys: requested.extend(keys) or {}
         )
 
         response = self.client.get(reverse("sprint-scope-flow", args=[2446]))
@@ -636,9 +688,23 @@ class SprintScopeFlowTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "chartjs-chart-sankey")
         self.assertContains(response, "BKL1-5")
+        self.assertEqual(requested, ["BKL1-1", "BKL1-2", "BKL1-3", "BKL1-4", "BKL1-5", "BKL1-6"])
 
         user.language = "fr"
         user.save(update_fields=["language"])
         response = self.client.get(reverse("sprint-scope-flow", args=[2446]))
         self.assertContains(response, "Périmètre du sprint")
         self.assertContains(response, "Retirés / reportés")
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_scope_page_falls_back_to_current_statuses_when_history_times_out(self, mock_get_jira):
+        def timeout(keys):
+            raise Timeout("read timed out")
+
+        self._login_and_fake_jira(mock_get_jira, get_status_histories=timeout)
+
+        response = self.client.get(reverse("sprint-scope-flow", args=[2446]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "alert-warning")
+        self.assertFalse(response.context["scope"]["has_history"])

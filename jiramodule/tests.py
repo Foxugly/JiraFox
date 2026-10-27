@@ -1,3 +1,4 @@
+import re
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
@@ -141,6 +142,38 @@ class JiraManagerRunJqlTests(SimpleTestCase):
         list(builder._run_jql_cached("project = ABC"))
 
         self.assertIsNone(self.search_kwargs[0]["expand"])
+
+
+class JiraManagerStatusHistoryTests(SimpleTestCase):
+    def test_status_histories_are_fetched_by_chunks_of_keys(self):
+        queries = []
+
+        def search_issues(jql, **kwargs):
+            queries.append((jql, kwargs))
+            change = SimpleNamespace(field="status", fromString="To Do", toString="Done")
+            history = SimpleNamespace(created="2026-03-05T10:00:00.000+0000", items=[change])
+            return [
+                SimpleNamespace(
+                    key=key,
+                    fields=SimpleNamespace(status=SimpleNamespace(name="Done"), created="2026-02-01"),
+                    changelog=SimpleNamespace(histories=[history]),
+                )
+                for key in re.findall(r'"([^"]+)"', jql)
+            ]
+
+        manager = JiraManager(SimpleNamespace(jira_url="https://jira.example/"))
+        manager._jira = SimpleNamespace(search_issues=search_issues)
+
+        result = manager.get_status_histories([f"ABC-{i}" for i in range(60)])
+
+        self.assertEqual(len(result), 60)
+        self.assertEqual(len(queries), 2)
+        self.assertEqual(queries[0][1]["fields"], "status,created")
+        self.assertEqual(queries[0][1]["expand"], "changelog")
+        self.assertEqual(
+            result["ABC-59"]["status_changes"],
+            [{"at": "2026-03-05T10:00:00.000+0000", "from": "To Do", "to": "Done"}],
+        )
 
 
 class JiraManagerWorklogSearchTests(SimpleTestCase):

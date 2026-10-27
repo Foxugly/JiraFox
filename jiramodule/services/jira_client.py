@@ -156,6 +156,13 @@ class JiraManager:
             state=states,
         )
 
+    def status_category_keys(self) -> Dict[str, str]:
+        """{status name: category key ("new", "indeterminate", "done")} for every Jira status."""
+        return {
+            getattr(status, "name", None): getattr(getattr(status, "statusCategory", None), "key", None)
+            for status in self._with_retries(self.jira.statuses)
+        }
+
     def list_statuses(self) -> List[Dict[str, Any]]:
         out: List[Dict[str, Any]] = []
         for status in self._with_retries(self.jira.statuses):
@@ -346,6 +353,41 @@ class JiraManager:
             base="{server}/rest/greenhopper/1.0/{path}",
         )
         return data.get("contents") or {}
+
+    def get_status_histories(self, keys: List[str]) -> Dict[str, Dict[str, Any]]:
+        """
+        {key: {"state", "created", "status_changes"}} for the given issues: just enough to rebuild
+        their status at any moment. Only the status field and the changelog are fetched.
+        """
+        out: Dict[str, Dict[str, Any]] = {}
+        page_size = self.WORKLOG_SEARCH_PAGE_SIZE
+        for index in range(0, len(keys), page_size):
+            chunk = keys[index:index + page_size]
+            issues = self._with_retries(
+                self.jira.search_issues,
+                f"key in ({', '.join(quote_value(key) for key in chunk)})",
+                maxResults=len(chunk),
+                fields="status,created",
+                expand="changelog",
+            )
+            for issue in issues:
+                histories = getattr(getattr(issue, "changelog", None), "histories", None) or []
+                out[issue.key] = {
+                    "key": issue.key,
+                    "state": getattr(getattr(issue.fields, "status", None), "name", None),
+                    "created": getattr(issue.fields, "created", None),
+                    "status_changes": [
+                        {
+                            "at": getattr(history, "created", None),
+                            "from": getattr(item, "fromString", None),
+                            "to": getattr(item, "toString", None),
+                        }
+                        for history in histories
+                        for item in (getattr(history, "items", None) or [])
+                        if getattr(item, "field", "") == "status"
+                    ],
+                }
+        return out
 
     def get_sprint_report(self, sprint_id: int, jql_extra: str = "", max_results: int = 1000) -> Dict[str, Any]:
         sprint = self.get_sprint(sprint_id)
