@@ -262,6 +262,7 @@ class JiraManager:
             "completeDate": getattr(sprint, "completeDate", None),
             "originBoardId": getattr(sprint, "originBoardId", None),
             "goal": getattr(sprint, "goal", None),
+            "url": self.get_url_jql(f"sprint={sprint_id}"),
         }
 
     def _search_issues(self, jql: str, *, max_results: int = 1000, detailed: bool = False):

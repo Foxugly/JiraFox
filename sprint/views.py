@@ -72,7 +72,6 @@ class SprintDetailView(LoginRequiredMixin, TemplateView):
         sprint_id = kwargs["sprint_id"]
         jira = get_connected_jira_for_user(self.request.user)
         context["sprint"] = jira.get_sprint(sprint_id)
-        context["jira_sprint_url"] = jira.get_url_jql(f"sprint={sprint_id}")
         return context
 
 
@@ -246,7 +245,6 @@ class SprintWeightedThroughputDistributionView(LoginRequiredMixin, TemplateView)
         sprint_id = kwargs.get("sprint_id")
         jira = get_connected_jira_for_user(self.request.user)
         context["sprint"] = jira.get_sprint(sprint_id)
-        context["jira_sprint_url"] = jira.get_url_jql(f"sprint={sprint_id}")
         context.update(build_weighted_throughput_distribution(jira, sprint_id))
         return context
 

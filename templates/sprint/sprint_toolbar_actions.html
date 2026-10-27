@@ -17,6 +17,6 @@
 <a class="btn btn-sm btn-outline-secondary" href="{% url 'sprint_xls_report' sprint.id %}">
     <i class="fa-regular fa-file-excel me-2"></i>XLSX
 </a>
-<a class="btn btn-sm btn-outline-primary" href="{{ jira_sprint_url }}" target="_blank" rel="noopener">
+<a class="btn btn-sm btn-outline-primary" href="{{ sprint.url }}" target="_blank" rel="noopener">
     <i class="fa-brands fa-jira me-2"></i>{% trans "Open in Jira" %}
 </a>

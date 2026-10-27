@@ -396,7 +396,7 @@ class LoggedSheetViewTests(TestCase):
 
         return SimpleNamespace(
             cfg=SimpleNamespace(team=team, jira_project_id=7),
-            get_sprint=lambda sprint_id: SPRINT,
+            get_sprint=lambda sprint_id: {**SPRINT, "url": "https://jira.example/issues/?jql=sprint%3D2446"},
             get_sprint_issues_with_worklogs=lambda sprint_id: ISSUES,
             get_issues_with_worklogs_by=get_issues_with_worklogs_by,
         )
@@ -491,6 +491,14 @@ class LoggedSheetViewTests(TestCase):
 
                 for text in texts:
                     self.assertContains(response, text)
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_open_in_jira_links_to_the_sprint(self, mock_get_jira):
+        mock_get_jira.return_value = self._fake_jira(self.team)
+
+        response = self.client.get(reverse("sprint_xls_report", args=[2446]))
+
+        self.assertContains(response, 'href="https://jira.example/issues/?jql=sprint%3D2446"')
 
     def test_weighted_throughput_distribution_groups_done_by_story_points(self):
         jira = SimpleNamespace(
