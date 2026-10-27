@@ -153,7 +153,6 @@ class JiraManager:
         return self.list_sprints(
             board_id=self.cfg.jira_board_id,
             state=states,
-            max_results=500,
         )
 
     def list_statuses(self) -> List[Dict[str, Any]]:
@@ -204,9 +203,10 @@ class JiraManager:
         board_id: int,
         *,
         state: str = "active,future,closed",
-        max_results: int = 50,
     ) -> List[Dict[str, Any]]:
-        sprints = self._with_retries(self.jira.sprints, board_id, state=state, maxResults=max_results)
+        # maxResults=0 makes python-jira follow every page. With a number it reads a single page,
+        # and Jira caps that page at 50 sprints, oldest first: the latest closed sprints were lost.
+        sprints = self._with_retries(self.jira.sprints, board_id, state=state, maxResults=0)
         out: List[Dict[str, Any]] = []
         for sprint in sprints:
             out.append(
@@ -223,25 +223,25 @@ class JiraManager:
             )
         return out
 
-    def get_current_sprint(self, board_id: int = 0, max_results: int = 50) -> Optional[Dict[str, Any]]:
+    def get_current_sprint(self, board_id: int = 0) -> Optional[Dict[str, Any]]:
         """
         Find the active sprint for the given board.
         Returns None if not found.
         """
         if board_id == 0:
             board_id = self.cfg.jira_board_id
-        sprints = self.list_sprints(board_id, state="active", max_results=max_results)
+        sprints = self.list_sprints(board_id, state="active")
         candidates = [sprint for sprint in sprints if isinstance(sprint.get("id"), int)]
         if not candidates:
             return None
         return min(candidates, key=lambda sprint: sprint["id"])
 
-    def get_next_sprint(self, board_id: int, max_results: int = 50) -> Optional[Dict[str, Any]]:
+    def get_next_sprint(self, board_id: int) -> Optional[Dict[str, Any]]:
         current_sprint = self.get_current_sprint(board_id)
         if not current_sprint:
             return None
         current_sprint_id = int(current_sprint.get("id"))
-        sprints = self.list_sprints(board_id, state="future", max_results=max_results)
+        sprints = self.list_sprints(board_id, state="future")
         candidates = [
             sprint
             for sprint in sprints

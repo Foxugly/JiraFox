@@ -5,6 +5,7 @@ import requests
 from django.core.cache import cache
 from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
+from jira import JIRA
 from jira.exceptions import JIRAError
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -76,6 +77,23 @@ class JiraManagerSerializationTests(TestCase):
         self.assertEqual(result["state"], "Closed")
         self.assertEqual(result["statusCategory"], "Done")
         self.assertEqual(result["labels"], ["old"])
+
+
+class JiraManagerSprintListTests(SimpleTestCase):
+    def test_list_sprints_reads_every_page(self):
+        # Jira returns at most 50 sprints per page, oldest first.
+        def fake_get_json(path, params=None, base=None, use_post=False):
+            start = params.get("startAt", 0)
+            values = [{"id": i, "name": f"S{i}", "state": "closed"} for i in range(start, min(start + 50, 120))]
+            return {"startAt": start, "maxResults": 50, "isLast": start + 50 >= 120, "values": values}
+
+        manager = JiraManager(SimpleNamespace(jira_url="https://jira.example/"))
+        manager._jira = JIRA(server="https://jira.example", get_server_info=False)
+        with patch.object(JIRA, "_get_json", side_effect=fake_get_json):
+            sprints = manager.list_sprints(638, state="closed")
+
+        self.assertEqual(len(sprints), 120)
+        self.assertEqual(sprints[-1]["name"], "S119")
 
 
 class BulkOperationsServiceTests(TestCase):
