@@ -390,8 +390,8 @@ class LoggedSheetViewTests(TestCase):
     def _fake_jira(self, team, outside_issues=()):
         self.worklog_queries = []
 
-        def get_issues_with_worklogs_by(usernames, start, end):
-            self.worklog_queries.append((usernames, start, end))
+        def get_issues_with_worklogs_by(usernames, since):
+            self.worklog_queries.append((usernames, since))
             return list(outside_issues)
 
         return SimpleNamespace(
@@ -427,7 +427,7 @@ class LoggedSheetViewTests(TestCase):
 
         response = self.client.get(reverse("sprint-logged-xls-export", args=[2446]))
 
-        self.assertEqual(self.worklog_queries, [(["AMARTIN"], date(2026, 3, 1), date(2026, 3, 14))])
+        self.assertEqual(self.worklog_queries, [(["AMARTIN"], date(2026, 3, 1))])
         alice = [[cell.value for cell in row] for row in load_workbook(BytesIO(response.content))["Alice"].iter_rows()]
         self.assertEqual([row[0] for row in alice[1:3]], ["ABC-1 - Login page", "SUP-9 - Support"])
         self.assertEqual(alice[2][1:], [None, "Created during sprint", 2.0, "In Progress", "No"])

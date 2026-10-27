@@ -394,13 +394,11 @@ def create_logged_xlsx_bytes(jira: JiraManager, sprint_id: int, now: datetime | 
     usernames = [dev.jira_username for dev in devs if dev.jira_username]
     outside_issues = []
     if usernames and start:
-        # Jira filters worklogs by day, in its own time zone: widen by a day, rows filter exactly.
+        # Jira compares days in its own time zone: widen by a day, rows filter worklogs exactly.
         sprint_keys = {issue.get("key") for issue in issues}
         outside_issues = [
             issue
-            for issue in jira.get_issues_with_worklogs_by(
-                usernames, (start - timedelta(days=1)).date(), (end + timedelta(days=1)).date()
-            )
+            for issue in jira.get_issues_with_worklogs_by(usernames, (start - timedelta(days=1)).date())
             if issue.get("key") not in sprint_keys
         ]
 
