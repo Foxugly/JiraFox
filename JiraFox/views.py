@@ -302,7 +302,6 @@ M8.6 — Regression & Final Validation""",
         except (TypeError, ValueError):
             requested_max_results = self.DEFAULT_MAX_RESULTS
         max_results = min(self.MAX_RESULTS_LIMIT, max(1, requested_max_results))
-        full = self.request.GET.get("full") == "1"
 
         context["todo"] = [
             {
@@ -316,12 +315,11 @@ M8.6 — Regression & Final Validation""",
         context["query_history"] = self.request.session.get("query_history", [])
         context["jql"] = jql
         context["max_results"] = max_results
-        context["full"] = full
         context["jira_url_jql"] = jira.get_url_jql(jql) if jql else ""
 
         if jql:
             try:
-                context["issues"] = jira.run_jql(jql, max_results=max_results, full=full)
+                context["issues"] = jira.run_jql(jql, max_results=max_results, full=False)
                 context["result_count"] = len(context["issues"])
                 self._store_query_history(jql)
             except Exception as exc:  # noqa: BLE001
