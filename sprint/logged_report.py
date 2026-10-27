@@ -40,6 +40,16 @@ def parse_jira_datetime(value: str | None) -> datetime | None:
     return timezone.make_aware(parsed) if timezone.is_naive(parsed) else parsed
 
 
+def _exact_names(person: dict) -> set[str]:
+    names = {(person.get("displayName") or "").strip(), (person.get("name") or "").strip()}
+    return {name.casefold() for name in names if name}
+
+
+def _first_name(person: dict) -> str | None:
+    display_name = (person.get("displayName") or "").strip()
+    return display_name.split(", ", 1)[1].casefold() if ", " in display_name else None
+
+
 def person_matches_dev(person: dict | None, dev_name: str) -> bool:
     """
     Same rule as the capacity sheet: Jira display names look like "Last, First" and Dev.name holds
@@ -47,12 +57,27 @@ def person_matches_dev(person: dict | None, dev_name: str) -> bool:
     """
     if not person or not dev_name:
         return False
-    display_name = (person.get("displayName") or "").strip()
-    candidates = {display_name, (person.get("name") or "").strip()}
-    if ", " in display_name:
-        candidates.add(display_name.split(", ", 1)[1])
     target = dev_name.strip().casefold()
-    return any(candidate.casefold() == target for candidate in candidates if candidate)
+    return target in _exact_names(person) or target == _first_name(person)
+
+
+def resolve_dev(person: dict | None, dev_names: list[str]) -> str | None:
+    """
+    The one team developer a worklog author is, so that no time is counted twice. An exact match
+    (username or full display name) wins over a first-name match; an author whose first name fits
+    several developers is ambiguous and left unassigned, where it shows up instead of being doubled.
+    """
+    if not person:
+        return None
+    exact = _exact_names(person)
+    first_name = _first_name(person)
+    exact_matches = [name for name in dev_names if name.strip().casefold() in exact]
+    if len(exact_matches) == 1:
+        return exact_matches[0]
+    if exact_matches:
+        return None
+    first_name_matches = [name for name in dev_names if first_name and name.strip().casefold() == first_name]
+    return first_name_matches[0] if len(first_name_matches) == 1 else None
 
 
 def status_at(issue: dict, moment: datetime) -> str | None:
@@ -84,22 +109,38 @@ def sprint_window(sprint: dict, now: datetime) -> tuple[datetime | None, datetim
 
 
 def sprint_worklogs(issue: dict, start: datetime | None, end: datetime) -> list[dict]:
+    if start is None:
+        # A sprint that never started has no logged time; without a lower bound the whole
+        # history of its (carried-over) tickets would be counted.
+        return []
     worklogs = []
     for worklog in issue.get("worklogs") or []:
         started = parse_jira_datetime(worklog.get("started"))
-        if started is None or (start and started < start) or started > end:
+        if started is None or started < start or started > end:
             continue
         worklogs.append(worklog)
     return worklogs
 
 
-def logged_hours(issue: dict, dev_name: str, start: datetime | None, end: datetime) -> float:
+def worklog_seconds(worklog: dict) -> float:
+    seconds = worklog.get("seconds")
+    return float(seconds) if seconds is not None else float(worklog.get("hours") or 0) * 3600
+
+
+def seconds_to_hours(seconds: float) -> float:
+    return round(seconds / 3600, 2)
+
+
+def logged_hours(
+    issue: dict, dev_name: str, start: datetime | None, end: datetime, dev_names: list[str] | None = None
+) -> float:
+    dev_names = dev_names if dev_names is not None else [dev_name]
     total = sum(
-        float(worklog.get("hours") or 0)
+        worklog_seconds(worklog)
         for worklog in sprint_worklogs(issue, start, end)
-        if person_matches_dev(worklog.get("author"), dev_name)
+        if resolve_dev(worklog.get("author"), dev_names) == dev_name
     )
-    return round(total, 2)
+    return seconds_to_hours(total)
 
 
 def issue_row(issue: dict, hours: float, start: datetime | None, end: datetime) -> dict:
@@ -114,10 +155,12 @@ def issue_row(issue: dict, hours: float, start: datetime | None, end: datetime) 
     }
 
 
-def build_dev_rows(issues: Iterable[dict], dev_name: str, start: datetime | None, end: datetime) -> list[dict]:
+def build_dev_rows(
+    issues: Iterable[dict], dev_name: str, start: datetime | None, end: datetime, dev_names: list[str] | None = None
+) -> list[dict]:
     rows = []
     for issue in issues:
-        hours = logged_hours(issue, dev_name, start, end)
+        hours = logged_hours(issue, dev_name, start, end, dev_names)
         if hours <= 0 and not person_matches_dev(issue.get("assignee"), dev_name):
             continue
         rows.append(issue_row(issue, hours, start, end))
@@ -137,17 +180,17 @@ def author_label(author: dict | None) -> str:
 def build_unassigned_rows(
     issues: Iterable[dict], dev_names: list[str], start: datetime | None, end: datetime
 ) -> list[dict]:
-    """Time logged during the sprint by authors matching none of the team developers."""
+    """Time logged during the sprint by authors matching no team developer, or several of them."""
     rows = []
     for issue in issues:
-        hours_by_author: dict[str, float] = defaultdict(float)
+        seconds_by_author: dict[str, float] = defaultdict(float)
         for worklog in sprint_worklogs(issue, start, end):
             author = worklog.get("author")
-            if any(person_matches_dev(author, dev_name) for dev_name in dev_names):
+            if resolve_dev(author, dev_names):
                 continue
-            hours_by_author[author_label(author)] += float(worklog.get("hours") or 0)
-        for index, (author, hours) in enumerate(sorted(hours_by_author.items())):
-            row = {**issue_row(issue, round(hours, 2), start, end), "author": author}
+            seconds_by_author[author_label(author)] += worklog_seconds(worklog)
+        for index, (author, seconds) in enumerate(sorted(seconds_by_author.items())):
+            row = {**issue_row(issue, seconds_to_hours(seconds), start, end), "author": author}
             if index:
                 # Planned time belongs to the ticket: count it once, not once per author.
                 row["planned_hours"] = None
@@ -188,7 +231,7 @@ class LoggedWorkbookBuilder:
             worksheet["A1"] = "The team has no developer: add them on the capacity sheet page."
         for dev_name in self.dev_names:
             worksheet = self.workbook.create_sheet(sheet_title(dev_name, used_titles))
-            self._populate(worksheet, build_dev_rows(self.issues, dev_name, self.start, self.end))
+            self._populate(worksheet, build_dev_rows(self.issues, dev_name, self.start, self.end, self.dev_names))
 
         worksheet = self.workbook.create_sheet(sheet_title(UNASSIGNED_SHEET_TITLE, used_titles))
         self._populate(

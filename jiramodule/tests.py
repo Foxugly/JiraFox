@@ -130,6 +130,8 @@ class BulkOperationsServiceTests(TestCase):
 
         self.assertTrue(results[0]["ok"])
         self.assertEqual(calls[0][0], "ABC-1")
+        # The labels are re-read from Jira, never taken from the (possibly stale) preview.
+        self.assertIsNone(calls[0][1]["current_labels"])
 
 
 class BulkOperationsViewsTests(TestCase):

@@ -187,9 +187,9 @@ class AuthPagesTests(TestCase):
             {"id": 12, "name": "Sprint 12"},
             [
                 {"key": "ABC-1", "state": "In Progress", "kanban_metrics": {"current_wip_age_hours": 36, "current_wip_age_days": 5, "cycle_time_days": 3, "lead_time_days": 4}},
-                {"key": "ABC-2", "state": "Done", "statusCategory": "Done", "estimation": {"story_points": 3}},
-                {"key": "ABC-3", "state": "Done", "statusCategory": "Done", "estimation": {"story_points": None}},
-                {"key": "ABC-4", "state": "Closed", "statusCategory": "Done", "estimation": {"story_points": 5}},
+                {"key": "ABC-2", "state": "Done", "status_category": "done", "estimation": {"story_points": 3}},
+                {"key": "ABC-3", "state": "Done", "status_category": "done", "estimation": {"story_points": None}},
+                {"key": "ABC-4", "state": "Closed", "status_category": "done", "estimation": {"story_points": 5}},
             ],
         )
 

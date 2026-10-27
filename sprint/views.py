@@ -4,22 +4,13 @@ from django.http import HttpResponse, JsonResponse
 from django.views import View
 from django.views.decorators.http import require_GET
 from django.views.generic import ListView, TemplateView
-from JiraFox.services.issue_data import build_sprint_issue_item, get_issue_status
+from JiraFox.services.issue_data import build_sprint_issue_item, get_issue_status, is_issue_done
 from jiramodule.services.jira_config_service import get_connected_jira_for_user, require_config_fields
 from jiramodule.status import CANONICAL_ORDER, STATUS_EXCLUDED
 from jiramodule.utils.datetime_utils import hours_to_business_days
 from team.models import TeamDev
 from .logged_report import create_logged_xlsx_bytes
 from .report import create_xlsx_bytes
-
-DONE_STATUS_NAMES = {
-    "resolved",
-    "completed",
-    "issue completed",
-    "closed",
-    "done",
-}
-
 
 def _to_float(v, default=0.0) -> float:
     try:
@@ -225,7 +216,7 @@ def build_weighted_throughput_distribution_from_issues(issues: list[dict]) -> di
     done_count = 0
 
     for issue in issues:
-        if (issue.get("statusCategory") or "").strip() != "Done" and (issue.get("state") or "").strip().lower() not in DONE_STATUS_NAMES:
+        if not is_issue_done(issue):
             continue
 
         done_count += 1

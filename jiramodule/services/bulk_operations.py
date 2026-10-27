@@ -109,7 +109,8 @@ def apply_bulk_label_preview(jira, payload: dict) -> list[dict]:
                 issue_key,
                 add_labels=payload.get("add_labels", []),
                 remove_labels=payload.get("remove_labels", []),
-                current_labels=item.get("current_labels", []),
+                # Re-read the labels: the preview may be stale, and sending it back would drop newer ones.
+                current_labels=None,
             )
             results.append({**item, "ok": True, "skipped": False, "message": _("Updated")})
         except Exception as exc:  # noqa: BLE001

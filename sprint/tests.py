@@ -13,9 +13,11 @@ from sprint.logged_report import (
     HEADERS,
     UNASSIGNED_HEADERS,
     LoggedWorkbookBuilder,
+    build_dev_rows,
     build_unassigned_rows,
     logged_hours,
     person_matches_dev,
+    resolve_dev,
     sheet_title,
     sprint_window,
     status_at,
@@ -287,6 +289,46 @@ class LoggedReportTests(SimpleTestCase):
         self.assertEqual(sheet_title("a/b", used), "a-b (2)")
         self.assertLessEqual(len(sheet_title("x" * 40, used)), 31)
 
+    def test_logged_hours_are_summed_before_rounding(self):
+        start, end = sprint_window(SPRINT, NOW)
+        issue = {
+            **ISSUES[1],
+            "worklogs": [
+                {"author": ALICE, "started": f"2026-03-0{day}T09:00:00.000+0100", "hours": 0.33, "seconds": 1200}
+                for day in (3, 4, 5)
+            ],
+        }
+
+        self.assertEqual(logged_hours(issue, "Alice", start, end), 1.0)
+
+    def test_sprint_not_started_has_no_logged_time(self):
+        sprint = {**SPRINT, "startDate": None}
+        start, end = sprint_window(sprint, NOW)
+
+        self.assertEqual(logged_hours(ISSUES[0], "Alice", start, end), 0)
+        self.assertEqual(build_unassigned_rows(ISSUES, ["Alice"], start, end), [])
+
+    def test_each_worklog_is_attributed_to_one_developer_only(self):
+        alice_bis = {"displayName": "Durand, Alice", "name": "ADURAND"}
+        self.assertEqual(resolve_dev(ALICE, ["Alice", "AMARTIN"]), "AMARTIN")  # exact match wins
+        self.assertIsNone(resolve_dev(alice_bis, ["Alice", "alice"]))  # ambiguous first name
+        self.assertEqual(resolve_dev(alice_bis, ["Alice", "Bob"]), "Alice")
+        self.assertIsNone(resolve_dev(CARL, ["Alice", "Bob"]))
+
+        start, end = sprint_window(SPRINT, NOW)
+        dev_names = ["Alice", "AMARTIN"]
+        self.assertEqual(logged_hours(ISSUES[0], "AMARTIN", start, end, dev_names), 5.5)
+        self.assertEqual(logged_hours(ISSUES[0], "Alice", start, end, dev_names), 0)
+
+    def test_dev_tabs_and_unassigned_add_up_to_all_time_logged_in_the_sprint(self):
+        start, end = sprint_window(SPRINT, NOW)
+        dev_names = ["Alice", "Bob"]
+
+        per_dev = sum(row["logged_hours"] for name in dev_names for row in build_dev_rows(ISSUES, name, start, end, dev_names))
+        unassigned = sum(row["logged_hours"] for row in build_unassigned_rows(ISSUES, dev_names, start, end))
+
+        self.assertEqual(per_dev + unassigned, 3.0 + 2.5 + 1.0 + 1.5 + 0.5)
+
 
 class LoggedSheetViewTests(TestCase):
     def setUp(self):
@@ -334,12 +376,12 @@ class LoggedSheetViewTests(TestCase):
         jira = SimpleNamespace(
             JIRA_ONLY_STANDARD_TYPES="issuetype in standardIssueTypes()",
             get_cached_sprint_issues=lambda sprint_id, jql_extra=None, full=None: [
-                {"state": "Done", "estimation": {"story_points": 3}},
-                {"state": "Done", "estimation": {"story_points": 3}},
-                {"state": "Done", "estimation": {"story_points": 5}},
-                {"state": "Done", "estimation": {"story_points": None}},
-                {"state": "Closed", "estimation": {"story_points": 8}},
-                {"state": "In Progress", "estimation": {"story_points": 8}},
+                {"state": "Done", "status_category": "done", "estimation": {"story_points": 3}},
+                {"state": "Done", "status_category": "done", "estimation": {"story_points": 3}},
+                {"state": "Done", "status_category": "done", "estimation": {"story_points": 5}},
+                {"state": "Done", "status_category": "done", "estimation": {"story_points": None}},
+                {"state": "Closed", "status_category": "done", "estimation": {"story_points": 8}},
+                {"state": "In Progress", "status_category": "indeterminate", "estimation": {"story_points": 8}},
             ],
         )
 

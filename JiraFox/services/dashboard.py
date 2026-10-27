@@ -7,7 +7,7 @@ AGING_WIP_THRESHOLD_DAYS = 10
 
 
 def get_dashboard_status_bucket(issue: dict) -> str:
-    if (issue.get("statusCategory") or "").strip() == "Done":
+    if is_issue_done(issue):
         return "Done"
     return get_issue_status(issue)
 

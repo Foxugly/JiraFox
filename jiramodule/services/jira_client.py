@@ -59,6 +59,7 @@ class JiraManager:
             "assignee",
             "issuetype",
             "project",
+            "labels",
         ]
         if detailed:
             fields.extend(["timetracking", "created", "updated", "resolutiondate"])
@@ -344,7 +345,9 @@ class JiraManager:
             "issueType": getattr(getattr(fields, "issuetype", None), "name", None),
             "state": getattr(getattr(fields, "status", None), "name", None),
             "status_category": _status_category_key(fields),
+            "statusCategory": getattr(getattr(getattr(fields, "status", None), "statusCategory", None), "name", None),
             "assignee": self._serialize_assignee(getattr(fields, "assignee", None)),
+            "labels": list(getattr(fields, "labels", None) or []),
             "url": self.get_issue_url(issue.key),
         }
 
@@ -362,7 +365,9 @@ class JiraManager:
             "issueType": getattr(getattr(fields, "issuetype", None), "name", None),
             "state": getattr(getattr(fields, "status", None), "name", None),
             "status_category": _status_category_key(fields),
+            "statusCategory": getattr(getattr(getattr(fields, "status", None), "statusCategory", None), "name", None),
             "assignee": self._serialize_assignee(getattr(fields, "assignee", None)),
+            "labels": list(getattr(fields, "labels", None) or []),
             "estimation": {
                 "story_points": self._get_story_points(issue),
                 "original_estimate_hours": _to_hours(original_estimate_sec),
@@ -488,6 +493,8 @@ class JiraManager:
                             "author": self._serialize_assignee(getattr(worklog, "author", None)),
                             "started": getattr(worklog, "started", None),
                             "hours": _to_hours(getattr(worklog, "timeSpentSeconds", None)) or 0.0,
+                            # Exact time: summing the rounded hours drifts (3 x 20 min = 0.99 h).
+                            "seconds": getattr(worklog, "timeSpentSeconds", None) or 0,
                         }
                         for worklog in worklogs
                     ],
