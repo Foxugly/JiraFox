@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block header %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-sankey@0.12.1/dist/chartjs-chart-sankey.min.js"></script>
+{% endblock %}
+
+{% block title %}JiraFox - Sprint {{ sprint.name }} - {% trans "Sprint scope" %}{% endblock %}
+
+{% block content %}
+    <section class="page-shell glass-panel section-stack">
+        {% include "sprint/sprint_header.html" %}
+
+        <div class="utility-panel">
+            <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3">
+                <div>
+                    <h2 class="h4 mb-1">{% trans "Sprint scope" %}</h2>
+                    <div class="inline-note">
+                        {% trans "Planned at the sprint start or added during the sprint, how the issues ended (Jira sprint report) and their current status. Sub-tasks are not counted." %}
+                    </div>
+                </div>
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <span class="badge text-bg-primary">{% trans "Planned" %}: {{ scope.totals.planned }}</span>
+                    <span class="badge text-bg-warning">{% trans "Added during sprint" %}: {{ scope.totals.added }}</span>
+                </div>
+            </div>
+
+            <div class="card p-4">
+                {% if scope.issues %}
+                    <div style="height: 520px;">
+                        <canvas id="scopeFlowChart"></canvas>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <h3 class="h5 mb-2">{% trans "Aucune donnée à afficher" %}</h3>
+                    </div>
+                {% endif %}
+            </div>
+
+            {% if scope.issues %}
+                <div class="card p-4 mt-3">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                        <h3 class="h5 mb-0">
+                            {% trans "Issues" %} <span id="scopeFilterLabel" class="text-secondary fw-normal"></span>
+                            (<span id="scopeIssueCount">{{ scope.issues|length }}</span>)
+                        </h3>
+                        <button id="scopeShowAll" type="button" class="btn btn-sm btn-outline-secondary d-none">
+                            {% trans "Show all" %}
+                        </button>
+                    </div>
+                    <p class="inline-note mb-2">{% trans "Click a flow of the diagram to list its issues." %}</p>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped table-hover align-middle mb-0">
+                            <thead>
+                            <tr>
+                                <th>{% trans "Key" %}</th>
+                                <th>{% trans "Summary" %}</th>
+                                <th>{% trans "Origin" %}</th>
+                                <th>{% trans "Outcome" %}</th>
+                                <th>{% trans "Current status" %}</th>
+                                <th>{% trans "Assignee" %}</th>
+                            </tr>
+                            </thead>
+                            <tbody id="scopeIssueRows"></tbody>
+                        </table>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+    {{ scope|json_script:"scope-flow-data" }}
+{% endblock %}
+
+{% block js %}
+    {% if scope.issues %}
+        <script>
+            (function () {
+                const scope = JSON.parse(document.getElementById("scope-flow-data").textContent);
+                const labels = {
+                    "origin:planned": "{% trans 'Planned at start' %}",
+                    "origin:added": "{% trans 'Added during sprint' %}",
+                    "outcome:done": "{% trans 'Completed' %}",
+                    "outcome:not_done": "{% trans 'Not completed' %}",
+                    "outcome:removed": "{% trans 'Removed / carried over' %}",
+                    "outcome:done_elsewhere": "{% trans 'Completed in another sprint' %}"
+                };
+                const colors = {
+                    "origin:planned": "#2f7de1",
+                    "origin:added": "#f0a202",
+                    "outcome:done": "#2e9d5b",
+                    "outcome:not_done": "#e07a1f",
+                    "outcome:removed": "#c8475a",
+                    "outcome:done_elsewhere": "#3aa6a0"
+                };
+                const statusColors = {new: "#8a94a6", indeterminate: "#4a8fe0", done: "#2e9d5b"};
+                Object.entries(scope.status_categories).forEach(([name, category]) => {
+                    labels[`status:${name}`] = name;
+                    colors[`status:${name}`] = statusColors[category] || "#8a94a6";
+                });
+                // A block holds whatever flows through it: the larger of its inflow and outflow.
+                const inflow = {}, outflow = {};
+                scope.flows.forEach((flow) => {
+                    outflow[flow.from] = (outflow[flow.from] || 0) + flow.flow;
+                    inflow[flow.to] = (inflow[flow.to] || 0) + flow.flow;
+                });
+                const chartLabels = {};
+                Object.keys({...inflow, ...outflow}).forEach((key) => {
+                    chartLabels[key] = `${labels[key] || key} (${Math.max(inflow[key] || 0, outflow[key] || 0)})`;
+                });
+                const color = (key) => colors[key] || "#8a94a6";
+                const nodeLabel = (key) => labels[key] || key;
+                const issueNodes = (issue) => [`origin:${issue.origin}`, `outcome:${issue.outcome}`, `status:${issue.status}`];
+
+                const rows = document.getElementById("scopeIssueRows");
+                const count = document.getElementById("scopeIssueCount");
+                const filterLabel = document.getElementById("scopeFilterLabel");
+                const showAll = document.getElementById("scopeShowAll");
+
+                function cell(text) {
+                    const td = document.createElement("td");
+                    td.textContent = text;
+                    return td;
+                }
+
+                function render(nodes) {
+                    const shown = scope.issues.filter((issue) => nodes.every((node) => issueNodes(issue).includes(node)));
+                    rows.replaceChildren(...shown.map((issue) => {
+                        const tr = document.createElement("tr");
+                        const key = document.createElement("td");
+                        const link = document.createElement("a");
+                        link.href = issue.url;
+                        link.target = "_blank";
+                        link.rel = "noopener";
+                        link.className = "fw-semibold mono";
+                        link.textContent = issue.key;
+                        key.appendChild(link);
+                        tr.append(key, cell(issue.summary), cell(nodeLabel(`origin:${issue.origin}`)),
+                            cell(nodeLabel(`outcome:${issue.outcome}`)), cell(issue.status), cell(issue.assignee || "-"));
+                        return tr;
+                    }));
+                    count.textContent = shown.length;
+                    filterLabel.textContent = nodes.length ? "— " + nodes.map(nodeLabel).join(" → ") : "";
+                    showAll.classList.toggle("d-none", !nodes.length);
+                }
+
+                showAll.addEventListener("click", () => render([]));
+                render([]);
+
+                const textColor = getComputedStyle(document.body).color;
+                new Chart(document.getElementById("scopeFlowChart"), {
+                    type: "sankey",
+                    data: {
+                        datasets: [{
+                            data: scope.flows,
+                            labels: chartLabels,
+                            colorFrom: (ctx) => color(ctx.dataset.data[ctx.dataIndex].from),
+                            colorTo: (ctx) => color(ctx.dataset.data[ctx.dataIndex].to),
+                            colorMode: "gradient",
+                            color: textColor,
+                            size: "max",
+                            nodeWidth: 14,
+                            padding: 18
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        layout: {padding: {top: 12, bottom: 4}},
+                        plugins: {
+                            legend: {display: false},
+                            tooltip: {
+                                callbacks: {
+                                    title: () => "",
+                                    label: (item) => {
+                                        const flow = item.dataset.data[item.dataIndex];
+                                        return `${nodeLabel(flow.from)} → ${nodeLabel(flow.to)}: ${flow.flow} {% trans 'issue(s)' %}`;
+                                    }
+                                }
+                            }
+                        },
+                        onClick: (event, elements) => {
+                            if (!elements.length) return;
+                            const flow = scope.flows[elements[0].index];
+                            render([flow.from, flow.to]);
+                        }
+                    }
+                });
+            })();
+        </script>
+    {% endif %}
+{% endblock %}

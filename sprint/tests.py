@@ -11,6 +11,7 @@ from openpyxl import load_workbook
 from requests.exceptions import Timeout
 
 from dev.models import Dev
+from sprint.scope_flow import build_scope_flow
 from sprint.logged_report import (
     HEADERS,
     UNASSIGNED_HEADERS,
@@ -570,3 +571,74 @@ class LoggedSheetViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "sprint/sprint_weighted_throughput_distribution.html")
         self.assertContains(response, "Distribution du débit par pondération")
+
+
+SCOPE_REPORT = {
+    "completedIssues": [
+        {"key": "BKL1-1", "summary": "Planned and done", "statusId": "10002", "assigneeName": "Martin, Alice"},
+        {"key": "BKL1-2", "summary": "Added and done", "statusId": "10002"},
+        {"key": "BKL1-3", "summary": "Planned and canceled", "statusId": "10009"},
+    ],
+    "issuesNotCompletedInCurrentSprint": [],
+    "puntedIssues": [
+        {"key": "BKL1-4", "summary": "Planned, carried over", "statusId": "3"},
+        {"key": "BKL1-5", "summary": "Added, carried over", "statusId": "3"},
+    ],
+    "issuesCompletedInAnotherSprint": [{"key": "BKL1-6", "summary": "Done elsewhere", "statusId": "10002"}],
+    "issueKeysAddedDuringSprint": {"BKL1-2": True, "BKL1-5": True},
+    "entityData": {
+        "statuses": {
+            "10002": {"statusName": "Done", "status": {"statusCategory": {"key": "done"}}},
+            "10009": {"statusName": "Canceled", "status": {"statusCategory": {"key": "done"}}},
+            "3": {"statusName": "In Progress", "status": {"statusCategory": {"key": "indeterminate"}}},
+        }
+    },
+}
+
+
+class SprintScopeFlowTests(TestCase):
+    def test_flows_split_planned_and_added_issues(self):
+        scope = build_scope_flow(SCOPE_REPORT, lambda key: f"https://jira.example/browse/{key}")
+
+        flows = {(flow["from"], flow["to"]): flow["flow"] for flow in scope["flows"]}
+        self.assertEqual(
+            flows,
+            {
+                ("origin:planned", "outcome:done"): 2,
+                ("origin:added", "outcome:done"): 1,
+                ("origin:planned", "outcome:removed"): 1,
+                ("origin:added", "outcome:removed"): 1,
+                ("origin:planned", "outcome:done_elsewhere"): 1,
+                ("outcome:done", "status:Done"): 2,
+                ("outcome:done", "status:Canceled"): 1,
+                ("outcome:removed", "status:In Progress"): 2,
+                ("outcome:done_elsewhere", "status:Done"): 1,
+            },
+        )
+        self.assertEqual(scope["totals"], {"planned": 4, "added": 2})
+        self.assertEqual(scope["status_categories"]["In Progress"], "indeterminate")
+        first = scope["issues"][0]
+        self.assertEqual((first["key"], first["origin"], first["assignee"]), ("BKL1-1", "planned", "Martin, Alice"))
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_scope_page_renders(self, mock_get_jira):
+        user = get_user_model().objects.create_user(username="alice", password="secret")
+        self.client.force_login(user)
+        mock_get_jira.return_value = SimpleNamespace(
+            cfg=SimpleNamespace(jira_board_id=638),
+            get_sprint=lambda sprint_id: {**SPRINT, "name": "Sprint 12", "url": "https://jira.example/"},
+            get_sprint_scope_report=lambda sprint_id: SCOPE_REPORT,
+            get_issue_url=lambda key: f"https://jira.example/browse/{key}",
+        )
+
+        response = self.client.get(reverse("sprint-scope-flow", args=[2446]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "chartjs-chart-sankey")
+        self.assertContains(response, "BKL1-5")
+
+        user.language = "fr"
+        user.save(update_fields=["language"])
+        response = self.client.get(reverse("sprint-scope-flow", args=[2446]))
+        self.assertContains(response, "Périmètre du sprint")
+        self.assertContains(response, "Retirés / reportés")

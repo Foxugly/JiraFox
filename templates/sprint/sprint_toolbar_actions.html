@@ -14,6 +14,9 @@
 <a class="btn btn-sm btn-outline-secondary" href="{% url 'sprint-weighted-throughput-distribution' sprint.id %}">
     <i class="fa-solid fa-chart-column me-2"></i>{% trans "Weighted throughput" %}
 </a>
+<a class="btn btn-sm btn-outline-secondary" href="{% url 'sprint-scope-flow' sprint.id %}">
+    <i class="fa-solid fa-diagram-project me-2"></i>{% trans "Sprint scope" %}
+</a>
 <a class="btn btn-sm btn-outline-secondary" href="{% url 'sprint_xls_report' sprint.id %}">
     <i class="fa-regular fa-file-excel me-2"></i>XLSX
 </a>

@@ -332,6 +332,21 @@ class JiraManager:
     def get_issue_url(self, issue_key: str) -> str:
         return f"{self.cfg.jira_url}browse/{issue_key}"
 
+    def get_sprint_scope_report(self, sprint_id: int) -> Dict[str, Any]:
+        """
+        Jira's own sprint report (Reports > Sprint report): issues completed, not completed, removed
+        and completed in another sprint, plus the keys added after the sprint started. One light call.
+        """
+        if not self.cfg.jira_board_id:
+            raise RuntimeError("Missing jira_board_id configuration.")
+        data = self._with_retries(
+            self.jira._get_json,
+            "rapid/charts/sprintreport",
+            params={"rapidViewId": int(self.cfg.jira_board_id), "sprintId": int(sprint_id)},
+            base="{server}/rest/greenhopper/1.0/{path}",
+        )
+        return data.get("contents") or {}
+
     def get_sprint_report(self, sprint_id: int, jql_extra: str = "", max_results: int = 1000) -> Dict[str, Any]:
         sprint = self.get_sprint(sprint_id)
         tickets = self.get_cached_sprint_issues(

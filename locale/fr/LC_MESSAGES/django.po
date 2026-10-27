@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: JiraFox\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-27 12:04+0100\n"
+"POT-Creation-Date: 2026-10-27 15:31+0100\n"
 "PO-Revision-Date: 2026-09-15 00:00+0200\n"
 "Last-Translator: Codex <codex@local>\n"
 "Language-Team: French <fr@local>\n"
@@ -57,7 +57,7 @@ msgstr "Sprint courant terminé"
 msgid "Current sprint WIP"
 msgstr "WIP du sprint courant"
 
-#: .\JiraFox\views.py:276 .\templates\sprint\sprint_xls_report.html:68
+#: .\JiraFox\views.py:276 .\templates\sprint\sprint_xls_report.html:72
 msgid "Fastlane"
 msgstr "Fastlane"
 
@@ -126,7 +126,7 @@ msgstr "Plusieurs configurations Jira sont marquées comme courantes. N'en garde
 msgid "No change"
 msgstr "Aucun changement"
 
-#: .\jiramodule\services\bulk_operations.py:115 .\jiramodule\tests.py:185
+#: .\jiramodule\services\bulk_operations.py:115 .\jiramodule\tests.py:271
 msgid "Updated"
 msgstr "Mis à jour"
 
@@ -144,7 +144,7 @@ msgstr "Impossible de se connecter à Jira sur %(url)s."
 msgid "Not enough information to compute metrics (missing created/status/changelog)."
 msgstr "Informations insuffisantes pour calculer les métriques (created/status/changelog manquants)."
 
-#: .\jiramodule\tests.py:148 .\templates\jira\bulk_operations.html:17
+#: .\jiramodule\tests.py:234 .\templates\jira\bulk_operations.html:17
 msgid "Available operations"
 msgstr "Opérations disponibles"
 
@@ -599,7 +599,7 @@ msgstr "Fermer"
 #: .\templates\base.html:52 .\templates\base.html:71 .\templates\base.html:84
 #: .\templates\jira\jira_config_list.html:136
 #: .\templates\jira\partials\jira_config_modal_form.html:84
-#: .\templates\sprint\sprint_xls_report.html:131
+#: .\templates\sprint\sprint_xls_report.html:135
 msgid "Cancel"
 msgstr "Annuler"
 
@@ -633,7 +633,7 @@ msgstr "Recharger"
 #: .\templates\dashboard\_toolbar_actions.html:6
 #: .\templates\issue\issue_header.html:19 .\templates\query.html:36
 #: .\templates\query_toolbar_actions.html:4
-#: .\templates\sprint\sprint_toolbar_actions.html:21
+#: .\templates\sprint\sprint_toolbar_actions.html:24
 #: .\templates\sprint\sprint_wia.html:41
 msgid "Open in Jira"
 msgstr "Ouvrir dans Jira"
@@ -684,6 +684,7 @@ msgstr "Age max"
 #: .\templates\dashboard.html:33 .\templates\dashboard\_aging_table.html:18
 #: .\templates\jira\bulk_labels.html:80 .\templates\jira\bulk_labels.html:136
 #: .\templates\query.html:65 .\templates\sprint\sprint_detail.html:29
+#: .\templates\sprint\sprint_scope_flow.html:57
 #: .\templates\sprint\sprint_wia.html:56
 msgid "Key"
 msgstr "Clé"
@@ -700,6 +701,7 @@ msgstr "Age"
 #: .\templates\dashboard.html:36 .\templates\dashboard\_aging_table.html:22
 #: .\templates\issue\issue_detail.html:37 .\templates\query.html:70
 #: .\templates\sprint\sprint_detail.html:33
+#: .\templates\sprint\sprint_scope_flow.html:62
 msgid "Assignee"
 msgstr "Assigné"
 
@@ -1147,6 +1149,7 @@ msgstr "Appliquer les changements"
 
 #: .\templates\jira\bulk_labels.html:81 .\templates\jira\bulk_labels.html:137
 #: .\templates\query.html:66 .\templates\sprint\sprint_detail.html:30
+#: .\templates\sprint\sprint_scope_flow.html:58
 msgid "Summary"
 msgstr "Résumé"
 
@@ -1562,7 +1565,7 @@ msgstr "Requête échouée"
 msgid "Results"
 msgstr "Résultats"
 
-#: .\templates\query.html:58
+#: .\templates\query.html:58 .\templates\sprint\sprint_scope_flow.html:177
 msgid "issue(s)"
 msgstr "ticket(s)"
 
@@ -1591,7 +1594,7 @@ msgid "Current Jira configuration"
 msgstr "Configuration Jira courante"
 
 #: .\templates\query.html:157 .\templates\settings.html:103
-#: .\templates\sprint\sprint_xls_report.html:17
+#: .\templates\sprint\sprint_xls_report.html:21
 msgid "Team"
 msgstr "Equipe"
 
@@ -1711,12 +1714,12 @@ msgid "Name"
 msgstr "Nom"
 
 #: .\templates\sprint\sprint_list.html:43
-#: .\templates\sprint\sprint_xls_report.html:94
+#: .\templates\sprint\sprint_xls_report.html:98
 msgid "Start"
 msgstr "Début"
 
 #: .\templates\sprint\sprint_list.html:44
-#: .\templates\sprint\sprint_xls_report.html:98
+#: .\templates\sprint\sprint_xls_report.html:102
 msgid "End"
 msgstr "Fin"
 
@@ -1731,6 +1734,74 @@ msgstr "Rapport de sprint"
 #: .\templates\sprint\sprint_report.html:14
 msgid "Ready-to-open JQL queries by sprint segment."
 msgstr "Ready-to-open JQL queries by sprint segment."
+
+#: .\templates\sprint\sprint_scope_flow.html:9
+#: .\templates\sprint\sprint_scope_flow.html:18
+#: .\templates\sprint\sprint_toolbar_actions.html:18
+msgid "Sprint scope"
+msgstr "Périmètre du sprint"
+
+#: .\templates\sprint\sprint_scope_flow.html:20
+msgid "Planned at the sprint start or added during the sprint, how the issues ended (Jira sprint report) and their current status. Sub-tasks are not counted."
+msgstr "Prévus au début du sprint ou ajoutés en cours de sprint, comment les tickets ont fini (rapport de sprint Jira) et leur statut actuel. Les sous-tâches ne sont pas comptées."
+
+#: .\templates\sprint\sprint_scope_flow.html:24
+msgid "Planned"
+msgstr "Prévus"
+
+#: .\templates\sprint\sprint_scope_flow.html:25
+#: .\templates\sprint\sprint_scope_flow.html:82
+msgid "Added during sprint"
+msgstr "Ajoutés en cours de sprint"
+
+#: .\templates\sprint\sprint_scope_flow.html:36
+#: .\templates\sprint\sprint_weighted_throughput_distribution.html:34
+msgid "Aucune donnée à afficher"
+msgstr "Aucune donnée à afficher"
+
+#: .\templates\sprint\sprint_scope_flow.html:45
+msgid "Issues"
+msgstr "Tickets"
+
+#: .\templates\sprint\sprint_scope_flow.html:49
+msgid "Show all"
+msgstr "Tout afficher"
+
+#: .\templates\sprint\sprint_scope_flow.html:52
+msgid "Click a flow of the diagram to list its issues."
+msgstr "Cliquez sur un flux du diagramme pour lister ses tickets."
+
+#: .\templates\sprint\sprint_scope_flow.html:59
+msgid "Origin"
+msgstr "Origine"
+
+#: .\templates\sprint\sprint_scope_flow.html:60
+msgid "Outcome"
+msgstr "Résultat"
+
+#: .\templates\sprint\sprint_scope_flow.html:61
+msgid "Current status"
+msgstr "Statut actuel"
+
+#: .\templates\sprint\sprint_scope_flow.html:81
+msgid "Planned at start"
+msgstr "Prévus au début"
+
+#: .\templates\sprint\sprint_scope_flow.html:83
+msgid "Completed"
+msgstr "Terminés"
+
+#: .\templates\sprint\sprint_scope_flow.html:84
+msgid "Not completed"
+msgstr "Non terminés"
+
+#: .\templates\sprint\sprint_scope_flow.html:85
+msgid "Removed / carried over"
+msgstr "Retirés / reportés"
+
+#: .\templates\sprint\sprint_scope_flow.html:86
+msgid "Completed in another sprint"
+msgstr "Terminés dans un autre sprint"
 
 #: .\templates\sprint\sprint_toolbar_actions.html:9
 msgid "Report"
@@ -1748,10 +1819,6 @@ msgstr "Histogramme des tickets Done par story points."
 #: .\templates\sprint\sprint_weighted_throughput_distribution.html:23
 msgid "Total tickets Done"
 msgstr "Total tickets Done"
-
-#: .\templates\sprint\sprint_weighted_throughput_distribution.html:34
-msgid "Aucune donnée à afficher"
-msgstr "Aucune donnée à afficher"
 
 #: .\templates\sprint\sprint_weighted_throughput_distribution.html:36
 msgid "Aucun ticket Done avec story points n'a été trouvé pour ce sprint."
@@ -1822,146 +1889,146 @@ msgstr "ticket"
 msgid "Item age (days)"
 msgstr "Item age (days)"
 
-#: .\templates\sprint\sprint_xls_report.html:15
+#: .\templates\sprint\sprint_xls_report.html:19
 msgid "Capacity sheet"
 msgstr "Capacity sheet"
 
-#: .\templates\sprint\sprint_xls_report.html:18
+#: .\templates\sprint\sprint_xls_report.html:22
 msgid "Ajuster la capacite, les conges et les temps recurrents avant generation du fichier."
 msgstr "Ajuster la capacite, les conges et les temps recurrents avant generation du fichier."
 
-#: .\templates\sprint\sprint_xls_report.html:22
+#: .\templates\sprint\sprint_xls_report.html:26
 msgid "Ajouter un dev"
 msgstr "Ajouter un dev"
 
-#: .\templates\sprint\sprint_xls_report.html:39
+#: .\templates\sprint\sprint_xls_report.html:43
 msgid "Reordonner le dev"
 msgstr "Reordonner le dev"
 
-#: .\templates\sprint\sprint_xls_report.html:45
+#: .\templates\sprint\sprint_xls_report.html:49
 msgid "Retirer de la team"
 msgstr "Retirer de la team"
 
-#: .\templates\sprint\sprint_xls_report.html:56
+#: .\templates\sprint\sprint_xls_report.html:60
 msgid "Jira username: matches worklogs and assignees exactly, and adds the time logged outside the sprint to the logged sheet."
 msgstr "Identifiant Jira : associe exactement les worklogs et les assignés, et ajoute au rapport des temps prestés le temps logué hors sprint."
 
-#: .\templates\sprint\sprint_xls_report.html:56
+#: .\templates\sprint\sprint_xls_report.html:60
 msgid "Jira ID"
 msgstr "ID Jira"
 
-#: .\templates\sprint\sprint_xls_report.html:57
+#: .\templates\sprint\sprint_xls_report.html:61
 msgid "Ex: TDPTAV"
 msgstr "Ex : TDPTAV"
 
-#: .\templates\sprint\sprint_xls_report.html:60
+#: .\templates\sprint\sprint_xls_report.html:64
 msgid "Workload"
 msgstr "Charge"
 
-#: .\templates\sprint\sprint_xls_report.html:64
+#: .\templates\sprint\sprint_xls_report.html:68
 msgid "Holidays"
 msgstr "Congés"
 
-#: .\templates\sprint\sprint_xls_report.html:72
+#: .\templates\sprint\sprint_xls_report.html:76
 msgid "Project meetings"
 msgstr "Réunions projet"
 
-#: .\templates\sprint\sprint_xls_report.html:76
+#: .\templates\sprint\sprint_xls_report.html:80
 msgid "Other meetings"
 msgstr "Autres réunions"
 
-#: .\templates\sprint\sprint_xls_report.html:87
+#: .\templates\sprint\sprint_xls_report.html:91
 msgid "Logged sheet period"
 msgstr "Période du rapport des temps prestés"
 
-#: .\templates\sprint\sprint_xls_report.html:89
+#: .\templates\sprint\sprint_xls_report.html:93
 msgid "Set by hand."
 msgstr "Saisie manuellement."
 
-#: .\templates\sprint\sprint_xls_report.html:89
+#: .\templates\sprint\sprint_xls_report.html:93
 msgid "Jira sprint dates."
 msgstr "Dates du sprint dans Jira."
 
-#: .\templates\sprint\sprint_xls_report.html:90
+#: .\templates\sprint\sprint_xls_report.html:94
 msgid "Jira:"
 msgstr "Jira :"
 
-#: .\templates\sprint\sprint_xls_report.html:102
+#: .\templates\sprint\sprint_xls_report.html:106
 msgid "Save bounds"
 msgstr "Enregistrer les bornes"
 
-#: .\templates\sprint\sprint_xls_report.html:104
+#: .\templates\sprint\sprint_xls_report.html:108
 msgid "Reset to Jira dates"
 msgstr "Revenir aux dates Jira"
 
-#: .\templates\sprint\sprint_xls_report.html:110
+#: .\templates\sprint\sprint_xls_report.html:114
 msgid "Generer le Capacity Sheet"
 msgstr "Generer le Capacity Sheet"
 
-#: .\templates\sprint\sprint_xls_report.html:113
+#: .\templates\sprint\sprint_xls_report.html:117
 msgid "One tab per developer: planned vs logged hours and ticket status at sprint start and end."
 msgstr "Un onglet par développeur : heures prévues et loguées, statut des tickets au début et à la fin du sprint."
 
-#: .\templates\sprint\sprint_xls_report.html:114
+#: .\templates\sprint\sprint_xls_report.html:118
 msgid "Generate logged sheet"
 msgstr "Générer le rapport des temps prestés"
 
-#: .\templates\sprint\sprint_xls_report.html:125
+#: .\templates\sprint\sprint_xls_report.html:129
 msgid "Value saved."
 msgstr "Valeur enregistrée."
 
-#: .\templates\sprint\sprint_xls_report.html:126
+#: .\templates\sprint\sprint_xls_report.html:130
 msgid "Unable to save value."
 msgstr "Impossible d’enregistrer la valeur."
 
-#: .\templates\sprint\sprint_xls_report.html:127
+#: .\templates\sprint\sprint_xls_report.html:131
 msgid "Add developer"
 msgstr "Ajouter un développeur"
 
-#: .\templates\sprint\sprint_xls_report.html:128
+#: .\templates\sprint\sprint_xls_report.html:132
 msgid "Developer name"
 msgstr "Nom du développeur"
 
-#: .\templates\sprint\sprint_xls_report.html:129
+#: .\templates\sprint\sprint_xls_report.html:133
 msgid "Ex: Jane Doe"
 msgstr "Ex: Jane Doe"
 
-#: .\templates\sprint\sprint_xls_report.html:130
+#: .\templates\sprint\sprint_xls_report.html:134
 msgid "Create"
 msgstr "Créer"
 
-#: .\templates\sprint\sprint_xls_report.html:132
+#: .\templates\sprint\sprint_xls_report.html:136
 msgid "Developer added."
 msgstr "Développeur ajouté."
 
-#: .\templates\sprint\sprint_xls_report.html:133
+#: .\templates\sprint\sprint_xls_report.html:137
 msgid "Unable to create developer."
 msgstr "Impossible de créer le développeur."
 
-#: .\templates\sprint\sprint_xls_report.html:134
+#: .\templates\sprint\sprint_xls_report.html:138
 msgid "Remove developer"
 msgstr "Retirer le développeur"
 
-#: .\templates\sprint\sprint_xls_report.html:135
+#: .\templates\sprint\sprint_xls_report.html:139
 msgid "Remove this developer from the team?"
 msgstr "Retirer ce développeur de l’équipe ?"
 
-#: .\templates\sprint\sprint_xls_report.html:136
+#: .\templates\sprint\sprint_xls_report.html:140
 msgid "Remove"
 msgstr "Retirer"
 
-#: .\templates\sprint\sprint_xls_report.html:137
+#: .\templates\sprint\sprint_xls_report.html:141
 msgid "Developer removed from team."
 msgstr "Développeur retiré de l’équipe."
 
-#: .\templates\sprint\sprint_xls_report.html:138
+#: .\templates\sprint\sprint_xls_report.html:142
 msgid "Unable to remove developer."
 msgstr "Impossible de retirer le développeur."
 
-#: .\templates\sprint\sprint_xls_report.html:139
+#: .\templates\sprint\sprint_xls_report.html:143
 msgid "Column order saved."
 msgstr "Ordre des colonnes enregistré."
 
-#: .\templates\sprint\sprint_xls_report.html:140
+#: .\templates\sprint\sprint_xls_report.html:144
 msgid "Unable to save column order."
 msgstr "Impossible d’enregistrer l’ordre des colonnes."

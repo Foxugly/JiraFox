@@ -17,6 +17,7 @@ from team.models import TeamDev
 from .logged_report import create_logged_xlsx_bytes, sprint_window
 from .models import SprintPeriod
 from .report import create_xlsx_bytes
+from .scope_flow import build_scope_flow
 
 def _to_float(v, default=0.0) -> float:
     try:
@@ -246,6 +247,19 @@ class SprintWeightedThroughputDistributionView(LoginRequiredMixin, TemplateView)
         jira = get_connected_jira_for_user(self.request.user)
         context["sprint"] = jira.get_sprint(sprint_id)
         context.update(build_weighted_throughput_distribution(jira, sprint_id))
+        return context
+
+
+class SprintScopeFlowView(LoginRequiredMixin, TemplateView):
+    template_name = "sprint/sprint_scope_flow.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        sprint_id = kwargs["sprint_id"]
+        jira = get_connected_jira_for_user(self.request.user)
+        require_config_fields(jira.cfg, ["jira_board_id"])
+        context["sprint"] = jira.get_sprint(sprint_id)
+        context["scope"] = build_scope_flow(jira.get_sprint_scope_report(sprint_id), jira.get_issue_url)
         return context
 
 

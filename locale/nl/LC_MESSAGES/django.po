@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: JiraFox\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-27 12:04+0100\n"
+"POT-Creation-Date: 2026-10-27 15:31+0100\n"
 "PO-Revision-Date: 2026-09-15 00:00+0200\n"
 "Last-Translator: Codex <codex@local>\n"
 "Language-Team: Dutch <nl@local>\n"
@@ -57,7 +57,7 @@ msgstr "Current sprint Done"
 msgid "Current sprint WIP"
 msgstr "Current sprint WIP"
 
-#: .\JiraFox\views.py:276 .\templates\sprint\sprint_xls_report.html:68
+#: .\JiraFox\views.py:276 .\templates\sprint\sprint_xls_report.html:72
 msgid "Fastlane"
 msgstr "Fastlane"
 
@@ -126,7 +126,7 @@ msgstr "Meerdere Jira-configuraties zijn als huidige gemarkeerd. Behoud er slech
 msgid "No change"
 msgstr "Geen wijziging"
 
-#: .\jiramodule\services\bulk_operations.py:115 .\jiramodule\tests.py:185
+#: .\jiramodule\services\bulk_operations.py:115 .\jiramodule\tests.py:271
 msgid "Updated"
 msgstr "Bijgewerkt"
 
@@ -144,7 +144,7 @@ msgstr "Kan geen verbinding maken met Jira op %(url)s."
 msgid "Not enough information to compute metrics (missing created/status/changelog)."
 msgstr "Not enough information to compute metrics (missing created/status/changelog)."
 
-#: .\jiramodule\tests.py:148 .\templates\jira\bulk_operations.html:17
+#: .\jiramodule\tests.py:234 .\templates\jira\bulk_operations.html:17
 msgid "Available operations"
 msgstr "Available operations"
 
@@ -599,7 +599,7 @@ msgstr "Sluiten"
 #: .\templates\base.html:52 .\templates\base.html:71 .\templates\base.html:84
 #: .\templates\jira\jira_config_list.html:136
 #: .\templates\jira\partials\jira_config_modal_form.html:84
-#: .\templates\sprint\sprint_xls_report.html:131
+#: .\templates\sprint\sprint_xls_report.html:135
 msgid "Cancel"
 msgstr "Annuleren"
 
@@ -633,7 +633,7 @@ msgstr "Herladen"
 #: .\templates\dashboard\_toolbar_actions.html:6
 #: .\templates\issue\issue_header.html:19 .\templates\query.html:36
 #: .\templates\query_toolbar_actions.html:4
-#: .\templates\sprint\sprint_toolbar_actions.html:21
+#: .\templates\sprint\sprint_toolbar_actions.html:24
 #: .\templates\sprint\sprint_wia.html:41
 msgid "Open in Jira"
 msgstr "Openen in Jira"
@@ -684,6 +684,7 @@ msgstr "Max. leeftijd"
 #: .\templates\dashboard.html:33 .\templates\dashboard\_aging_table.html:18
 #: .\templates\jira\bulk_labels.html:80 .\templates\jira\bulk_labels.html:136
 #: .\templates\query.html:65 .\templates\sprint\sprint_detail.html:29
+#: .\templates\sprint\sprint_scope_flow.html:57
 #: .\templates\sprint\sprint_wia.html:56
 msgid "Key"
 msgstr "Sleutel"
@@ -700,6 +701,7 @@ msgstr "Leeftijd"
 #: .\templates\dashboard.html:36 .\templates\dashboard\_aging_table.html:22
 #: .\templates\issue\issue_detail.html:37 .\templates\query.html:70
 #: .\templates\sprint\sprint_detail.html:33
+#: .\templates\sprint\sprint_scope_flow.html:62
 msgid "Assignee"
 msgstr "Toegewezen aan"
 
@@ -1147,6 +1149,7 @@ msgstr "Wijzigingen toepassen"
 
 #: .\templates\jira\bulk_labels.html:81 .\templates\jira\bulk_labels.html:137
 #: .\templates\query.html:66 .\templates\sprint\sprint_detail.html:30
+#: .\templates\sprint\sprint_scope_flow.html:58
 msgid "Summary"
 msgstr "Samenvatting"
 
@@ -1562,7 +1565,7 @@ msgstr "Query failed"
 msgid "Results"
 msgstr "Resultaten"
 
-#: .\templates\query.html:58
+#: .\templates\query.html:58 .\templates\sprint\sprint_scope_flow.html:177
 msgid "issue(s)"
 msgstr "issue(s)"
 
@@ -1591,7 +1594,7 @@ msgid "Current Jira configuration"
 msgstr "Huidige Jira-configuratie"
 
 #: .\templates\query.html:157 .\templates\settings.html:103
-#: .\templates\sprint\sprint_xls_report.html:17
+#: .\templates\sprint\sprint_xls_report.html:21
 msgid "Team"
 msgstr "Team"
 
@@ -1711,12 +1714,12 @@ msgid "Name"
 msgstr "Naam"
 
 #: .\templates\sprint\sprint_list.html:43
-#: .\templates\sprint\sprint_xls_report.html:94
+#: .\templates\sprint\sprint_xls_report.html:98
 msgid "Start"
 msgstr "Start"
 
 #: .\templates\sprint\sprint_list.html:44
-#: .\templates\sprint\sprint_xls_report.html:98
+#: .\templates\sprint\sprint_xls_report.html:102
 msgid "End"
 msgstr "Einde"
 
@@ -1731,6 +1734,74 @@ msgstr "Sprintrapport"
 #: .\templates\sprint\sprint_report.html:14
 msgid "Ready-to-open JQL queries by sprint segment."
 msgstr "Ready-to-open JQL queries by sprint segment."
+
+#: .\templates\sprint\sprint_scope_flow.html:9
+#: .\templates\sprint\sprint_scope_flow.html:18
+#: .\templates\sprint\sprint_toolbar_actions.html:18
+msgid "Sprint scope"
+msgstr "Sprintscope"
+
+#: .\templates\sprint\sprint_scope_flow.html:20
+msgid "Planned at the sprint start or added during the sprint, how the issues ended (Jira sprint report) and their current status. Sub-tasks are not counted."
+msgstr "Gepland bij de start van de sprint of tijdens de sprint toegevoegd, hoe de issues eindigden (Jira-sprintrapport) en hun huidige status. Subtaken worden niet meegeteld."
+
+#: .\templates\sprint\sprint_scope_flow.html:24
+msgid "Planned"
+msgstr "Gepland"
+
+#: .\templates\sprint\sprint_scope_flow.html:25
+#: .\templates\sprint\sprint_scope_flow.html:82
+msgid "Added during sprint"
+msgstr "Toegevoegd tijdens de sprint"
+
+#: .\templates\sprint\sprint_scope_flow.html:36
+#: .\templates\sprint\sprint_weighted_throughput_distribution.html:34
+msgid "Aucune donnée à afficher"
+msgstr "Aucune donnée à afficher"
+
+#: .\templates\sprint\sprint_scope_flow.html:45
+msgid "Issues"
+msgstr "Issues"
+
+#: .\templates\sprint\sprint_scope_flow.html:49
+msgid "Show all"
+msgstr "Alles tonen"
+
+#: .\templates\sprint\sprint_scope_flow.html:52
+msgid "Click a flow of the diagram to list its issues."
+msgstr "Klik op een stroom in het diagram om de issues ervan te tonen."
+
+#: .\templates\sprint\sprint_scope_flow.html:59
+msgid "Origin"
+msgstr "Herkomst"
+
+#: .\templates\sprint\sprint_scope_flow.html:60
+msgid "Outcome"
+msgstr "Uitkomst"
+
+#: .\templates\sprint\sprint_scope_flow.html:61
+msgid "Current status"
+msgstr "Huidige status"
+
+#: .\templates\sprint\sprint_scope_flow.html:81
+msgid "Planned at start"
+msgstr "Gepland bij de start"
+
+#: .\templates\sprint\sprint_scope_flow.html:83
+msgid "Completed"
+msgstr "Afgerond"
+
+#: .\templates\sprint\sprint_scope_flow.html:84
+msgid "Not completed"
+msgstr "Niet afgerond"
+
+#: .\templates\sprint\sprint_scope_flow.html:85
+msgid "Removed / carried over"
+msgstr "Verwijderd / doorgeschoven"
+
+#: .\templates\sprint\sprint_scope_flow.html:86
+msgid "Completed in another sprint"
+msgstr "Afgerond in een andere sprint"
 
 #: .\templates\sprint\sprint_toolbar_actions.html:9
 msgid "Report"
@@ -1748,10 +1819,6 @@ msgstr "Histogramme des tickets Done par story points."
 #: .\templates\sprint\sprint_weighted_throughput_distribution.html:23
 msgid "Total tickets Done"
 msgstr "Total tickets Done"
-
-#: .\templates\sprint\sprint_weighted_throughput_distribution.html:34
-msgid "Aucune donnée à afficher"
-msgstr "Aucune donnée à afficher"
 
 #: .\templates\sprint\sprint_weighted_throughput_distribution.html:36
 msgid "Aucun ticket Done avec story points n'a été trouvé pour ce sprint."
@@ -1822,146 +1889,146 @@ msgstr "item"
 msgid "Item age (days)"
 msgstr "Item age (days)"
 
-#: .\templates\sprint\sprint_xls_report.html:15
+#: .\templates\sprint\sprint_xls_report.html:19
 msgid "Capacity sheet"
 msgstr "Capaciteitssheet"
 
-#: .\templates\sprint\sprint_xls_report.html:18
+#: .\templates\sprint\sprint_xls_report.html:22
 msgid "Ajuster la capacite, les conges et les temps recurrents avant generation du fichier."
 msgstr "Ajuster la capacite, les conges et les temps recurrents avant generation du fichier."
 
-#: .\templates\sprint\sprint_xls_report.html:22
+#: .\templates\sprint\sprint_xls_report.html:26
 msgid "Ajouter un dev"
 msgstr "Ontwikkelaar toevoegen"
 
-#: .\templates\sprint\sprint_xls_report.html:39
+#: .\templates\sprint\sprint_xls_report.html:43
 msgid "Reordonner le dev"
 msgstr "Reordonner le dev"
 
-#: .\templates\sprint\sprint_xls_report.html:45
+#: .\templates\sprint\sprint_xls_report.html:49
 msgid "Retirer de la team"
 msgstr "Retirer de la team"
 
-#: .\templates\sprint\sprint_xls_report.html:56
+#: .\templates\sprint\sprint_xls_report.html:60
 msgid "Jira username: matches worklogs and assignees exactly, and adds the time logged outside the sprint to the logged sheet."
 msgstr "Jira-gebruikersnaam: koppelt worklogs en toegewezen personen exact, en voegt de buiten de sprint gelogde tijd toe aan het urenrapport."
 
-#: .\templates\sprint\sprint_xls_report.html:56
+#: .\templates\sprint\sprint_xls_report.html:60
 msgid "Jira ID"
 msgstr "Jira-ID"
 
-#: .\templates\sprint\sprint_xls_report.html:57
+#: .\templates\sprint\sprint_xls_report.html:61
 msgid "Ex: TDPTAV"
 msgstr "Bv.: TDPTAV"
 
-#: .\templates\sprint\sprint_xls_report.html:60
+#: .\templates\sprint\sprint_xls_report.html:64
 msgid "Workload"
 msgstr "Werklast"
 
-#: .\templates\sprint\sprint_xls_report.html:64
+#: .\templates\sprint\sprint_xls_report.html:68
 msgid "Holidays"
 msgstr "Verlof"
 
-#: .\templates\sprint\sprint_xls_report.html:72
+#: .\templates\sprint\sprint_xls_report.html:76
 msgid "Project meetings"
 msgstr "Projectmeetings"
 
-#: .\templates\sprint\sprint_xls_report.html:76
+#: .\templates\sprint\sprint_xls_report.html:80
 msgid "Other meetings"
 msgstr "Andere meetings"
 
-#: .\templates\sprint\sprint_xls_report.html:87
+#: .\templates\sprint\sprint_xls_report.html:91
 msgid "Logged sheet period"
 msgstr "Periode van het urenrapport"
 
-#: .\templates\sprint\sprint_xls_report.html:89
+#: .\templates\sprint\sprint_xls_report.html:93
 msgid "Set by hand."
 msgstr "Handmatig ingesteld."
 
-#: .\templates\sprint\sprint_xls_report.html:89
+#: .\templates\sprint\sprint_xls_report.html:93
 msgid "Jira sprint dates."
 msgstr "Sprintdatums uit Jira."
 
-#: .\templates\sprint\sprint_xls_report.html:90
+#: .\templates\sprint\sprint_xls_report.html:94
 msgid "Jira:"
 msgstr "Jira:"
 
-#: .\templates\sprint\sprint_xls_report.html:102
+#: .\templates\sprint\sprint_xls_report.html:106
 msgid "Save bounds"
 msgstr "Grenzen opslaan"
 
-#: .\templates\sprint\sprint_xls_report.html:104
+#: .\templates\sprint\sprint_xls_report.html:108
 msgid "Reset to Jira dates"
 msgstr "Terug naar de Jira-datums"
 
-#: .\templates\sprint\sprint_xls_report.html:110
+#: .\templates\sprint\sprint_xls_report.html:114
 msgid "Generer le Capacity Sheet"
 msgstr "Capacity Sheet genereren"
 
-#: .\templates\sprint\sprint_xls_report.html:113
+#: .\templates\sprint\sprint_xls_report.html:117
 msgid "One tab per developer: planned vs logged hours and ticket status at sprint start and end."
 msgstr "Eén tabblad per ontwikkelaar: geplande en gelogde uren, ticketstatus bij begin en einde van de sprint."
 
-#: .\templates\sprint\sprint_xls_report.html:114
+#: .\templates\sprint\sprint_xls_report.html:118
 msgid "Generate logged sheet"
 msgstr "Urenrapport genereren"
 
-#: .\templates\sprint\sprint_xls_report.html:125
+#: .\templates\sprint\sprint_xls_report.html:129
 msgid "Value saved."
 msgstr "Waarde opgeslagen."
 
-#: .\templates\sprint\sprint_xls_report.html:126
+#: .\templates\sprint\sprint_xls_report.html:130
 msgid "Unable to save value."
 msgstr "Kan waarde niet opslaan."
 
-#: .\templates\sprint\sprint_xls_report.html:127
+#: .\templates\sprint\sprint_xls_report.html:131
 msgid "Add developer"
 msgstr "Ontwikkelaar toevoegen"
 
-#: .\templates\sprint\sprint_xls_report.html:128
+#: .\templates\sprint\sprint_xls_report.html:132
 msgid "Developer name"
 msgstr "Naam ontwikkelaar"
 
-#: .\templates\sprint\sprint_xls_report.html:129
+#: .\templates\sprint\sprint_xls_report.html:133
 msgid "Ex: Jane Doe"
 msgstr "Ex: Jane Doe"
 
-#: .\templates\sprint\sprint_xls_report.html:130
+#: .\templates\sprint\sprint_xls_report.html:134
 msgid "Create"
 msgstr "Aanmaken"
 
-#: .\templates\sprint\sprint_xls_report.html:132
+#: .\templates\sprint\sprint_xls_report.html:136
 msgid "Developer added."
 msgstr "Ontwikkelaar toegevoegd."
 
-#: .\templates\sprint\sprint_xls_report.html:133
+#: .\templates\sprint\sprint_xls_report.html:137
 msgid "Unable to create developer."
 msgstr "Kan ontwikkelaar niet aanmaken."
 
-#: .\templates\sprint\sprint_xls_report.html:134
+#: .\templates\sprint\sprint_xls_report.html:138
 msgid "Remove developer"
 msgstr "Ontwikkelaar verwijderen"
 
-#: .\templates\sprint\sprint_xls_report.html:135
+#: .\templates\sprint\sprint_xls_report.html:139
 msgid "Remove this developer from the team?"
 msgstr "Remove this developer from the team?"
 
-#: .\templates\sprint\sprint_xls_report.html:136
+#: .\templates\sprint\sprint_xls_report.html:140
 msgid "Remove"
 msgstr "Verwijderen"
 
-#: .\templates\sprint\sprint_xls_report.html:137
+#: .\templates\sprint\sprint_xls_report.html:141
 msgid "Developer removed from team."
 msgstr "Ontwikkelaar uit team verwijderd."
 
-#: .\templates\sprint\sprint_xls_report.html:138
+#: .\templates\sprint\sprint_xls_report.html:142
 msgid "Unable to remove developer."
 msgstr "Kan ontwikkelaar niet verwijderen."
 
-#: .\templates\sprint\sprint_xls_report.html:139
+#: .\templates\sprint\sprint_xls_report.html:143
 msgid "Column order saved."
 msgstr "Column order saved."
 
-#: .\templates\sprint\sprint_xls_report.html:140
+#: .\templates\sprint\sprint_xls_report.html:144
 msgid "Unable to save column order."
 msgstr "Unable to save column order."
