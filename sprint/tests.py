@@ -465,6 +465,8 @@ class LoggedSheetViewTests(TestCase):
     @patch("sprint.views.get_connected_jira_for_user")
     def test_capacity_page_shows_logged_sheet_button(self, mock_get_jira):
         mock_get_jira.return_value = self._fake_jira(self.team)
+        self.user.language = "en"
+        self.user.save(update_fields=["language"])
 
         response = self.client.get(reverse("sprint_xls_report", args=[2446]))
 
@@ -472,6 +474,23 @@ class LoggedSheetViewTests(TestCase):
         self.assertContains(response, "Generate logged sheet")
         self.assertContains(response, 'data-field="jira_username"')
         self.assertContains(response, reverse("sprint-period", args=[2446]))
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_capacity_page_is_translated(self, mock_get_jira):
+        mock_get_jira.return_value = self._fake_jira(self.team)
+        expected = {
+            "fr": ("Générer le rapport des temps prestés", "Enregistrer les bornes", "ID Jira"),
+            "nl": ("Urenrapport genereren", "Grenzen opslaan", "Jira-ID"),
+        }
+        for language, texts in expected.items():
+            with self.subTest(language=language):
+                self.user.language = language
+                self.user.save(update_fields=["language"])
+
+                response = self.client.get(reverse("sprint_xls_report", args=[2446]))
+
+                for text in texts:
+                    self.assertContains(response, text)
 
     def test_weighted_throughput_distribution_groups_done_by_story_points(self):
         jira = SimpleNamespace(
