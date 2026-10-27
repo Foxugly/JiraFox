@@ -27,6 +27,7 @@ class JiraManager:
     SPRINT_ISSUES_CACHE_TTL_SECONDS = 300
     CONNECTION_CACHE_TTL_SECONDS = 3600
     THROUGHPUT_DEFAULT_DAYS = 7
+    WORKLOG_SEARCH_PAGE_SIZE = 50
     RETRY_ATTEMPTS = 2
     RETRY_DELAY_SECONDS = 1
 
@@ -466,13 +467,22 @@ class JiraManager:
         return self._issues_with_worklogs(jql, max_results)
 
     def _issues_with_worklogs(self, jql: str, max_results: int) -> List[Dict[str, Any]]:
-        issues = self._with_retries(
-            self.jira.search_issues,
-            jql,
-            maxResults=max_results,
-            fields="summary,status,assignee,created,timetracking,worklog",
-            expand="changelog",
-        )
+        # Worklogs and changelogs make each issue heavy: one request for hundreds of issues
+        # outlasts the read timeout. Small pages keep every request short.
+        issues = []
+        while len(issues) < max_results:
+            page = self._with_retries(
+                self.jira.search_issues,
+                jql,
+                startAt=len(issues),
+                maxResults=min(self.WORKLOG_SEARCH_PAGE_SIZE, max_results - len(issues)),
+                fields="summary,status,assignee,created,timetracking,worklog",
+                expand="changelog",
+            )
+            issues.extend(page)
+            total = getattr(page, "total", None)
+            if not page or (total is not None and len(issues) >= total):
+                break
         out: List[Dict[str, Any]] = []
         for issue in issues:
             fields = issue.fields

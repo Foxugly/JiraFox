@@ -6,6 +6,7 @@ from django.core.cache import cache
 from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 from jira import JIRA
+from jira.client import ResultList
 from jira.exceptions import JIRAError
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -94,6 +95,27 @@ class JiraManagerSprintListTests(SimpleTestCase):
 
         self.assertEqual(len(sprints), 120)
         self.assertEqual(sprints[-1]["name"], "S119")
+
+
+class JiraManagerWorklogSearchTests(SimpleTestCase):
+    def test_issues_with_worklogs_are_fetched_in_small_pages(self):
+        issues = [
+            SimpleNamespace(key=f"ABC-{i}", fields=SimpleNamespace(worklog=None, timetracking=None))
+            for i in range(120)
+        ]
+        calls = []
+
+        def search_issues(jql, startAt, maxResults, **kwargs):
+            calls.append((startAt, maxResults))
+            return ResultList(issues[startAt:startAt + maxResults], startAt, maxResults, len(issues))
+
+        manager = JiraManager(SimpleNamespace(jira_url="https://jira.example/"))
+        manager._jira = SimpleNamespace(search_issues=search_issues)
+
+        result = manager.get_sprint_issues_with_worklogs(2446)
+
+        self.assertEqual(len(result), 120)
+        self.assertEqual(calls, [(0, 50), (50, 50), (100, 50)])
 
 
 class BulkOperationsServiceTests(TestCase):
