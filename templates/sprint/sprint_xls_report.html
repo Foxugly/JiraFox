@@ -3,6 +3,10 @@
 
 {% block title %}JiraFox - Team {{ team.name }}{% endblock %}
 
+{% block header %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+{% endblock %}
+
 {% block content %}
     <section class="page-shell glass-panel section-stack">
         {% include "sprint/sprint_header.html" %}
@@ -92,11 +96,11 @@
                 </div>
                 <div class="col-auto">
                     <label class="form-label small mb-1" for="period-start">{% trans "Start" %}</label>
-                    <input id="period-start" type="datetime-local" name="start" class="form-control form-control-sm" value="{{ period_start }}" required>
+                    <input id="period-start" type="text" data-period-picker name="start" class="form-control form-control-sm" value="{{ period_start }}" required>
                 </div>
                 <div class="col-auto">
                     <label class="form-label small mb-1" for="period-end">{% trans "End" %}</label>
-                    <input id="period-end" type="datetime-local" name="end" class="form-control form-control-sm" value="{{ period_end }}" required>
+                    <input id="period-end" type="text" data-period-picker name="end" class="form-control form-control-sm" value="{{ period_end }}" required>
                 </div>
                 <div class="col-auto">
                     <button type="submit" class="btn btn-outline-primary btn-sm">{% trans "Save bounds" %}</button>
@@ -142,4 +146,19 @@
         };
     </script>
     <script src="{% static 'js/sprint-xls.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/fr.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/nl.js"></script>
+    <script>
+        // Picker in the page language; the submitted value keeps the datetime-local format.
+        flatpickr("[data-period-picker]", {
+            enableTime: true,
+            time_24hr: true,
+            dateFormat: "Y-m-d\\TH:i",
+            altInput: true,
+            altFormat: "d/m/Y H:i",
+            allowInput: true,
+            locale: flatpickr.l10ns["{{ LANGUAGE_CODE|default:'fr'|lower|slice:':2' }}"] || "default"
+        });
+    </script>
 {% endblock %}
