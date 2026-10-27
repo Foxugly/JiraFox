@@ -192,6 +192,7 @@ BOB = {"displayName": "Dupont, Bob", "name": "BDUPONT"}
 CARL = {"displayName": "Extern, Carl", "name": "CEXTERN"}
 ISSUES = [
     {
+        "id": "101",
         "key": "ABC-1",
         "summary": "Login page",
         "state": "Done",
@@ -215,6 +216,7 @@ ISSUES = [
         "url": "https://jira.example/browse/ABC-1",
     },
     {
+        "id": "102",
         "key": "ABC-2",
         "summary": "Hotfix",
         "state": "In Progress",
@@ -389,20 +391,25 @@ class LoggedSheetViewTests(TestCase):
         self.team = Team.objects.create(name="Core")
         TeamDev.objects.create(team=self.team, dev=Dev.objects.create(name="Alice"), order=0)
 
-    def _fake_jira(self, team, outside_issues=(), failing_usernames=()):
-        self.worklog_queries = []
+    def _fake_jira(self, team, worklogs=(), outside_issues=(), worklog_error=None):
+        self.worklog_windows, self.issue_id_queries = [], []
 
-        def get_issues_with_worklogs_by(username, since):
-            self.worklog_queries.append((username, since))
-            if username in failing_usernames:
-                raise Timeout("read timed out")
-            return list(outside_issues)
+        def get_worklogs_between(start, end):
+            self.worklog_windows.append((start, end))
+            if worklog_error:
+                raise worklog_error
+            return list(worklogs)
+
+        def get_issues_by_ids(issue_ids):
+            self.issue_id_queries.append(sorted(issue_ids))
+            return [dict(issue) for issue in outside_issues if issue["id"] in issue_ids]
 
         return SimpleNamespace(
             cfg=SimpleNamespace(team=team, jira_project_id=7),
             get_sprint=lambda sprint_id: {**SPRINT, "url": "https://jira.example/issues/?jql=sprint%3D2446"},
             get_sprint_issues_with_worklogs=lambda sprint_id: ISSUES,
-            get_issues_with_worklogs_by=get_issues_with_worklogs_by,
+            get_worklogs_between=get_worklogs_between,
+            get_issues_by_ids=get_issues_by_ids,
         )
 
     @patch("sprint.views.get_connected_jira_for_user")
@@ -414,52 +421,43 @@ class LoggedSheetViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn('filename="sprint_2446_logged.xlsx"', response["Content-Disposition"])
         self.assertEqual(load_workbook(BytesIO(response.content)).sheetnames, ["Alice", "Unassigned", "Period"])
-        # No developer has a Jira ID: the time logged outside the sprint cannot be looked up.
-        self.assertEqual(self.worklog_queries, [])
+        # The period's worklogs are read once, between the sprint bounds.
+        self.assertEqual(
+            [(start.isoformat(), end.isoformat()) for start, end in self.worklog_windows],
+            [("2026-03-02T08:00:00+01:00", "2026-03-13T18:00:00+01:00")],
+        )
+        self.assertEqual(self.issue_id_queries, [])
 
     @patch("sprint.views.get_connected_jira_for_user")
-    def test_logged_sheet_adds_time_logged_outside_the_sprint_by_jira_id(self, mock_get_jira):
-        Dev.objects.filter(name="Alice").update(jira_username="AMARTIN")
-        support = {
-            **ISSUES[1],
-            "key": "SUP-9",
-            "summary": "Support",
-            "worklogs": [{"author": ALICE, "started": "2026-03-04T14:00:00.000+0100", "seconds": 7200}],
-        }
-        # ABC-1 is a sprint ticket: returned by both queries, it must be listed once.
-        mock_get_jira.return_value = self._fake_jira(self.team, outside_issues=[ISSUES[0], support])
+    def test_logged_sheet_adds_time_logged_outside_the_sprint(self, mock_get_jira):
+        # Alice has no Jira ID: her worklogs are matched by name, like the sprint's.
+        worklogs = [
+            {"issue_id": "900", "author": ALICE, "started": "2026-03-04T14:00:00.000+0100", "seconds": 7200},
+            # On a sprint ticket: already counted with the sprint, not fetched again.
+            {"issue_id": "101", "author": ALICE, "started": "2026-03-04T15:00:00.000+0100", "seconds": 3600},
+            # Someone outside the team: ignored.
+            {"issue_id": "901", "author": CARL, "started": "2026-03-04T15:00:00.000+0100", "seconds": 3600},
+        ]
+        support = {**ISSUES[1], "id": "900", "key": "SUP-9", "summary": "Support", "worklogs": []}
+        mock_get_jira.return_value = self._fake_jira(self.team, worklogs=worklogs, outside_issues=[support])
 
         response = self.client.get(reverse("sprint-logged-xls-export", args=[2446]))
 
-        self.assertEqual(self.worklog_queries, [("AMARTIN", date(2026, 3, 1))])
+        self.assertEqual(self.issue_id_queries, [["900"]])
         alice = [[cell.value for cell in row] for row in load_workbook(BytesIO(response.content))["Alice"].iter_rows()]
         self.assertEqual([row[0] for row in alice[1:3]], ["ABC-1 - Login page", "SUP-9 - Support"])
         self.assertEqual(alice[2][1:], [None, "Created during sprint", 2.0, "In Progress", "No"])
 
     @patch("sprint.views.get_connected_jira_for_user")
-    def test_logged_sheet_searches_each_developer_and_survives_a_timeout(self, mock_get_jira):
-        Dev.objects.filter(name="Alice").update(jira_username="AMARTIN")
-        bob = Dev.objects.create(name="Bob", jira_username="BDUPONT")
-        TeamDev.objects.create(team=self.team, dev=bob, order=1)
-        support = {
-            **ISSUES[1],
-            "key": "SUP-9",
-            "summary": "Support",
-            "worklogs": [{"author": ALICE, "started": "2026-03-04T14:00:00.000+0100", "seconds": 7200}],
-        }
-        mock_get_jira.return_value = self._fake_jira(
-            self.team, outside_issues=[support], failing_usernames={"BDUPONT"}
-        )
+    def test_logged_sheet_survives_a_worklog_timeout(self, mock_get_jira):
+        mock_get_jira.return_value = self._fake_jira(self.team, worklog_error=Timeout("read timed out"))
 
         response = self.client.get(reverse("sprint-logged-xls-export", args=[2446]))
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual([username for username, _ in self.worklog_queries], ["AMARTIN", "BDUPONT"])
         workbook = load_workbook(BytesIO(response.content))
-        self.assertIn("SUP-9 - Support", [row[0].value for row in workbook["Alice"].iter_rows()])
         period = [[cell.value for cell in row] for row in workbook["Period"].iter_rows()]
         self.assertEqual(period[-1][0], "Not fetched")
-        self.assertIn("Bob (BDUPONT)", period[-1][1])
         self.assertIn("timeout", period[-1][1])
 
     @patch("sprint.views.get_connected_jira_for_user")

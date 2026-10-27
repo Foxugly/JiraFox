@@ -1,3 +1,4 @@
+from datetime import datetime, timezone as dt_timezone
 import re
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
@@ -174,6 +175,38 @@ class JiraManagerStatusHistoryTests(SimpleTestCase):
             result["ABC-59"]["status_changes"],
             [{"at": "2026-03-05T10:00:00.000+0000", "from": "To Do", "to": "Done"}],
         )
+
+
+class JiraManagerWorklogApiTests(SimpleTestCase):
+    def test_worklogs_between_follow_the_updated_pages_and_keep_the_period(self):
+        start = datetime(2026, 10, 5, 16, tzinfo=dt_timezone.utc)
+        end = datetime(2026, 10, 19, 16, tzinfo=dt_timezone.utc)
+        calls = []
+
+        def get_json(path, params=None, base=None, use_post=False):
+            calls.append((path, params, use_post))
+            if path == "worklog/updated" and params["since"] == int(start.timestamp() * 1000):
+                return {"values": [{"worklogId": 1}, {"worklogId": 2}], "lastPage": False, "until": 1800000000000}
+            if path == "worklog/updated":
+                return {"values": [{"worklogId": 3}], "lastPage": True, "until": 1800000001000}
+            author = {"name": "TDPTBC", "displayName": "Remacle, Benjamin"}
+            return [
+                {"issueId": 10, "author": author, "started": "2026-10-06T09:00:00.000+0200", "timeSpentSeconds": 3600},
+                {"issueId": 11, "author": author, "started": "2026-10-22T09:00:00.000+0200", "timeSpentSeconds": 600},
+                {"issueId": 12, "author": author, "started": "2026-10-05T17:00:00.000+0200", "timeSpentSeconds": 900},
+            ]
+
+        manager = JiraManager(SimpleNamespace(jira_url="https://jira.example/"))
+        manager._jira = SimpleNamespace(_get_json=get_json)
+
+        result = manager.get_worklogs_between(start, end)
+
+        self.assertEqual([path for path, _, _ in calls], ["worklog/updated", "worklog/updated", "worklog/list"])
+        self.assertEqual(calls[2][1], {"ids": [1, 2, 3]})
+        self.assertTrue(calls[2][2])
+        # 2026-10-22 is after the period; 17:00+02:00 is 15:00 UTC, before the 16:00 UTC start.
+        self.assertEqual([(w["issue_id"], w["seconds"]) for w in result], [("10", 3600)])
+        self.assertEqual(result[0]["author"]["name"], "TDPTBC")
 
 
 class JiraManagerWorklogSearchTests(SimpleTestCase):

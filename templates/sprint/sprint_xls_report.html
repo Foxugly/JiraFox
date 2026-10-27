@@ -57,7 +57,7 @@
                     </thead>
                     <tbody>
                     <tr>
-                        <td class="fw-bold" title="{% trans 'Jira username: matches worklogs and assignees exactly, and adds the time logged outside the sprint to the logged sheet.' %}">{% trans "Jira ID" %}</td>
+                        <td class="fw-bold" title="{% trans 'Jira username: matches worklogs and assignees exactly. Without it, the developer is matched by name.' %}">{% trans "Jira ID" %}</td>
                         {% for td in teamdevs %}<td><input type="text" class="form-control form-control-sm dev-input" data-update-url="{% url 'update_dev' td.dev.id %}" data-field="jira_username" value="{{ td.dev.jira_username }}" placeholder="{% trans 'Ex: TDPTAV' %}" maxlength="100"></td>{% endfor %}
                     </tr>
                     <tr>

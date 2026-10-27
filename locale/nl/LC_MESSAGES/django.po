@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: JiraFox\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-27 15:39+0100\n"
+"POT-Creation-Date: 2026-10-27 16:28+0100\n"
 "PO-Revision-Date: 2026-09-15 00:00+0200\n"
 "Last-Translator: Codex <codex@local>\n"
 "Language-Team: Dutch <nl@local>\n"
@@ -126,7 +126,7 @@ msgstr "Meerdere Jira-configuraties zijn als huidige gemarkeerd. Behoud er slech
 msgid "No change"
 msgstr "Geen wijziging"
 
-#: .\jiramodule\services\bulk_operations.py:115 .\jiramodule\tests.py:304
+#: .\jiramodule\services\bulk_operations.py:115 .\jiramodule\tests.py:357
 msgid "Updated"
 msgstr "Bijgewerkt"
 
@@ -144,7 +144,7 @@ msgstr "Kan geen verbinding maken met Jira op %(url)s."
 msgid "Not enough information to compute metrics (missing created/status/changelog)."
 msgstr "Not enough information to compute metrics (missing created/status/changelog)."
 
-#: .\jiramodule\tests.py:267 .\templates\jira\bulk_operations.html:17
+#: .\jiramodule\tests.py:320 .\templates\jira\bulk_operations.html:17
 msgid "Available operations"
 msgstr "Available operations"
 
@@ -1926,8 +1926,8 @@ msgid "Retirer de la team"
 msgstr "Retirer de la team"
 
 #: .\templates\sprint\sprint_xls_report.html:60
-msgid "Jira username: matches worklogs and assignees exactly, and adds the time logged outside the sprint to the logged sheet."
-msgstr "Jira-gebruikersnaam: koppelt worklogs en toegewezen personen exact, en voegt de buiten de sprint gelogde tijd toe aan het urenrapport."
+msgid "Jira username: matches worklogs and assignees exactly. Without it, the developer is matched by name."
+msgstr "Jira-gebruikersnaam: koppelt worklogs en toegewezen personen exact. Zonder deze wordt de ontwikkelaar op naam herkend."
 
 #: .\templates\sprint\sprint_xls_report.html:60
 msgid "Jira ID"

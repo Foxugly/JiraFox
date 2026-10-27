@@ -13,7 +13,7 @@ so name mismatches between the developers and Jira are visible instead of silent
 from collections import defaultdict
 from dataclasses import dataclass
 import re
-from datetime import datetime, timedelta
+from datetime import datetime
 from io import BytesIO
 from typing import Iterable
 
@@ -375,7 +375,7 @@ class LoggedWorkbookBuilder:
             ("Start", _excel_datetime(self.start)),
             ("End", _excel_datetime(self.end)),
             ("Bounds", "Set by hand" if self.period else "Jira sprint dates"),
-            *(("Not fetched", f"Time logged outside the sprint by {warning}") for warning in self.warnings),
+            *(("Not fetched", f"Time logged outside the sprint: {warning}") for warning in self.warnings),
         )
         for row_index, (label, value) in enumerate(lines, start=1):
             worksheet.cell(row=row_index, column=1, value=label).font = Font(bold=True)
@@ -384,6 +384,26 @@ class LoggedWorkbookBuilder:
                 cell.number_format = "yyyy-mm-dd hh:mm"
         worksheet.column_dimensions["A"].width = 12
         worksheet.column_dimensions["B"].width = 30
+
+
+def fetch_outside_issues(
+    jira: JiraManager, issues: list[dict], devs: list[DevIdentity], start: datetime, end: datetime
+) -> list[dict]:
+    """
+    Issues outside the sprint on which a team developer logged time during the period, carrying
+    those worklogs only. Found from the worklogs of the period, matched like the sprint's.
+    """
+    sprint_ids = {issue.get("id") for issue in issues}
+    worklogs_by_issue: dict[str, list[dict]] = defaultdict(list)
+    for worklog in jira.get_worklogs_between(start, end):
+        if worklog["issue_id"] not in sprint_ids and resolve_dev(worklog.get("author"), devs):
+            worklogs_by_issue[worklog["issue_id"]].append(worklog)
+    if not worklogs_by_issue:
+        return []
+    outside = jira.get_issues_by_ids(list(worklogs_by_issue))
+    for issue in outside:
+        issue["worklogs"] = worklogs_by_issue.get(issue.get("id"), [])
+    return outside
 
 
 def create_logged_xlsx_bytes(jira: JiraManager, sprint_id: int, now: datetime | None = None) -> bytes:
@@ -397,31 +417,20 @@ def create_logged_xlsx_bytes(jira: JiraManager, sprint_id: int, now: datetime | 
     issues = jira.get_sprint_issues_with_worklogs(sprint_id)
 
     start, end = sprint_window(sprint, now or timezone.now(), period)
-    outside_issues: dict[str, dict] = {}
+    outside_issues: list[dict] = []
     warnings: list[str] = []
     if start:
-        # Jira compares days in its own time zone: widen by a day, rows filter worklogs exactly.
-        since = (start - timedelta(days=1)).date()
-        sprint_keys = {issue.get("key") for issue in issues}
-        # One search per developer: a single search for the whole team outlasted Jira's timeout.
-        for dev in devs:
-            if not dev.jira_username:
-                continue
-            try:
-                found = jira.get_issues_with_worklogs_by(dev.jira_username, since)
-            except (JIRAError, RequestException, JiraUnavailable) as exc:
-                # The sprint itself is still worth reporting: say what is missing instead.
-                warnings.append(f"{dev.name} ({dev.jira_username}): {describe_jira_error(exc)}")
-                continue
-            for issue in found:
-                if issue.get("key") not in sprint_keys:
-                    outside_issues.setdefault(issue.get("key"), issue)
+        try:
+            outside_issues = fetch_outside_issues(jira, issues, devs, start, end)
+        except (JIRAError, RequestException, JiraUnavailable) as exc:
+            # The sprint itself is still worth reporting: say what is missing instead.
+            warnings.append(describe_jira_error(exc))
 
     return LoggedWorkbookBuilder(
         sprint=sprint,
         issues=issues,
         devs=devs,
-        outside_issues=list(outside_issues.values()),
+        outside_issues=outside_issues,
         period=period,
         now=now,
         warnings=warnings,

@@ -1,7 +1,7 @@
 import hashlib
 import time
 import urllib.parse
-from datetime import date
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from django.core.cache import cache
@@ -9,7 +9,7 @@ from jira import JIRA
 
 from ..exceptions import is_transient_jira_error
 from ..models import JiraConfiguration
-from ..utils.datetime_utils import _to_hours
+from ..utils.datetime_utils import _parse_jira_dt, _to_hours
 from .jql import JqlBuilder, STANDARD_ISSUE_TYPES, quote_value
 from .kanban_metrics import KanbanMetricsService
 
@@ -29,6 +29,7 @@ class JiraManager:
     THROUGHPUT_DEFAULT_DAYS = 7
     WORKLOG_SEARCH_PAGE_SIZE = 50
     STATUS_HISTORY_CHUNK_SIZE = 20
+    WORKLOG_UPDATED_MAX_PAGES = 200
     RETRY_ATTEMPTS = 2
     RETRY_DELAY_SECONDS = 1
 
@@ -521,19 +522,58 @@ class JiraManager:
         """
         return self._issues_with_worklogs(f"sprint = {int(sprint_id)} ORDER BY key ASC", max_results)
 
-    def get_issues_with_worklogs_by(
-        self, username: str, since: date, max_results: int = 1000
-    ) -> List[Dict[str, Any]]:
+    def get_worklogs_between(self, start: datetime, end: datetime) -> List[Dict[str, Any]]:
         """
-        Every issue, in any sprint or none, on which `username` logged work and that was
-        updated since `since`. Logging work updates the issue, so this covers every worklog of the
-        period; the caller keeps the worklogs it wants by date.
-        """
-        # No worklogDate: Jira Server scans every worklog for it and the search times out.
-        jql = f'worklogAuthor = {quote_value(username)} AND updated >= "{since:%Y-%m-%d}" ORDER BY key ASC'
-        return self._issues_with_worklogs(jql, max_results)
+        Every worklog, on any issue the account can see, started between `start` and `end`.
 
-    def _issues_with_worklogs(self, jql: str, max_results: int) -> List[Dict[str, Any]]:
+        Read from the worklog API (worklogs updated since `start`, then their details by 1000)
+        rather than a worklogAuthor/worklogDate search, which Jira Server answers too slowly.
+        """
+        ids: List[int] = []
+        since = int(start.timestamp() * 1000)
+        for _ in range(self.WORKLOG_UPDATED_MAX_PAGES):
+            page = self._with_retries(self.jira._get_json, "worklog/updated", params={"since": since})
+            ids.extend(value["worklogId"] for value in page.get("values") or [] if value.get("worklogId"))
+            if page.get("lastPage", True) or not page.get("until") or page["until"] <= since:
+                break
+            since = page["until"]
+
+        out: List[Dict[str, Any]] = []
+        for index in range(0, len(ids), 1000):
+            details = self._with_retries(
+                self.jira._get_json, "worklog/list", params={"ids": ids[index:index + 1000]}, use_post=True
+            )
+            for worklog in details or []:
+                started = _parse_jira_dt(worklog.get("started"))
+                if started is None or started < start or started > end:
+                    continue
+                author = worklog.get("author") or {}
+                out.append(
+                    {
+                        "issue_id": str(worklog.get("issueId")),
+                        "author": {
+                            "displayName": author.get("displayName"),
+                            "emailAddress": author.get("emailAddress"),
+                            "accountId": author.get("accountId"),
+                            "name": author.get("name"),
+                        },
+                        "started": worklog.get("started"),
+                        "hours": _to_hours(worklog.get("timeSpentSeconds")) or 0.0,
+                        "seconds": worklog.get("timeSpentSeconds") or 0,
+                    }
+                )
+        return out
+
+    def get_issues_by_ids(self, issue_ids: List[str]) -> List[Dict[str, Any]]:
+        """The given issues with their status changes, without worklogs (the caller has them)."""
+        out: List[Dict[str, Any]] = []
+        page_size = self.WORKLOG_SEARCH_PAGE_SIZE
+        for index in range(0, len(issue_ids), page_size):
+            chunk = ", ".join(str(int(issue_id)) for issue_id in issue_ids[index:index + page_size])
+            out.extend(self._issues_with_worklogs(f"id in ({chunk}) ORDER BY key ASC", page_size, worklogs=False))
+        return out
+
+    def _issues_with_worklogs(self, jql: str, max_results: int, worklogs: bool = True) -> List[Dict[str, Any]]:
         # Asking for worklogs and changelogs inside the search made each page huge (long-lived
         # issues carry years of history) and outlasted the read timeout. Three light steps instead:
         # the issues alone, their status changes by small chunks, their worklogs one issue at a time.
@@ -555,10 +595,11 @@ class JiraManager:
         out: List[Dict[str, Any]] = []
         for issue in issues:
             fields = issue.fields
-            worklogs = self._with_retries(self.jira.worklogs, issue.key)
+            issue_worklogs = self._with_retries(self.jira.worklogs, issue.key) if worklogs else []
             timetracking = getattr(fields, "timetracking", None)
             out.append(
                 {
+                    "id": str(getattr(issue, "id", "")),
                     "key": issue.key,
                     "summary": getattr(fields, "summary", None) or "",
                     "state": getattr(getattr(fields, "status", None), "name", None),
@@ -576,7 +617,7 @@ class JiraManager:
                             # Exact time: summing the rounded hours drifts (3 x 20 min = 0.99 h).
                             "seconds": getattr(worklog, "timeSpentSeconds", None) or 0,
                         }
-                        for worklog in worklogs or []
+                        for worklog in issue_worklogs or []
                     ],
                     "url": self.get_issue_url(issue.key),
                 }
