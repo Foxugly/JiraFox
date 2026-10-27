@@ -25,6 +25,11 @@
                             <input id="max_results" name="max_results" type="number" min="1" max="500"
                                    class="form-control" value="{{ max_results }}">
                         </div>
+                        <div class="form-check mb-2">
+                            <input id="full" name="full" value="1" class="form-check-input" type="checkbox"
+                                   {% if full %}checked{% endif %}>
+                            <label class="form-check-label" for="full">{% trans "Load full issue details" %}</label>
+                        </div>
                         <div class="ms-auto d-flex flex-wrap gap-2">
                             {% if jira_url_jql %}
                                 <a class="btn btn-outline-primary" href="{{ jira_url_jql }}" target="_blank" rel="noopener">

@@ -153,12 +153,11 @@ class AuthPagesTests(TestCase):
 
     @patch("JiraFox.views.get_connected_jira_for_user")
     def test_query_page_runs_jql(self, mock_get_jira):
-        self.run_jql_calls = []
         mock_get_jira.return_value = SimpleNamespace(
             cfg=SimpleNamespace(jira_project_id="ABC"),
             get_current_sprint=lambda: {"id": 12, "name": "Sprint 12"},
             get_url_jql=lambda query: f"https://jira.example/issues/?jql={query}",
-            run_jql=lambda jql, max_results=None, full=None: self.run_jql_calls.append(full) or [
+            run_jql=lambda jql, max_results=None, full=None: [
                 {
                     "key": "ABC-1",
                     "summary": "Issue title",
@@ -176,8 +175,6 @@ class AuthPagesTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "ABC-1")
         self.assertContains(response, "Issue title")
-        # The table shows no detail field: no changelog to fetch.
-        self.assertEqual(self.run_jql_calls, [False])
 
     @patch("JiraFox.views.get_current_sprint_with_issues")
     @patch("JiraFox.views.get_connected_jira_for_user")
