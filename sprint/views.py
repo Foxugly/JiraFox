@@ -279,6 +279,12 @@ class SprintScopeFlowView(LoginRequiredMixin, TemplateView):
         context["scope"] = build_scope_flow(
             report, jira.get_issue_url, histories=histories, start=start, end=end, status_categories=categories
         )
+        completion = context["scope"]["completion"]
+        context["completion"] = [
+            (_("Planned issues closed"), completion["planned"]),
+            (_("Added issues closed"), completion["added"]),
+            (_("All issues closed"), completion["all"]),
+        ]
         return context
 
 

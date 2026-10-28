@@ -681,6 +681,27 @@ class SprintScopeFlowTests(TestCase):
         first = scope["issues"][0]
         self.assertEqual((first["key"], first["origin"], first["assignee"]), ("BKL1-1", "planned", "Martin, Alice"))
 
+    def test_completion_rates_count_closed_out_of_started_issues(self):
+        scope = build_scope_flow(SCOPE_REPORT, lambda key: key)
+
+        # Removed but in progress at the end: started, not closed. Done in another sprint: left out.
+        self.assertEqual(
+            scope["completion"],
+            {
+                "planned": {"done": 2, "started": 3, "percent": 67},
+                "added": {"done": 1, "started": 2, "percent": 50},
+                "all": {"done": 3, "started": 5, "percent": 60},
+            },
+        )
+
+        # Still To Do at the end: not started, so not counted.
+        histories = {"BKL1-5": {"state": "To Do", "created": "2026-03-05T10:00:00.000+0000", "status_changes": []}}
+        scope = build_scope_flow(
+            SCOPE_REPORT, lambda key: key, histories=histories, start=datetime(2026, 3, 2, tzinfo=dt_timezone.utc),
+            end=datetime(2026, 3, 13, tzinfo=dt_timezone.utc), status_categories={"To Do": "new"},
+        )
+        self.assertEqual(scope["completion"]["added"], {"done": 1, "started": 1, "percent": 100})
+
     def test_statuses_at_sprint_start_and_end_come_from_the_changelog(self):
         start = datetime(2026, 3, 2, 8, tzinfo=dt_timezone.utc)
         end = datetime(2026, 3, 13, 18, tzinfo=dt_timezone.utc)
@@ -748,13 +769,15 @@ class SprintScopeFlowTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "chartjs-chart-sankey")
         self.assertContains(response, "BKL1-5")
-        self.assertEqual(requested, ["BKL1-1", "BKL1-2", "BKL1-3", "BKL1-4", "BKL1-5", "BKL1-6"])
+        self.assertEqual(requested,["BKL1-1", "BKL1-2", "BKL1-3", "BKL1-4", "BKL1-5", "BKL1-6"])
 
         user.language = "fr"
         user.save(update_fields=["language"])
         response = self.client.get(reverse("sprint-scope-flow", args=[2446]))
         self.assertContains(response, "Périmètre du sprint")
         self.assertContains(response, "Retirés / reportés")
+        self.assertContains(response, "Tickets prévus clôturés")
+        self.assertContains(response, "2 clôturés / 3 commencés")
 
     @patch("sprint.views.get_connected_jira_for_user")
     def test_scope_page_falls_back_to_current_statuses_when_history_times_out(self, mock_get_jira):

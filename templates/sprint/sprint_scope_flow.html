@@ -35,6 +35,20 @@
                 </div>
             </div>
 
+            {% if scope.issues %}
+                <div class="row g-3 mb-3">
+                    {% for label, rate in completion %}
+                        <div class="col-12 col-md-4">
+                            <div class="card p-3 h-100" title="{% trans 'Issues closed during the sprint out of the issues started by its end (To Do left out), including the issues removed from the sprint. Issues completed in another sprint are not counted.' %}">
+                                <div class="text-uppercase text-secondary small mb-2">{{ label }}</div>
+                                <div class="metric-value">{% if rate.percent is not None %}{{ rate.percent }} %{% else %}-{% endif %}</div>
+                                <div class="inline-note mt-2">{% blocktrans with done=rate.done started=rate.started %}{{ done }} closed / {{ started }} started{% endblocktrans %}</div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
             <div class="card p-4">
                 {% if scope.issues %}
                     <div style="height: 520px;">

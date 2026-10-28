@@ -23,6 +23,9 @@ OUTCOMES = (
     ("issuesCompletedInAnotherSprint", "done_elsewhere"),
 )
 
+# Completion rates: planned issues, added issues, all of them.
+COMPLETION_GROUPS = (PLANNED, ADDED, "all")
+
 # Diagram columns, left to right.
 COLUMNS = {"start": 0, "origin": 1, "outcome": 2, "end": 3}
 
@@ -87,6 +90,7 @@ def build_scope_flow(
         for step in steps:
             counts[step] = counts.get(step, 0) + 1
 
+    completion = completion_rates(issues, categories)
     flows = [{"from": source, "to": target, "flow": count} for (source, target), count in counts.items()]
     nodes = {node for flow in flows for node in (flow["from"], flow["to"])}
     return {
@@ -95,5 +99,28 @@ def build_scope_flow(
         "status_categories": categories,
         "issues": issues,
         "totals": {origin: sum(1 for issue in issues if issue["origin"] == origin) for origin in ORIGINS},
+        "completion": completion,
         "has_history": bool(histories),
     }
+
+
+def completion_rates(issues: list[dict], status_categories: dict[str, str]) -> dict[str, dict]:
+    """
+    Per group: issues closed in the sprint out of the issues started by its end (not "To Do"),
+    whatever Jira's bucket: an issue removed from the sprint still counts by its status at the end.
+    Issues completed in another sprint are left out.
+    """
+    rates = {}
+    for group in COMPLETION_GROUPS:
+        done = started = 0
+        for issue in issues:
+            if group != "all" and issue["origin"] != group or issue["outcome"] == "done_elsewhere":
+                continue
+            category = status_categories.get(issue["status_end"])
+            if issue["outcome"] == "done" or category == "done":
+                done += 1
+            elif category == "new":
+                continue
+            started += 1
+        rates[group] = {"done": done, "started": started, "percent": round(100 * done / started) if started else None}
+    return rates
