@@ -19,6 +19,8 @@ from sprint.logged_report import (
     LoggedWorkbookBuilder,
     build_dev_rows,
     build_unassigned_rows,
+    planned_assignee_at,
+    planned_hours_at,
     logged_hours,
     person_matches_dev,
     resolve_dev,
@@ -200,6 +202,13 @@ ISSUES = [
         "created": "2026-02-20T10:00:00.000+0100",
         "assignee": ALICE,
         "original_estimate_hours": 8.0,
+        # 8h estimated, 4h logged before the sprint: 4h left to plan at the sprint start.
+        "remaining_estimate_seconds": 0,
+        "estimate_changes": [
+            {"at": "2026-02-27T09:00:00.000+0100", "from": "28800", "to": "14400"},
+            {"at": "2026-03-04T09:00:00.000+0100", "from": "14400", "to": "0"},
+        ],
+        "assignee_changes": [],
         "status_changes": [
             {"at": "2026-02-25T10:00:00.000+0100", "from": "Open", "to": "Ready"},
             {"at": "2026-03-03T09:00:00.000+0100", "from": "Ready", "to": "In Progress"},
@@ -224,6 +233,9 @@ ISSUES = [
         "created": "2026-03-05T10:00:00.000+0100",
         "assignee": BOB,
         "original_estimate_hours": None,
+        "remaining_estimate_seconds": 7200,
+        "estimate_changes": [],
+        "assignee_changes": [],
         "status_changes": [],
         "worklogs": [],
         "url": "https://jira.example/browse/ABC-2",
@@ -260,20 +272,20 @@ class LoggedReportTests(SimpleTestCase):
         self.assertEqual(workbook.sheetnames, ["Alice", "Bob", "Unassigned", "Period"])
         alice = [[cell.value for cell in row] for row in workbook["Alice"].iter_rows()]
         self.assertEqual(alice[0], list(HEADERS))
-        self.assertEqual(alice[1], ["ABC-1 - Login page", 8.0, "Ready", 5.5, "Done", "Yes"])
-        self.assertEqual(alice[2], ["Total", "=SUM(B2:B2)", None, "=SUM(D2:D2)", None, None])
-        self.assertEqual(alice[3], ["Outside sprint", None, None, '=SUMIF(F2:F2,"No",D2:D2)', None, None])
+        self.assertEqual(alice[1], ["ABC-1 - Login page", 4.0, "Ready", 5.5, "=B2-D2", "Done", "Yes"])
+        self.assertEqual(alice[2], ["Total", "=SUM(B2:B2)", None, "=SUM(D2:D2)", "=SUM(E2:E2)", None, None])
+        self.assertEqual(alice[3], ["Outside sprint", None, None, '=SUMIF(G2:G2,"No",D2:D2)', None, None, None])
 
         bob = [[cell.value for cell in row] for row in workbook["Bob"].iter_rows()]
-        # ABC-1 because Bob logged on it, ABC-2 because it is assigned to him.
-        self.assertEqual(bob[1], ["ABC-1 - Login page", 8.0, "Ready", 1.0, "Done", "Yes"])
-        self.assertEqual(bob[2], ["ABC-2 - Hotfix", 0.0, "Created during sprint", 0.0, "In Progress", "Yes"])
+        # ABC-1 because Bob logged on it (planned for Alice), ABC-2 because it is assigned to him.
+        self.assertEqual(bob[1], ["ABC-1 - Login page", None, "Ready", 1.0, "=B2-D2", "Done", "Yes"])
+        self.assertEqual(bob[2], ["ABC-2 - Hotfix", 2.0, "Created during sprint", 0.0, "=B3-D3", "In Progress", "Yes"])
         self.assertEqual(bob[3][:4], ["Total", "=SUM(B2:B3)", None, "=SUM(D2:D3)"])
 
         unassigned = [[cell.value for cell in row] for row in workbook["Unassigned"].iter_rows()]
         self.assertEqual(unassigned[0], list(UNASSIGNED_HEADERS))
         self.assertEqual(
-            unassigned[1], ["ABC-1 - Login page", 8.0, "Ready", 2.0, "Done", "Extern, Carl (CEXTERN)"]
+            unassigned[1], ["ABC-1 - Login page", None, "Ready", 2.0, "Done", "Extern, Carl (CEXTERN)"]
         )
         self.assertEqual(unassigned[2][:4], ["Total", "=SUM(B2:B2)", None, "=SUM(D2:D2)"])
 
@@ -285,11 +297,39 @@ class LoggedReportTests(SimpleTestCase):
         self.assertEqual(
             [(row["ticket"], row["author"], row["planned_hours"], row["logged_hours"]) for row in rows],
             [
-                ("ABC-1 - Login page", "Dupont, Bob (BDUPONT)", 8.0, 1.0),
-                # The ticket's planned time is only counted on its first row.
+                # Planned for Alice: her planned time is on her tab, not here.
+                ("ABC-1 - Login page", "Dupont, Bob (BDUPONT)", None, 1.0),
                 ("ABC-1 - Login page", "Extern, Carl (CEXTERN)", None, 2.0),
             ],
         )
+        # Planned for someone outside the team: shown here, on the ticket's first row only.
+        rows = build_unassigned_rows([{**ISSUES[0], "assignee": CARL}], ["Alice"], start, end)
+        self.assertEqual([row["planned_hours"] for row in rows], [4.0, None])
+
+    def test_planned_time_is_the_remaining_estimate_at_sprint_start_for_the_dev_assigned_then(self):
+        start, end = sprint_window(SPRINT, NOW)
+        # Planned for Bob, handed over to Alice during the sprint.
+        issue = {
+            **ISSUES[0],
+            "assignee_changes": [{"at": "2026-03-05T09:00:00.000+0100", "from": BOB, "to": ALICE}],
+            "worklogs": [],
+        }
+
+        self.assertEqual(planned_hours_at(issue, start), 4.0)
+        self.assertEqual(planned_assignee_at(issue, start), BOB)
+        bob = build_dev_rows([issue], "Bob", start, end, ["Alice", "Bob"])
+        alice = build_dev_rows([issue], "Alice", start, end, ["Alice", "Bob"])
+        self.assertEqual([(row["planned_hours"], row["logged_hours"]) for row in bob], [(4.0, 0)])
+        self.assertEqual([(row["planned_hours"], row["logged_hours"]) for row in alice], [(None, 0)])
+
+        # Unassigned and not estimated at the start: the first assignee and estimate given count.
+        issue = {
+            **ISSUES[0],
+            "assignee_changes": [{"at": "2026-03-05T09:00:00.000+0100", "from": None, "to": ALICE}],
+            "estimate_changes": [{"at": "2026-03-05T09:00:00.000+0100", "from": None, "to": "10800"}],
+        }
+        self.assertEqual(planned_hours_at(issue, start), 3.0)
+        self.assertEqual(planned_assignee_at(issue, start), ALICE)
 
     def test_sheet_titles_are_valid_and_unique(self):
         used: set[str] = set()
@@ -357,7 +397,7 @@ class LoggedReportTests(SimpleTestCase):
         rows = build_dev_rows(ISSUES, "Alice", start, end, ["Alice", "Bob"], [support])
         self.assertEqual(
             [(row["ticket"], row["planned_hours"], row["logged_hours"], row["in_sprint"]) for row in rows],
-            [("ABC-1 - Login page", 8.0, 5.5, True), ("SUP-9 - Support", None, 1.5, False)],
+            [("ABC-1 - Login page", 4.0, 5.5, True), ("SUP-9 - Support", None, 1.5, False)],
         )
         # Bob is the assignee but logged nothing on it: an outside ticket only shows up with logged time.
         self.assertEqual(len(build_dev_rows(ISSUES, "Bob", start, end, ["Alice", "Bob"], [support])), 2)
@@ -447,7 +487,7 @@ class LoggedSheetViewTests(TestCase):
         self.assertEqual(self.issue_id_queries, [["900"]])
         alice = [[cell.value for cell in row] for row in load_workbook(BytesIO(response.content))["Alice"].iter_rows()]
         self.assertEqual([row[0] for row in alice[1:3]], ["ABC-1 - Login page", "SUP-9 - Support"])
-        self.assertEqual(alice[2][1:], [None, "Created during sprint", 2.0, "In Progress", "No"])
+        self.assertEqual(alice[2][1:], [None, "Created during sprint", 2.0, "=B3-D3", "In Progress", "No"])
 
     @patch("sprint.views.get_connected_jira_for_user")
     def test_logged_sheet_survives_a_worklog_timeout(self, mock_get_jira):

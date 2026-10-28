@@ -152,7 +152,11 @@ class JiraManagerStatusHistoryTests(SimpleTestCase):
         def search_issues(jql, **kwargs):
             queries.append((jql, kwargs))
             change = SimpleNamespace(field="status", fromString="To Do", toString="Done")
-            history = SimpleNamespace(created="2026-03-05T10:00:00.000+0000", items=[change])
+            estimate = SimpleNamespace(field="timeestimate", fromString="7200", toString="0", **{"from": "7200", "to": "0"})
+            assignee = SimpleNamespace(
+                field="assignee", fromString=None, toString="Martin, Alice", **{"from": None, "to": "AMARTIN"}
+            )
+            history = SimpleNamespace(created="2026-03-05T10:00:00.000+0000", items=[change, estimate, assignee])
             return [
                 SimpleNamespace(
                     key=key,
@@ -174,6 +178,19 @@ class JiraManagerStatusHistoryTests(SimpleTestCase):
         self.assertEqual(
             result["ABC-59"]["status_changes"],
             [{"at": "2026-03-05T10:00:00.000+0000", "from": "To Do", "to": "Done"}],
+        )
+        self.assertEqual(
+            result["ABC-59"]["estimate_changes"], [{"at": "2026-03-05T10:00:00.000+0000", "from": "7200", "to": "0"}]
+        )
+        self.assertEqual(
+            result["ABC-59"]["assignee_changes"],
+            [
+                {
+                    "at": "2026-03-05T10:00:00.000+0000",
+                    "from": None,
+                    "to": {"name": "AMARTIN", "displayName": "Martin, Alice"},
+                }
+            ],
         )
 
 

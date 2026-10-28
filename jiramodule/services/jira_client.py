@@ -20,6 +20,13 @@ def _status_category_key(fields: Any) -> Optional[str]:
     return getattr(category, "key", None)
 
 
+def _changed_person(username: str | None, display_name: str | None) -> Dict[str, Any] | None:
+    """An assignee as the changelog gives it, shaped like a serialized assignee."""
+    if not username and not display_name:
+        return None
+    return {"name": username, "displayName": display_name}
+
+
 class JiraManager:
     JIRA_ONLY_STANDARD_TYPES = "issuetype in standardIssueTypes()"
     # (connect, read) seconds, passed to requests by the jira client.
@@ -358,8 +365,9 @@ class JiraManager:
 
     def get_status_histories(self, keys: List[str]) -> Dict[str, Dict[str, Any]]:
         """
-        {key: {"state", "created", "status_changes"}} for the given issues: just enough to rebuild
-        their status at any moment. Only the status field and the changelog are fetched.
+        {key: {"state", "created", "status_changes", "estimate_changes", "assignee_changes"}} for the
+        given issues: just enough to rebuild their status, remaining estimate (seconds) and assignee
+        at any moment. Only the status field and the changelog are fetched.
         """
         out: Dict[str, Dict[str, Any]] = {}
         # A changelog can be very long: few issues per request keeps each answer small.
@@ -375,19 +383,34 @@ class JiraManager:
             )
             for issue in issues:
                 histories = getattr(getattr(issue, "changelog", None), "histories", None) or []
+                changes = [
+                    (getattr(history, "created", None), item)
+                    for history in histories
+                    for item in (getattr(history, "items", None) or [])
+                ]
                 out[issue.key] = {
                     "key": issue.key,
                     "state": getattr(getattr(issue.fields, "status", None), "name", None),
                     "created": getattr(issue.fields, "created", None),
                     "status_changes": [
-                        {
-                            "at": getattr(history, "created", None),
-                            "from": getattr(item, "fromString", None),
-                            "to": getattr(item, "toString", None),
-                        }
-                        for history in histories
-                        for item in (getattr(history, "items", None) or [])
+                        {"at": at, "from": getattr(item, "fromString", None), "to": getattr(item, "toString", None)}
+                        for at, item in changes
                         if getattr(item, "field", "") == "status"
+                    ],
+                    # Raw values: seconds for the estimate, usernames for the assignee.
+                    "estimate_changes": [
+                        {"at": at, "from": getattr(item, "from", None), "to": getattr(item, "to", None)}
+                        for at, item in changes
+                        if getattr(item, "field", "") == "timeestimate"
+                    ],
+                    "assignee_changes": [
+                        {
+                            "at": at,
+                            "from": _changed_person(getattr(item, "from", None), getattr(item, "fromString", None)),
+                            "to": _changed_person(getattr(item, "to", None), getattr(item, "toString", None)),
+                        }
+                        for at, item in changes
+                        if getattr(item, "field", "") == "assignee"
                     ],
                 }
         return out
@@ -608,7 +631,12 @@ class JiraManager:
                     "original_estimate_hours": _to_hours(
                         getattr(timetracking, "originalEstimateSeconds", None) if timetracking else None
                     ),
+                    "remaining_estimate_seconds": (
+                        getattr(timetracking, "remainingEstimateSeconds", None) if timetracking else None
+                    ),
                     "status_changes": (histories.get(issue.key) or {}).get("status_changes") or [],
+                    "estimate_changes": (histories.get(issue.key) or {}).get("estimate_changes") or [],
+                    "assignee_changes": (histories.get(issue.key) or {}).get("assignee_changes") or [],
                     "worklogs": [
                         {
                             "author": self._serialize_assignee(getattr(worklog, "author", None)),

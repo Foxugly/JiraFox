@@ -1,8 +1,12 @@
 """
 "Logged sheet": one tab per team developer listing, for each ticket the developer worked on (time
-logged during the sprint) or is assigned to in the sprint:
+logged during the sprint), is assigned to, or was assigned to at the sprint start:
 
-    Ticket | Planned (h) | Status at sprint start | Logged (h) | Status at sprint end | In sprint
+    Ticket | Planned (h) | Status at sprint start | Logged (h) | Gap (h) | Status at sprint end | In sprint
+
+Planned time is the sprint's load: the ticket's remaining estimate at the sprint start (its first
+estimate if created later), on the tab of the developer assigned at that moment only, both rebuilt
+from the changelog. Gap = planned - logged, so time on tickets planned for others counts as unplanned.
 
 Tickets outside the sprint the developer logged time on come last ("In sprint" = No, no planned
 time), followed by a Total row and an "Outside sprint" subtotal. An "Unassigned" tab lists the
@@ -30,8 +34,10 @@ from team.models import TeamDev
 
 from .models import SprintPeriod
 
-HEADERS = ("Ticket", "Planned (h)", "Status at sprint start", "Logged (h)", "Status at sprint end", "In sprint")
-UNASSIGNED_HEADERS = HEADERS[:5] + ("Logged by",)
+HEADERS = (
+    "Ticket", "Planned (h)", "Status at sprint start", "Logged (h)", "Gap (h)", "Status at sprint end", "In sprint"
+)
+UNASSIGNED_HEADERS = ("Ticket", "Planned (h)", "Status at sprint start", "Logged (h)", "Status at sprint end", "Logged by")
 UNASSIGNED_SHEET_TITLE = "Unassigned"
 PERIOD_SHEET_TITLE = "Period"
 CREATED_DURING_SPRINT = "Created during sprint"
@@ -118,26 +124,65 @@ def resolve_dev(person: dict | None, devs: Iterable[DevIdentity | str]) -> DevId
     return None
 
 
-def status_at(issue: dict, moment: datetime) -> str | None:
-    """Status of the issue at `moment`, rebuilt from its changelog. None if it did not exist yet."""
-    created = parse_jira_datetime(issue.get("created"))
-    if created and created > moment:
-        return None
-
-    changes = sorted(
+def _sorted_changes(changes: Iterable[dict]) -> list[tuple]:
+    return sorted(
         (
             (when, change.get("from"), change.get("to"))
-            for change in issue.get("status_changes") or []
+            for change in changes
             if (when := parse_jira_datetime(change.get("at")))
         ),
         key=lambda change: change[0],
     )
+
+
+def _value_at(changes: Iterable[dict], moment: datetime, current):
+    """A field's value at `moment`: the last change before it, else the first change's old value."""
+    changes = _sorted_changes(changes)
     passed = [change for change in changes if change[0] <= moment]
     if passed:
         return passed[-1][2]
     if changes:
         return changes[0][1]
-    return issue.get("state")
+    return current
+
+
+def _first_value_set(changes: Iterable[dict]):
+    return next((new for _, _, new in _sorted_changes(changes) if new), None)
+
+
+def status_at(issue: dict, moment: datetime) -> str | None:
+    """Status of the issue at `moment`, rebuilt from its changelog. None if it did not exist yet."""
+    created = parse_jira_datetime(issue.get("created"))
+    if created and created > moment:
+        return None
+    return _value_at(issue.get("status_changes") or [], moment, issue.get("state"))
+
+
+def _planning_moment(issue: dict, start: datetime) -> datetime:
+    # A ticket created during the sprint is planned as it was created.
+    created = parse_jira_datetime(issue.get("created"))
+    return max(start, created) if created else start
+
+
+def planned_hours_at(issue: dict, start: datetime | None) -> float:
+    """Remaining estimate of the issue at the sprint start (its first estimate if none was set yet)."""
+    changes = issue.get("estimate_changes") or []
+    current = issue.get("remaining_estimate_seconds")
+    seconds = current if start is None else _value_at(changes, _planning_moment(issue, start), current)
+    if seconds in (None, ""):
+        seconds = _first_value_set(changes)
+    try:
+        return seconds_to_hours(float(seconds or 0))
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def planned_assignee_at(issue: dict, start: datetime | None) -> dict | None:
+    """Assignee of the issue at the sprint start; the first one given later if it had none."""
+    if start is None:
+        return issue.get("assignee")
+    changes = issue.get("assignee_changes") or []
+    return _value_at(changes, _planning_moment(issue, start), issue.get("assignee")) or _first_value_set(changes)
 
 
 def sprint_window(
@@ -192,13 +237,16 @@ def logged_hours(
     return seconds_to_hours(total)
 
 
-def issue_row(issue: dict, hours: float, start: datetime | None, end: datetime, in_sprint: bool = True) -> dict:
+def issue_row(
+    issue: dict, hours: float, start: datetime | None, end: datetime, in_sprint: bool = True, planned: bool = True
+) -> dict:
+    """`planned`: whether the ticket's planned time goes on this row (one developer's, once)."""
     start_status = status_at(issue, start) if start else issue.get("state")
     return {
         "ticket": f"{issue.get('key', '')} - {issue.get('summary', '')}",
         "url": issue.get("url") or "",
         # Planned time is the sprint's: a ticket outside the sprint was not planned in it.
-        "planned_hours": float(issue.get("original_estimate_hours") or 0) if in_sprint else None,
+        "planned_hours": planned_hours_at(issue, start) if in_sprint and planned else None,
         "start_status": start_status or CREATED_DURING_SPRINT,
         "logged_hours": hours,
         "end_status": status_at(issue, end) or "",
@@ -219,9 +267,10 @@ def build_dev_rows(
     rows = []
     for issue in issues:
         hours = logged_hours(issue, dev, start, end, devs)
-        if hours <= 0 and not person_matches_dev(issue.get("assignee"), dev):
+        planned = resolve_dev(planned_assignee_at(issue, start), devs) == dev
+        if hours <= 0 and not planned and not person_matches_dev(issue.get("assignee"), dev):
             continue
-        rows.append(issue_row(issue, hours, start, end))
+        rows.append(issue_row(issue, hours, start, end, planned=planned))
     for issue in outside_issues:
         hours = logged_hours(issue, dev, start, end, devs)
         if hours > 0:
@@ -252,12 +301,11 @@ def build_unassigned_rows(
             if resolve_dev(author, devs):
                 continue
             seconds_by_author[author_label(author)] += worklog_seconds(worklog)
+        # Planned time shows here only when planned for nobody in the team, and once per ticket.
+        planned_outside_team = resolve_dev(planned_assignee_at(issue, start), devs) is None
         for index, (author, seconds) in enumerate(sorted(seconds_by_author.items())):
-            row = {**issue_row(issue, seconds_to_hours(seconds), start, end), "author": author}
-            if index:
-                # Planned time belongs to the ticket: count it once, not once per author.
-                row["planned_hours"] = None
-            rows.append(row)
+            row = issue_row(issue, seconds_to_hours(seconds), start, end, planned=planned_outside_team and not index)
+            rows.append({**row, "author": author})
     return rows
 
 
@@ -282,7 +330,7 @@ class LoggedWorkbookBuilder:
     header_fill = PatternFill(start_color="ff6565", end_color="ff6565", fill_type="solid")
     total_fill = PatternFill(start_color="ff8f8f", end_color="ff8f8f", fill_type="solid")
     border = Border(*(Side(style="thin"),) * 4)
-    column_widths = (70, 13, 26, 13, 26, 34)
+    column_widths = {HEADERS: (70, 13, 26, 13, 13, 26, 12), UNASSIGNED_HEADERS: (70, 13, 26, 13, 26, 34)}
 
     def __init__(
         self,
@@ -327,11 +375,16 @@ class LoggedWorkbookBuilder:
         self.workbook.save(buffer)
         return buffer.getvalue()
 
-    def _row_values(self, row: dict, headers: tuple[str, ...]) -> tuple:
-        values = (row["ticket"], row["planned_hours"], row["start_status"], row["logged_hours"], row["end_status"])
+    def _row_values(self, row: dict, headers: tuple[str, ...], row_index: int) -> tuple:
         if headers == UNASSIGNED_HEADERS:
-            return values + (row["author"],)
-        return values + ("Yes" if row["in_sprint"] else "No",)
+            return (
+                row["ticket"], row["planned_hours"], row["start_status"], row["logged_hours"], row["end_status"],
+                row["author"],
+            )
+        return (
+            row["ticket"], row["planned_hours"], row["start_status"], row["logged_hours"],
+            f"=B{row_index}-D{row_index}", row["end_status"], "Yes" if row["in_sprint"] else "No",
+        )
 
     def _populate(self, worksheet, rows: list[dict], headers: tuple[str, ...] = HEADERS) -> None:
         for column, header in enumerate(headers, start=1):
@@ -342,7 +395,7 @@ class LoggedWorkbookBuilder:
         worksheet.freeze_panes = "A2"
 
         for row_index, row in enumerate(rows, start=2):
-            for column, value in enumerate(self._row_values(row, headers), start=1):
+            for column, value in enumerate(self._row_values(row, headers, row_index), start=1):
                 worksheet.cell(row=row_index, column=column, value=value).border = self.border
             if row["url"]:
                 worksheet.cell(row=row_index, column=1).hyperlink = row["url"]
@@ -356,8 +409,9 @@ class LoggedWorkbookBuilder:
             }
         ]
         if headers == HEADERS:
+            total_rows[0][5] = f"=SUM(E2:E{last_data_row})" if rows else 0
             total_rows.append(
-                {1: "Outside sprint", 4: f'=SUMIF(F2:F{last_data_row},"No",D2:D{last_data_row})' if rows else 0}
+                {1: "Outside sprint", 4: f'=SUMIF(G2:G{last_data_row},"No",D2:D{last_data_row})' if rows else 0}
             )
         for offset, totals in enumerate(total_rows):
             for column in range(1, len(headers) + 1):
@@ -366,7 +420,7 @@ class LoggedWorkbookBuilder:
                 cell.fill = self.total_fill
                 cell.border = self.border
 
-        for column, width in enumerate(self.column_widths[: len(headers)], start=1):
+        for column, width in enumerate(self.column_widths[headers], start=1):
             worksheet.column_dimensions[chr(ord("A") + column - 1)].width = width
 
     def _populate_period(self, worksheet) -> None:
