@@ -193,45 +193,4 @@
             }
         });
     });
-
-    document.querySelectorAll(".js-current-switch").forEach((toggle) => {
-        toggle.addEventListener("change", async (event) => {
-            const input = event.currentTarget;
-            const configId = input.dataset.configId;
-            const wantCurrent = input.checked;
-
-            if (wantCurrent) {
-                document.querySelectorAll(".js-current-switch").forEach((other) => {
-                    if (other !== input) other.checked = false;
-                });
-            }
-
-            const body = new FormData();
-            body.append("config_id", configId);
-            body.append("current", String(wantCurrent));
-
-            try {
-                const data = await fetchJson(page.setCurrentUrl, {
-                    method: "POST",
-                    headers: {
-                        "X-Requested-With": "XMLHttpRequest",
-                        "X-CSRFToken": getCookie("csrftoken"),
-                    },
-                    credentials: "same-origin",
-                    body,
-                });
-
-                if (!data.ok) {
-                    notify(data.error || i18n.unable_to_save_current_configuration || "Unable to save current configuration.", "danger", 4500);
-                    window.location.reload();
-                    return;
-                }
-
-                notify(i18n.current_configuration_updated || "Current configuration updated.", "success");
-            } catch (error) {
-                notify(error.message, "danger", 4500);
-                window.location.reload();
-            }
-        });
-    });
 })();

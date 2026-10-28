@@ -16,7 +16,6 @@ from jiramodule.services.jira_config_management import (
     build_jira_config_form,
     get_user_jira_config_or_404,
     save_jira_config_form,
-    set_current_config,
     test_jira_configuration,
 )
 from jiramodule.services.jira_config_service import get_connected_jira_for_user
@@ -166,17 +165,4 @@ def jira_config_modal_edit(request, pk: int):
 def jira_config_delete(request, pk: int):
     config = get_user_jira_config_or_404(request.user, pk)
     config.delete()
-    return JsonResponse({"ok": True})
-
-
-@login_required
-@require_POST
-def jira_config_set_current(request):
-    try:
-        config_id = int(request.POST["config_id"])
-    except (KeyError, TypeError, ValueError):
-        return JsonResponse({"ok": False, "error": "Invalid config_id."}, status=400)
-    want_current = request.POST.get("current") == "true"
-    config = get_user_jira_config_or_404(request.user, config_id)
-    set_current_config(config=config, want_current=want_current)
     return JsonResponse({"ok": True})

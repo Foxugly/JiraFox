@@ -78,6 +78,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 "django.template.context_processors.i18n",
+                "team.context_processors.projects",
             ],
             'libraries': {
                 'datetime_filters': 'templatetags.datetime_filters',

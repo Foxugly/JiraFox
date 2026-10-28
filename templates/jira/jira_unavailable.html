@@ -23,7 +23,7 @@
             <div class="page-hero-copy mx-auto">
                 <h1 class="hero-title fs-1 mt-0 mb-2">{{ error.message }}</h1>
                 {% if not_configured %}
-                    <p class="text-secondary mb-0">{% trans "JiraFox reads everything live from Jira: complete your Jira configuration to use this page." %}</p>
+                    <p class="text-secondary mb-0">{% trans "JiraFox reads everything live from Jira: complete your project and your Jira connection to use this page." %}</p>
                 {% elif not not_found %}
                     <p class="text-secondary mb-0">{% trans "Jira could not be reached or refused the request. Check the URL and the API token, then try again." %}</p>
                 {% endif %}
@@ -37,8 +37,11 @@
                 </div>
             {% endif %}
             <div class="d-flex flex-wrap gap-2">
-                <a class="btn btn-primary" href="{% url 'jira_config_list' %}">
-                    <i class="fa-brands fa-jira me-2"></i>{% trans "Open my Jira configurations" %}
+                <a class="btn btn-primary" href="{% url 'project_list' %}">
+                    <i class="fa-solid fa-folder-tree me-2"></i>{% trans "My projects" %}
+                </a>
+                <a class="btn btn-outline-primary" href="{% url 'jira_config_list' %}">
+                    <i class="fa-brands fa-jira me-2"></i>{% trans "My Jira connections" %}
                 </a>
                 {% if not not_configured %}
                     <a class="btn btn-outline-secondary" href="{{ request.get_full_path }}">

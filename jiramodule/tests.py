@@ -21,7 +21,8 @@ from customuser.models import CustomUser
 from jiramodule.exceptions import JiraNotConfigured, describe_jira_error, is_transient_jira_error
 from jiramodule.forms import JiraConfigurationForm
 from jiramodule.models import JiraConfiguration
-from jiramodule.selectors import get_current_jira_config_for_user
+from jiramodule.selectors import JiraContext, get_current_jira_context_for_user
+from team.models import Team
 from jiramodule.services.jira_client import JiraManager
 from jiramodule.services.jira_config_management import save_jira_config_form
 from jiramodule.services.jira_config_service import get_connected_jira_for_user
@@ -375,18 +376,6 @@ class BulkOperationsViewsTests(TestCase):
 
 
 class JiraConfigurationModelTests(TestCase):
-    def test_set_as_current_clears_previous_current_config(self):
-        user = CustomUser.objects.create_user(username="alice", password="secret")
-        old_config = JiraConfiguration.objects.create(user=user, jira_url="https://jira.old", current=True)
-        new_config = JiraConfiguration.objects.create(user=user, jira_url="https://jira.new", current=False)
-
-        new_config.set_as_current()
-
-        old_config.refresh_from_db()
-        new_config.refresh_from_db()
-        self.assertFalse(old_config.current)
-        self.assertTrue(new_config.current)
-
     def test_mark_test_result_truncates_error(self):
         user = CustomUser.objects.create_user(username="bob", password="secret")
         config = JiraConfiguration.objects.create(user=user, jira_url="https://jira.local")
@@ -402,32 +391,49 @@ class JiraConfigurationSelectionTests(TestCase):
     def setUp(self):
         self.user = CustomUser.objects.create_user(username="carol", password="secret")
 
-    def test_missing_current_config_raises_not_configured(self):
-        with self.assertRaises(JiraNotConfigured):
-            get_current_jira_config_for_user(self.user)
+    def _project(self, name="Core", **fields):
+        project = Team.objects.create(name=name, **{"jira_url": "https://a.example/", "jira_board_id": 1, **fields})
+        project.members.add(self.user)
+        return project
 
-    def test_several_current_configs_raise_not_configured(self):
-        JiraConfiguration.objects.create(user=self.user, jira_url="https://a.example/", current=True)
-        JiraConfiguration.objects.create(user=self.user, jira_url="https://b.example/", current=True)
-        with self.assertRaises(JiraNotConfigured):
-            get_current_jira_config_for_user(self.user)
+    def test_no_project_raises_not_configured(self):
+        with self.assertRaises(JiraNotConfigured) as ctx:
+            get_current_jira_context_for_user(self.user)
+        self.assertEqual(ctx.exception.missing_fields, ["project"])
 
-    def test_incomplete_config_lists_missing_fields(self):
-        JiraConfiguration.objects.create(user=self.user, jira_url="https://a.example/", current=True)
+    def test_no_token_for_the_project_jira_raises_not_configured(self):
+        self._project()
+        JiraConfiguration.objects.create(user=self.user, jira_url="https://other.example/", jira_token="t")
+        with self.assertRaises(JiraNotConfigured) as ctx:
+            get_current_jira_context_for_user(self.user)
+        self.assertEqual(ctx.exception.missing_fields, ["jira_token"])
+
+    def test_context_joins_the_current_project_and_the_user_token(self):
+        self._project("First")
+        second = self._project("Second", jira_url="https://A.example", jira_board_id=2)
+        self.user.current_project = second
+        self.user.save()
+        JiraConfiguration.objects.create(user=self.user, jira_url="https://a.example/", jira_token="t")
+
+        context = get_current_jira_context_for_user(self.user)
+
+        self.assertEqual((context.team, context.jira_board_id, context.jira_token), (second, 2, "t"))
+
+    def test_current_project_falls_back_when_the_user_left_it(self):
+        first = self._project("First")
+        gone = Team.objects.create(name="Gone", jira_url="https://a.example/")
+        self.user.current_project = gone
+        self.user.save()
+        JiraConfiguration.objects.create(user=self.user, jira_url="https://a.example/", jira_token="t")
+
+        self.assertEqual(get_current_jira_context_for_user(self.user).team, first)
+
+    def test_incomplete_project_lists_missing_fields(self):
+        self._project(jira_board_id=None)
+        JiraConfiguration.objects.create(user=self.user, jira_url="https://a.example/", jira_token="t")
         with self.assertRaises(JiraNotConfigured) as ctx:
             get_connected_jira_for_user(self.user)
-        self.assertEqual(ctx.exception.missing_fields, ["jira_token", "jira_board_id"])
-
-    def test_saving_form_as_current_unsets_previous_current(self):
-        old = JiraConfiguration.objects.create(user=self.user, jira_url="https://old.example/", current=True)
-        form = JiraConfigurationForm(data={"jira_url": "https://new.example/", "jira_token": "t", "current": "on"})
-        self.assertTrue(form.is_valid(), form.errors)
-
-        new = save_jira_config_form(form=form, user=self.user)
-
-        old.refresh_from_db()
-        self.assertFalse(old.current)
-        self.assertTrue(new.current)
+        self.assertEqual(ctx.exception.missing_fields, ["jira_board_id"])
 
     def test_edit_form_keeps_token_when_left_empty_and_never_renders_it(self):
         config = JiraConfiguration.objects.create(user=self.user, jira_url="https://a.example/", jira_token="s3cr3t-token")
@@ -460,9 +466,7 @@ class JiraManagerConnectionTests(TestCase):
     def setUp(self):
         cache.clear()
         user = CustomUser.objects.create_user(username="dave", password="secret")
-        self.config = JiraConfiguration.objects.create(
-            user=user, jira_url="https://jira.example/", jira_token="tok", jira_board_id=1, current=True
-        )
+        self.config = JiraConfiguration.objects.create(user=user, jira_url="https://jira.example/", jira_token="tok")
 
     def _fake_client(self):
         client = MagicMock()
@@ -519,7 +523,7 @@ class JiraErrorPageTests(TestCase):
 
         self.assertEqual(response.status_code, 409)
         self.assertTemplateUsed(response, "jira/jira_unavailable.html")
-        self.assertContains(response, reverse("jira_config_list"), status_code=409)
+        self.assertContains(response, reverse("project_list"), status_code=409)
 
     def test_api_without_config_returns_json(self):
         response = self.client.get(reverse("dashboard-items-api"))
@@ -531,9 +535,9 @@ class JiraErrorPageTests(TestCase):
     def test_connection_failure_shows_error_page_without_secrets(self, mock_connect):
         request = SimpleNamespace(headers={"Authorization": "Bearer s3cr3t-token"}, text="")
         mock_connect.side_effect = JIRAError(text="Unauthorized", status_code=401, request=request)
-        JiraConfiguration.objects.create(
-            user=self.user, jira_url="https://jira.example/", jira_token="s3cr3t-token", jira_board_id=1, current=True
-        )
+        project = Team.objects.create(name="Core", jira_url="https://jira.example/", jira_board_id=1)
+        project.members.add(self.user)
+        JiraConfiguration.objects.create(user=self.user, jira_url="https://jira.example/", jira_token="s3cr3t-token")
 
         response = self.client.get(reverse("sprint-list"))
 
@@ -546,8 +550,9 @@ class JiraErrorPageTests(TestCase):
 class JiraManagerQueryTests(TestCase):
     def test_throughput_counts_every_done_category_status(self):
         user = CustomUser.objects.create_user(username="frank", password="secret")
-        config = JiraConfiguration.objects.create(user=user, jira_url="https://jira.example/", jira_project_id=7)
-        manager = JiraManager(config)
+        config = JiraConfiguration.objects.create(user=user, jira_url="https://jira.example/")
+        project = Team.objects.create(name="Core", jira_url="https://jira.example/", jira_project_id=7)
+        manager = JiraManager(JiraContext(project=project, account=config))
 
         with patch.object(manager, "run_jql", return_value=[]) as run_jql:
             manager.throughput_7d()

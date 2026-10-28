@@ -19,7 +19,7 @@ from JiraFox.services.dashboard import (
     build_dashboard_kpis,
     get_current_sprint_with_issues,
 )
-from jiramodule.models import JiraConfiguration
+from jiramodule.selectors import get_current_project_for_user
 from jiramodule.services.jira_config_service import get_connected_jira_for_user
 from jiramodule.services.jql import JqlBuilder
 from sprint.views import build_weighted_throughput_distribution_from_issues, build_wia_data_from_issues
@@ -114,19 +114,19 @@ class SettingsView(LoginRequiredMixin, View):
 
     def get(self, request):
         form = UserSettingsForm(user=request.user)
-        current_jira_config = request.user.jira_configs.filter(current=True).select_related("team").first()
+        current_project = get_current_project_for_user(request.user)
         return render(
             request,
             self.template_name,
             {
                 "form": form,
-                "current_jira_config": current_jira_config,
+                "current_project": current_project,
             },
         )
 
     def post(self, request):
         form = UserSettingsForm(request.POST, user=request.user)
-        current_jira_config = request.user.jira_configs.filter(current=True).select_related("team").first()
+        current_project = get_current_project_for_user(request.user)
         if form.is_valid():
             user = form.save()
             messages.success(request, _("Settings updated."))
@@ -139,7 +139,7 @@ class SettingsView(LoginRequiredMixin, View):
             self.template_name,
             {
                 "form": form,
-                "current_jira_config": current_jira_config,
+                "current_project": current_project,
             },
         )
 
@@ -249,8 +249,8 @@ M8.6 — Regression & Final Validation""",
         ),
     ]
 
-    def _current_jira_config(self):
-        return JiraConfiguration.objects.filter(user=self.request.user, current=True).select_related("team").first()
+    def _current_project(self):
+        return get_current_project_for_user(self.request.user)
 
     def _query_presets(self, jira):
         sprint = jira.get_current_sprint()
@@ -311,7 +311,7 @@ M8.6 — Regression & Final Validation""",
             }
             for summary, description in self.epics
         ]
-        context["current_jira_config"] = self._current_jira_config()
+        context["current_project"] = self._current_project()
         context["presets"] = self._query_presets(jira)
         context["query_history"] = self.request.session.get("query_history", [])
         context["jql"] = jql

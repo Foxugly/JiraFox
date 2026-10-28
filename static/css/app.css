@@ -154,6 +154,12 @@ a:hover {
     box-shadow: none;
 }
 
+.project-switch {
+    width: auto;
+    max-width: 11rem;
+    text-overflow: ellipsis;
+}
+
 .lang-switch {
     padding: 0.2rem;
     border-radius: var(--app-radius-sm);
@@ -501,7 +507,8 @@ a:hover {
 
 .form-control,
 .form-select {
-    background: rgba(255, 255, 255, 0.9);
+    /* background-color only: the shorthand would drop the select's arrow. */
+    background-color: rgba(255, 255, 255, 0.9);
     border-radius: var(--app-radius-sm);
     padding: 0.82rem 0.95rem;
 }
@@ -1229,6 +1236,10 @@ div.dt-container div.dt-length select {
     min-height: 2.05rem;
     padding: 0.38rem 0.7rem;
     font-size: 0.9rem;
+}
+
+.form-select {
+    padding-right: 2.25rem;
 }
 
 .btn-icon {

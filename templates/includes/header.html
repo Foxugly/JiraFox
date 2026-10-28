@@ -39,6 +39,27 @@
             </ul>
 
             <ul class="navbar-nav ms-auto align-items-center gap-2">
+                {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        {% if user_projects %}
+                            <form action="{% url 'project_set_current' %}" method="post" class="d-flex align-items-center">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                <select name="project_id" class="form-select form-select-sm project-switch"
+                                        aria-label="{% trans 'Current project' %}" title="{% trans 'Current project' %}"
+                                        onchange="this.form.submit()">
+                                    {% for project in user_projects %}
+                                        <option value="{{ project.id }}" {% if current_project and project.id == current_project.id %}selected{% endif %}>{{ project.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </form>
+                        {% else %}
+                            <a class="btn btn-outline-primary btn-sm" href="{% url 'project_create' %}">
+                                <i class="fa-solid fa-plus me-2"></i>{% trans "New project" %}
+                            </a>
+                        {% endif %}
+                    </li>
+                {% endif %}
                 <li class="nav-item">
                     <button id="themeToggle" class="btn btn-sm btn-icon theme-toggle" type="button"
                             aria-label="{% trans 'Toggle dark mode' %}"
@@ -80,8 +101,13 @@
                                 </a>
                             </li>
                             <li>
+                                <a class="dropdown-item" href="{% url 'project_list' %}">
+                                    <i class="fa-solid fa-folder-tree me-2"></i>{% trans "My projects" %}
+                                </a>
+                            </li>
+                            <li>
                                 <a class="dropdown-item" href="{% url 'jira_config_list' %}">
-                                    <i class="fa-brands fa-jira me-2"></i>{% trans "Jira" %}
+                                    <i class="fa-brands fa-jira me-2"></i>{% trans "My Jira connections" %}
                                 </a>
                             </li>
                             <li>

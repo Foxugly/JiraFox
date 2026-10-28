@@ -8,7 +8,7 @@ from django.utils.translation import gettext as _
 
 from JiraFox.services.dashboard import build_dashboard_kpis
 from JiraFox.services.issue_data import is_issue_done
-from jiramodule.models import JiraConfiguration
+from team.models import Team
 from jiramodule.utils.datetime_utils import WORKDAY_HOURS, hours_to_business_days
 
 
@@ -62,13 +62,8 @@ class AuthPagesTests(TestCase):
         self.assertTemplateUsed(response, "account/password_change.html")
 
     def test_settings_page_renders_for_authenticated_user(self):
-        JiraConfiguration.objects.create(
-            user=self.user,
-            jira_url="https://jira.example",
-            jira_board_id=42,
-            jira_project_id=7,
-            current=True,
-        )
+        project = Team.objects.create(name="Core", jira_url="https://jira.example", jira_board_id=42, jira_project_id=7)
+        project.members.add(self.user)
 
         response = self.client.get(reverse("settings"))
 

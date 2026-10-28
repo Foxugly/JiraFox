@@ -19,14 +19,7 @@ class JiraConfigurationForm(forms.ModelForm):
 
     class Meta:
         model = JiraConfiguration
-        fields = [
-            "jira_url",
-            "jira_token",
-            "jira_board_id",
-            "jira_project_id",
-            "jira_recurrent_epic_key",
-            "current",
-        ]
+        fields = ["jira_url", "jira_token"]
         widgets = {
             "jira_url": forms.URLInput(attrs={
                 "class": "form-control",
@@ -35,20 +28,5 @@ class JiraConfigurationForm(forms.ModelForm):
             "jira_token": forms.PasswordInput(render_value=False, attrs={
                 "class": "form-control",
                 "autocomplete": "new-password",
-            }),
-            "jira_board_id": forms.NumberInput(attrs={
-                "class": "form-control",
-            }),
-            "jira_project_id": forms.NumberInput(attrs={
-                "class": "form-control",
-            }),
-            "jira_recurrent_epic_key": forms.TextInput(attrs={
-                "class": "form-control",
-                "placeholder": "ABC-123",
-            }),
-            # 🔥 SWITCH Bootstrap 5
-            "current": forms.CheckboxInput(attrs={
-                "class": "form-check-input",
-                "role": "switch",
             }),
         }

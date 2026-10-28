@@ -7,17 +7,17 @@ ALLOWED_INT_FIELDS = {"workload", "holidays", "fastlane", "project_meetings", "o
 ALLOWED_TEXT_FIELDS = {"jira_username"}
 
 
-# A user may only touch the teams linked to one of their Jira configurations.
+# A user may only touch the projects they are a member of.
 def teams_for_user(user):
-    return Team.objects.filter(jira_configs__user=user).distinct()
+    return Team.objects.filter(members=user).distinct()
 
 
 def devs_for_user(user):
-    return Dev.objects.filter(teamdevs__team__jira_configs__user=user).distinct()
+    return Dev.objects.filter(teamdevs__team__members=user).distinct()
 
 
 def teamdevs_for_user(user):
-    return TeamDev.objects.filter(team__jira_configs__user=user).distinct()
+    return TeamDev.objects.filter(team__members=user).distinct()
 
 
 def parse_dev_update(field: str | None, value: str | None) -> tuple[str, int | str]:
@@ -78,3 +78,19 @@ def reorder_teamdevs_for_team(*, team: Team, ids: list[int]) -> list[int]:
             TeamDev.objects.filter(id=teamdev_id, team=team).update(order=index)
 
     return ids
+
+
+def create_project(*, user, form) -> Team:
+    """The creator becomes the first member and switches to the new project."""
+    with transaction.atomic():
+        project = form.save()
+        project.members.add(user)
+        user.current_project = project
+        user.save(update_fields=["current_project"])
+    return project
+
+
+def remove_project_member(*, project: Team, member) -> None:
+    if project.members.count() <= 1:
+        raise ValueError("Last member")
+    project.members.remove(member)

@@ -1,7 +1,7 @@
 {% load i18n %}
 
 <div class="modal-header">
-    <h5 class="modal-title">{% if mode == "edit" %}{% trans "Edit" %}{% else %}{% trans "Add" %}{% endif %} {% trans "a Jira configuration" %}</h5>
+    <h5 class="modal-title">{% if mode == "edit" %}{% trans "Edit" %}{% else %}{% trans "Add" %}{% endif %} {% trans "a Jira connection" %}</h5>
     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
 </div>
 
@@ -31,24 +31,6 @@
                 {% if form.jira_token.errors %}
                     <div class="invalid-feedback d-block">{{ form.jira_token.errors|striptags }}</div>
                 {% endif %}
-            </div>
-            <div class="col-md-6">
-                <label class="form-label" for="{{ form.jira_board_id.id_for_label }}">{% trans "Board ID" %}</label>
-                {{ form.jira_board_id }}
-            </div>
-            <div class="col-md-6">
-                <label class="form-label" for="{{ form.jira_project_id.id_for_label }}">{% trans "Project ID" %}</label>
-                {{ form.jira_project_id }}
-            </div>
-            <div class="col-12">
-                <label class="form-label" for="{{ form.jira_recurrent_epic_key.id_for_label }}">{% trans "Recurrent Epic Key" %}</label>
-                {{ form.jira_recurrent_epic_key }}
-            </div>
-            <div class="col-12">
-                <div class="form-check form-switch">
-                    {{ form.current }}
-                    <label class="form-check-label" for="{{ form.current.id_for_label }}">{% trans "Current configuration" %}</label>
-                </div>
             </div>
         </div>
     </form>

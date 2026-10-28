@@ -2,8 +2,8 @@
 {% load static i18n %}
 
 {% block content %}
-    {% trans "Mes configurations Jira" as jira_configs_hero_title %}
-    {% trans "Creer, tester et activer plusieurs connexions selon vos boards et vos contextes d'equipe." as jira_configs_hero_description %}
+    {% trans "My Jira connections" as jira_configs_hero_title %}
+    {% trans "Your personal token for each Jira. Boards, projects and developers are set on the projects, shared with their members." as jira_configs_hero_description %}
     <section class="page-shell glass-panel section-stack">
         <form class="d-none">{% csrf_token %}</form>
 
@@ -32,11 +32,7 @@
                     <thead>
                     <tr>
                         <th>{% trans "URL" %}</th>
-                        <th>{% trans "Board" %}</th>
-                        <th>{% trans "Project" %}</th>
-                        <th>{% trans "Epic" %}</th>
                         <th>{% trans "Dernier test" %}</th>
-                        <th class="text-center">{% trans "Current" %}</th>
                         <th class="text-end">{% trans "Actions" %}</th>
                     </tr>
                     </thead>
@@ -44,9 +40,6 @@
                     {% for c in configs %}
                         <tr data-row-id="{{ c.id }}">
                             <td class="text-truncate jira-cell-url">{{ c.jira_url|default:"-" }}</td>
-                            <td>{{ c.jira_board_id|default:"-" }}</td>
-                            <td>{{ c.jira_project_id|default:"-" }}</td>
-                            <td class="text-truncate jira-cell-epic">{{ c.jira_recurrent_epic_key|default:"-" }}</td>
                             <td>
                                 {% if c.last_tested_at %}
                                     <div class="d-flex align-items-center gap-2">
@@ -65,16 +58,6 @@
                                 {% else %}
                                     <span class="text-muted">-</span>
                                 {% endif %}
-                            </td>
-                            <td class="text-center">
-                                <div class="form-check form-switch d-inline-flex m-0">
-                                    <input class="form-check-input js-current-switch"
-                                           type="checkbox"
-                                           role="switch"
-                                           data-config-id="{{ c.id }}"
-                                           {% if c.current %}checked{% endif %}
-                                           aria-label="{% trans 'Definir comme configuration courante' %}">
-                                </div>
                             </td>
                             <td class="text-end">
                                 <div class="btn-group btn-group-sm" role="group">
@@ -100,7 +83,7 @@
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-4">{% trans "Aucune configuration." %}</td>
+                            <td colspan="3" class="text-center text-muted py-4">{% trans "Aucune configuration." %}</td>
                         </tr>
                     {% endfor %}
                     </tbody>
@@ -119,7 +102,6 @@
 {% block js %}
     <script>
         window.JIRA_CONFIGS_PAGE = {
-            setCurrentUrl: "{% url 'jira_config_set_current' %}",
             i18n: {
                 saving: "{% trans 'Saving...' %}",
                 testing: "{% trans 'Testing...' %}",
@@ -136,8 +118,6 @@
                 cancel: "{% trans 'Cancel' %}",
                 configuration_deleted: "{% trans 'Configuration deleted.' %}",
                 jira_connection_ok: "{% trans 'Jira connection OK.' %}",
-                current_configuration_updated: "{% trans 'Current configuration updated.' %}",
-                unable_to_save_current_configuration: "{% trans 'Unable to save current configuration.' %}",
                 unexpected_response_format: "{% trans 'Unexpected response format' %}"
             }
         };

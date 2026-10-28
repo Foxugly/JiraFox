@@ -138,28 +138,28 @@
             {% endif %}
 
             <div class="utility-panel mb-3">
-                <h2 class="h5 mb-3">{% trans "Current Jira configuration" %}</h2>
-                {% if current_jira_config %}
+                <h2 class="h5 mb-3">{% trans "Current project" %}</h2>
+                {% if current_project %}
                     <div class="vstack gap-2">
                         <div class="d-flex justify-content-between gap-3">
                             <span class="inline-note">{% trans "URL" %}</span>
-                            <strong class="text-break text-end">{{ current_jira_config.jira_url }}</strong>
+                            <strong class="text-break text-end">{{ current_project.jira_url }}</strong>
                         </div>
                         <div class="d-flex justify-content-between gap-3">
                             <span class="inline-note">{% trans "Board" %}</span>
-                            <strong>{{ current_jira_config.jira_board_id|default:"-" }}</strong>
+                            <strong>{{ current_project.jira_board_id|default:"-" }}</strong>
                         </div>
                         <div class="d-flex justify-content-between gap-3">
                             <span class="inline-note">{% trans "Project" %}</span>
-                            <strong>{{ current_jira_config.jira_project_id|default:"-" }}</strong>
+                            <strong>{{ current_project.jira_project_id|default:"-" }}</strong>
                         </div>
                         <div class="d-flex justify-content-between gap-3">
-                            <span class="inline-note">{% trans "Team" %}</span>
-                            <strong>{{ current_jira_config.team.name|default:"-" }}</strong>
+                            <span class="inline-note">{% trans "Name" %}</span>
+                            <strong>{{ current_project.name|default:"-" }}</strong>
                         </div>
                     </div>
                 {% else %}
-                    <p class="text-secondary mb-0">{% trans "No active Jira configuration." %}</p>
+                    <p class="text-secondary mb-0">{% trans "You have no project yet." %}</p>
                 {% endif %}
             </div>
 

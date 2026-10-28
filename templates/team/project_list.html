@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}JiraFox - {% trans "My projects" %}{% endblock %}
+
+{% block content %}
+    {% trans "My projects" as projects_hero_title %}
+    {% trans "A project is a Jira board shared by its members, each with their own Jira token, and its developers. Switch project in the header." as projects_hero_description %}
+    <section class="page-shell glass-panel section-stack">
+        <div class="page-hero">
+            <div class="d-flex justify-content-start mb-3 page-hero-kicker-row">
+                <span class="page-kicker">
+                    <i class="fa-solid fa-folder-tree"></i>
+                    {% trans "Projects" %}
+                </span>
+            </div>
+            <div class="position-relative">
+                {% include "includes/page_hero_copy.html" with hero_title=projects_hero_title hero_description=projects_hero_description %}
+                <a class="btn btn-primary position-absolute top-0 end-0" href="{% url 'project_create' %}">
+                    <i class="fa-solid fa-plus me-2"></i>{% trans "New project" %}
+                </a>
+            </div>
+        </div>
+
+        <div class="utility-panel">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                    <tr>
+                        <th>{% trans "Name" %}</th>
+                        <th>{% trans "URL" %}</th>
+                        <th>{% trans "Board" %}</th>
+                        <th>{% trans "Project" %}</th>
+                        <th>{% trans "Members" %}</th>
+                        <th>{% trans "Developers" %}</th>
+                        <th class="text-end">{% trans "Actions" %}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for project in projects %}
+                        <tr>
+                            <td class="fw-semibold">
+                                {{ project.name }}
+                                {% if current_project and project.id == current_project.id %}
+                                    <span class="badge text-bg-primary ms-1">{% trans "Current project" %}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-truncate jira-cell-url">{{ project.jira_url|default:"-" }}</td>
+                            <td>{{ project.jira_board_id|default:"-" }}</td>
+                            <td>{{ project.jira_project_id|default:"-" }}</td>
+                            <td>{% for member in project.members.all %}{{ member.username }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+                            <td>{{ project.dev_count }}</td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a class="btn btn-outline-primary" href="{% url 'project_devs' project.id %}" title="{% trans 'Developers' %}">
+                                        <i class="fa-solid fa-users"></i>
+                                    </a>
+                                    <a class="btn btn-outline-primary" href="{% url 'project_edit' project.id %}" title="{% trans 'Edit' %}">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                {% trans "You are a member of no project yet: create one, or ask a member to add you." %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+{% endblock %}

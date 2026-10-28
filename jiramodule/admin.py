@@ -7,11 +7,8 @@ class JiraConfigurationAdmin(admin.ModelAdmin):
         "id",
         "user",
         "jira_url",
-        "jira_board_id",
-        "jira_project_id",
-        "current",
         "last_test_ok",
         "last_tested_at",
     )
-    list_filter = ("current", "last_test_ok", "is_active")
+    list_filter = ("last_test_ok", "is_active")
     search_fields = ("jira_url", "user__username")

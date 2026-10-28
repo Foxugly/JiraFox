@@ -12,8 +12,9 @@ class TeamDevInline(admin.TabularInline):
 
 @admin.register(Team)
 class TeamAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name',)
-    search_fields = ('name',)
+    list_display = ("id", "name", "jira_url", "jira_board_id", "jira_project_id")
+    search_fields = ("name",)
+    filter_horizontal = ("members",)
     inlines = [TeamDevInline]
 
 

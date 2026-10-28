@@ -89,12 +89,15 @@
                 </article>
 
                 <article class="feature-card">
-                    <div class="feature-icon"><i class="fa-brands fa-jira"></i></div>
-                    <h3 class="h5">{% trans "Connexions Jira" %}</h3>
+                    <div class="feature-icon"><i class="fa-solid fa-folder-tree"></i></div>
+                    <h3 class="h5">{% trans "Projects" %}</h3>
                     <p class="text-secondary">
-                        {% trans "Gerer plusieurs boards, tester les acces et choisir la configuration courante." %}
+                        {% trans "Share a board and its developers with your colleagues, each with their own Jira token." %}
                     </p>
-                    <a class="btn btn-outline-primary btn-sm" href="{% url 'jira_config_list' %}">{% trans "Configurer" %}</a>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a class="btn btn-outline-primary btn-sm" href="{% url 'project_list' %}">{% trans "My projects" %}</a>
+                        <a class="btn btn-outline-secondary btn-sm" href="{% url 'jira_config_list' %}">{% trans "My Jira connections" %}</a>
+                    </div>
                 </article>
             </div>
         </div>

@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}JiraFox - {% if mode == "edit" %}{{ project.name }}{% else %}{% trans "New project" %}{% endif %}{% endblock %}
+
+{% block content %}
+    <section class="page-shell glass-panel section-stack">
+        <div class="page-hero">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                <div>
+                    <span class="page-kicker">
+                        <i class="fa-solid fa-folder-tree"></i>
+                        {% trans "Project" %}
+                    </span>
+                    <h1 class="hero-title fs-1 mt-3 mb-2">{% if mode == "edit" %}{{ project.name }}{% else %}{% trans "New project" %}{% endif %}</h1>
+                    <p class="text-secondary mb-0">{% trans "Every member reads this board with their own Jira token: each needs a Jira connection for this URL." %}</p>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <a class="btn btn-outline-secondary btn-sm" href="{% url 'project_list' %}">
+                        <i class="fa-solid fa-arrow-left me-2"></i>{% trans "My projects" %}
+                    </a>
+                    {% if mode == "edit" %}
+                        <a class="btn btn-outline-primary btn-sm" href="{% url 'project_devs' project.id %}">
+                            <i class="fa-solid fa-users me-2"></i>{% trans "Developers" %}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-12 {% if mode == 'edit' %}col-lg-7{% endif %}">
+                <div class="utility-panel h-100">
+                    <h2 class="h5 mb-3">{% trans "Settings" %}</h2>
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">{{ form.non_field_errors|striptags }}</div>
+                        {% endif %}
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label" for="{{ form.name.id_for_label }}">{% trans "Name" %}</label>
+                                {{ form.name }}
+                                {% if form.name.errors %}<div class="invalid-feedback d-block">{{ form.name.errors|striptags }}</div>{% endif %}
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="{{ form.jira_url.id_for_label }}">{% trans "Jira URL" %}</label>
+                                {{ form.jira_url }}
+                                {% if form.jira_url.errors %}<div class="invalid-feedback d-block">{{ form.jira_url.errors|striptags }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ form.jira_board_id.id_for_label }}">{% trans "Board ID" %}</label>
+                                {{ form.jira_board_id }}
+                                {% if form.jira_board_id.errors %}<div class="invalid-feedback d-block">{{ form.jira_board_id.errors|striptags }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ form.jira_project_id.id_for_label }}">{% trans "Project ID" %}</label>
+                                {{ form.jira_project_id }}
+                                {% if form.jira_project_id.errors %}<div class="invalid-feedback d-block">{{ form.jira_project_id.errors|striptags }}</div>{% endif %}
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="{{ form.jira_recurrent_epic_key.id_for_label }}">{% trans "Recurrent Epic Key" %}</label>
+                                {{ form.jira_recurrent_epic_key }}
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-4">
+                            {% if mode == "edit" %}{% trans "Save" %}{% else %}{% trans "Create" %}{% endif %}
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            {% if mode == "edit" %}
+                <div class="col-12 col-lg-5">
+                    <div class="utility-panel h-100">
+                        <h2 class="h5 mb-3">{% trans "Members" %}</h2>
+                        <ul class="list-group mb-3">
+                            {% for member in members %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>{{ member.username }}{% if member == user %} <span class="text-secondary small">({% trans "you" %})</span>{% endif %}</span>
+                                    <form method="post" action="{% url 'project_remove_member' project.id member.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-link btn-sm link-danger text-decoration-none p-0"
+                                                title="{% if member == user %}{% trans 'Leave the project' %}{% else %}{% trans 'Remove from the project' %}{% endif %}">
+                                            <i class="fa-solid {% if member == user %}fa-right-from-bracket{% else %}fa-user-minus{% endif %}"></i>
+                                        </button>
+                                    </form>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        {% if candidates %}
+                            <form method="post" action="{% url 'project_add_member' project.id %}" class="d-flex gap-2">
+                                {% csrf_token %}
+                                <select name="user_id" class="form-select form-select-sm" aria-label="{% trans 'User' %}">
+                                    {% for candidate in candidates %}
+                                        <option value="{{ candidate.id }}">{{ candidate.username }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-outline-primary btn-sm text-nowrap">
+                                    <i class="fa-solid fa-user-plus me-2"></i>{% trans "Add" %}
+                                </button>
+                            </form>
+                        {% else %}
+                            <p class="inline-note mb-0">{% trans "Every user is already a member." %}</p>
+                        {% endif %}
+
+                        <hr class="my-4">
+                        <form method="post" action="{% url 'project_delete' project.id %}"
+                              onsubmit="return confirm('{% trans "Delete this project, its developers and its sprint bounds for every member?" as confirm_delete %}{{ confirm_delete|escapejs }}');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                <i class="fa-solid fa-trash me-2"></i>{% trans "Delete the project" %}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+{% endblock %}

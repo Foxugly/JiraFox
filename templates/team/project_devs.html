@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}JiraFox - {{ project.name }} - {% trans "Developers" %}{% endblock %}
+
+{% block content %}
+    <section class="page-shell glass-panel section-stack">
+        <div class="page-hero">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                <div>
+                    <span class="page-kicker">
+                        <i class="fa-solid fa-users"></i>
+                        {% trans "Developers" %}
+                    </span>
+                    <h1 class="hero-title fs-1 mt-3 mb-2">{{ project.name }}</h1>
+                    <p class="text-secondary mb-0">{% trans "The project's developers, shared by its members: capacity used by the capacity sheet, Jira ID used to match worklogs and assignees. Drag the columns to reorder them." %}</p>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <a class="btn btn-outline-secondary btn-sm" href="{% url 'project_edit' project.id %}">
+                        <i class="fa-solid fa-arrow-left me-2"></i>{% trans "Project" %}
+                    </a>
+                    <button id="add-dev-btn" class="btn btn-primary btn-sm" data-create-url="{% url 'create_dev' project.id %}">
+                        <i class="fa-solid fa-plus me-2"></i>{% trans "Ajouter un dev" %}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="utility-panel">
+            {% include "team/_dev_table.html" %}
+        </div>
+    </section>
+{% endblock %}
+
+{% block js %}
+    {% include "team/_dev_table_js.html" %}
+{% endblock %}

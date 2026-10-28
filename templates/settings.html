@@ -94,21 +94,26 @@
                 </div>
 
                 <div class="utility-panel">
-                    <h2 class="h4 mb-3">{% trans "Current Jira configuration" %}</h2>
-                    {% if current_jira_config %}
+                    <h2 class="h4 mb-3">{% trans "Current project" %}</h2>
+                    {% if current_project %}
                         <div class="vstack gap-2">
-                            <div class="d-flex justify-content-between gap-3"><span class="inline-note">{% trans "URL" %}</span><strong class="text-break">{{ current_jira_config.jira_url|default:"-" }}</strong></div>
-                            <div class="d-flex justify-content-between gap-3"><span class="inline-note">{% trans "Board" %}</span><strong>{{ current_jira_config.jira_board_id|default:"-" }}</strong></div>
-                            <div class="d-flex justify-content-between gap-3"><span class="inline-note">{% trans "Project" %}</span><strong>{{ current_jira_config.jira_project_id|default:"-" }}</strong></div>
-                            <div class="d-flex justify-content-between gap-3"><span class="inline-note">{% trans "Team" %}</span><strong>{{ current_jira_config.team.name|default:"-" }}</strong></div>
+                            <div class="d-flex justify-content-between gap-3"><span class="inline-note">{% trans "URL" %}</span><strong class="text-break">{{ current_project.jira_url|default:"-" }}</strong></div>
+                            <div class="d-flex justify-content-between gap-3"><span class="inline-note">{% trans "Board" %}</span><strong>{{ current_project.jira_board_id|default:"-" }}</strong></div>
+                            <div class="d-flex justify-content-between gap-3"><span class="inline-note">{% trans "Project" %}</span><strong>{{ current_project.jira_project_id|default:"-" }}</strong></div>
+                            <div class="d-flex justify-content-between gap-3"><span class="inline-note">{% trans "Name" %}</span><strong>{{ current_project.name|default:"-" }}</strong></div>
                         </div>
-                        <a class="btn btn-outline-secondary btn-sm mt-4" href="{% url 'jira_config_list' %}">
-                            <i class="fa-brands fa-jira me-2"></i>{% trans "Manage Jira connections" %}
-                        </a>
+                        <div class="d-flex flex-wrap gap-2 mt-4">
+                            <a class="btn btn-outline-secondary btn-sm" href="{% url 'project_edit' current_project.id %}">
+                                <i class="fa-solid fa-folder-tree me-2"></i>{% trans "Manage the project" %}
+                            </a>
+                            <a class="btn btn-outline-secondary btn-sm" href="{% url 'jira_config_list' %}">
+                                <i class="fa-brands fa-jira me-2"></i>{% trans "Manage Jira connections" %}
+                            </a>
+                        </div>
                     {% else %}
-                        <p class="text-secondary mb-3">{% trans "No current Jira configuration is active for this account." %}</p>
-                        <a class="btn btn-primary btn-sm" href="{% url 'jira_config_list' %}">
-                            <i class="fa-solid fa-plus me-2"></i>{% trans "Create a Jira connection" %}
+                        <p class="text-secondary mb-3">{% trans "You have no project yet." %}</p>
+                        <a class="btn btn-primary btn-sm" href="{% url 'project_create' %}">
+                            <i class="fa-solid fa-plus me-2"></i>{% trans "New project" %}
                         </a>
                     {% endif %}
                 </div>

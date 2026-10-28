@@ -29,10 +29,8 @@ def save_jira_config_form(*, form: JiraConfigurationForm, user) -> JiraConfigura
         config.user = user
         config.is_active = False
         config.save()
-        # Ticking "current" in the form must behave like the toggle: only one current config per user.
-        if config.current:
-            config.set_as_current()
     return config
+
 
 def test_jira_configuration(config: JiraConfiguration, *, user_pk: int | None = None) -> tuple[bool, str]:
     try:
@@ -50,12 +48,3 @@ def test_jira_configuration(config: JiraConfiguration, *, user_pk: int | None = 
     config.mark_test_result(ok=ok, error=error)
 
     return ok, error
-
-
-def set_current_config(*, config: JiraConfiguration, want_current: bool) -> None:
-    with transaction.atomic():
-        if want_current:
-            config.set_as_current()
-        else:
-            config.current = False
-            config.save(update_fields=["current"])

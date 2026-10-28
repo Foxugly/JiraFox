@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: JiraFox\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-28 09:49+0100\n"
+"POT-Creation-Date: 2026-10-28 11:18+0100\n"
 "PO-Revision-Date: 2026-09-15 00:00+0200\n"
 "Last-Translator: Codex <codex@local>\n"
 "Language-Team: French <fr@local>\n"
@@ -41,7 +41,7 @@ msgstr "Email"
 msgid "Language"
 msgstr "Langue"
 
-#: .\JiraFox\tests.py:152 .\JiraFox\views.py:264
+#: .\JiraFox\tests.py:147 .\JiraFox\views.py:264
 msgid "Current sprint issues"
 msgstr "Tickets du sprint courant"
 
@@ -57,7 +57,7 @@ msgstr "Sprint courant terminé"
 msgid "Current sprint WIP"
 msgstr "WIP du sprint courant"
 
-#: .\JiraFox\views.py:276 .\templates\sprint\sprint_xls_report.html:72
+#: .\JiraFox\views.py:276 .\templates\team\_dev_table.html:42
 msgid "Fastlane"
 msgstr "Fastlane"
 
@@ -114,28 +114,34 @@ msgstr "Cet élément n'existe pas dans Jira."
 msgid "Jira returned an error."
 msgstr "Jira a renvoyé une erreur."
 
-#: .\jiramodule\selectors.py:10
-msgid "No current Jira configuration. Create one and mark it as current."
-msgstr "Aucune configuration Jira courante. Créez-en une et marquez-la comme courante."
+#: .\jiramodule\selectors.py:75
+msgid "You have no project. Create one, or ask a member to add you to theirs."
+msgstr "Vous n'avez aucun projet. Créez-en un, ou demandez à un membre de vous ajouter au sien."
 
-#: .\jiramodule\selectors.py:12
-msgid "Several Jira configurations are marked as current. Keep only one."
-msgstr "Plusieurs configurations Jira sont marquées comme courantes. N'en gardez qu'une."
+#: .\jiramodule\selectors.py:79
+#, python-format
+msgid "The project %(project)s has no Jira URL."
+msgstr "Le projet %(project)s n'a pas d'URL Jira."
+
+#: .\jiramodule\selectors.py:84
+#, python-format
+msgid "You have no Jira token for %(url)s. Add it to your Jira connections."
+msgstr "Vous n'avez pas de token Jira pour %(url)s. Ajoutez-le dans vos connexions Jira."
 
 #: .\jiramodule\services\bulk_operations.py:104
 msgid "No change"
 msgstr "Aucun changement"
 
-#: .\jiramodule\services\bulk_operations.py:115 .\jiramodule\tests.py:374
+#: .\jiramodule\services\bulk_operations.py:115 .\jiramodule\tests.py:375
 msgid "Updated"
 msgstr "Mis à jour"
 
-#: .\jiramodule\services\jira_config_service.py:21
+#: .\jiramodule\services\jira_config_service.py:30
 #, python-format
-msgid "The current Jira configuration is incomplete: %(fields)s."
-msgstr "La configuration Jira courante est incomplète : %(fields)s."
+msgid "The current project is incomplete: %(fields)s."
+msgstr "Le projet courant est incomplet : %(fields)s."
 
-#: .\jiramodule\services\jira_config_service.py:35
+#: .\jiramodule\services\jira_config_service.py:44
 #, python-format
 msgid "Unable to connect to Jira at %(url)s."
 msgstr "Impossible de se connecter à Jira sur %(url)s."
@@ -144,33 +150,33 @@ msgstr "Impossible de se connecter à Jira sur %(url)s."
 msgid "Not enough information to compute metrics (missing created/status/changelog)."
 msgstr "Informations insuffisantes pour calculer les métriques (created/status/changelog manquants)."
 
-#: .\jiramodule\tests.py:337 .\templates\jira\bulk_operations.html:17
+#: .\jiramodule\tests.py:338 .\templates\jira\bulk_operations.html:17
 msgid "Available operations"
 msgstr "Opérations disponibles"
 
-#: .\jiramodule\views.py:74
+#: .\jiramodule\views.py:73
 msgid "JQL is required."
 msgstr "Le JQL est obligatoire."
 
-#: .\jiramodule\views.py:77
+#: .\jiramodule\views.py:76
 msgid "Add at least one label to add or remove."
 msgstr "Add at least one label to add or remove."
 
-#: .\jiramodule\views.py:90
+#: .\jiramodule\views.py:89
 #, python-format
 msgid "Preview failed: %(error)s"
 msgstr "Preview failed: %(error)s"
 
-#: .\jiramodule\views.py:94
+#: .\jiramodule\views.py:93
 #, python-format
 msgid "Preview ready: %(count)s ticket(s) will change."
 msgstr "Preview ready: %(count)s ticket(s) will change."
 
-#: .\jiramodule\views.py:103
+#: .\jiramodule\views.py:102
 msgid "No bulk labels preview to apply."
 msgstr "No bulk labels preview to apply."
 
-#: .\jiramodule\views.py:115
+#: .\jiramodule\views.py:114
 #, python-format
 msgid "Bulk labels applied: %(success_count)s updated, %(error_count)s error(s)."
 msgstr "Bulk labels applied: %(success_count)s updated, %(error_count)s error(s)."
@@ -198,6 +204,42 @@ msgstr "Tickets ajoutés clôturés"
 #: .\sprint\views.py:286
 msgid "All issues closed"
 msgstr "Tous les tickets clôturés"
+
+#: .\team\views.py:111
+msgid "Project created."
+msgstr "Projet créé."
+
+#: .\team\views.py:126
+msgid "Project saved."
+msgstr "Projet enregistré."
+
+#: .\team\views.py:149
+#, python-format
+msgid "Project %(name)s deleted."
+msgstr "Projet %(name)s supprimé."
+
+#: .\team\views.py:159
+msgid "Choose a user to add."
+msgstr "Choisissez un utilisateur à ajouter."
+
+#: .\team\views.py:162
+#, python-format
+msgid "%(user)s added to the project."
+msgstr "%(user)s ajouté au projet."
+
+#: .\team\views.py:174
+msgid "A project keeps at least one member: delete it instead."
+msgstr "Un projet garde au moins un membre : supprimez-le plutôt."
+
+#: .\team\views.py:177
+#, python-format
+msgid "You left the project %(name)s."
+msgstr "Vous avez quitté le projet %(name)s."
+
+#: .\team\views.py:179
+#, python-format
+msgid "%(user)s removed from the project."
+msgstr "%(user)s retiré du projet."
 
 #: .\templates\about.html:4 .\templates\about.html:8
 #: .\templates\includes\header.html:37
@@ -609,9 +651,9 @@ msgid "Close"
 msgstr "Fermer"
 
 #: .\templates\base.html:52 .\templates\base.html:71 .\templates\base.html:84
-#: .\templates\jira\jira_config_list.html:136
-#: .\templates\jira\partials\jira_config_modal_form.html:84
-#: .\templates\sprint\sprint_xls_report.html:135
+#: .\templates\jira\jira_config_list.html:118
+#: .\templates\jira\partials\jira_config_modal_form.html:66
+#: .\templates\team\_dev_table_js.html:11
 msgid "Cancel"
 msgstr "Annuler"
 
@@ -951,20 +993,29 @@ msgstr "Lister les sprints, naviguer dans leurs details et basculer rapidement v
 msgid "Parcourir"
 msgstr "Parcourir"
 
-#: .\templates\home.html:93
-msgid "Connexions Jira"
-msgstr "Connexions Jira"
+#: .\templates\home.html:93 .\templates\team\project_list.html:14
+msgid "Projects"
+msgstr "Projets"
 
 #: .\templates\home.html:95
-msgid "Gerer plusieurs boards, tester les acces et choisir la configuration courante."
-msgstr "Gerer plusieurs boards, tester les acces et choisir la configuration courante."
+msgid "Share a board and its developers with your colleagues, each with their own Jira token."
+msgstr "Partagez un board et ses développeurs avec vos collègues, chacun avec son propre token Jira."
 
-#: .\templates\home.html:97
-msgid "Configurer"
-msgstr "Configurer"
+#: .\templates\home.html:98 .\templates\includes\header.html:105
+#: .\templates\jira\jira_unavailable.html:41
+#: .\templates\team\project_form.html:20 .\templates\team\project_list.html:4
+#: .\templates\team\project_list.html:7
+msgid "My projects"
+msgstr "Mes projets"
+
+#: .\templates\home.html:99 .\templates\includes\header.html:110
+#: .\templates\jira\jira_config_list.html:5
+#: .\templates\jira\jira_unavailable.html:44
+msgid "My Jira connections"
+msgstr "Mes connexions Jira"
 
 #: .\templates\includes\header.html:20
-#: .\templates\jira\jira_unavailable.html:49
+#: .\templates\jira\jira_unavailable.html:52
 msgid "Home"
 msgstr "Accueil"
 
@@ -976,38 +1027,45 @@ msgstr "Sprint"
 msgid "Query"
 msgstr "Requête"
 
-#: .\templates\includes\header.html:33 .\templates\includes\header.html:89
+#: .\templates\includes\header.html:33 .\templates\includes\header.html:115
 #: .\templates\jira\bulk_labels.html:8 .\templates\jira\bulk_operations.html:4
 #: .\templates\jira\bulk_operations.html:9
 msgid "Bulk operations"
 msgstr "Opérations en masse"
 
-#: .\templates\includes\header.html:44 .\templates\includes\header.html:45
+#: .\templates\includes\header.html:49 .\templates\query.html:141
+#: .\templates\settings.html:97 .\templates\team\project_list.html:45
+msgid "Current project"
+msgstr "Projet courant"
+
+#: .\templates\includes\header.html:58 .\templates\settings.html:116
+#: .\templates\team\project_form.html:4 .\templates\team\project_form.html:15
+#: .\templates\team\project_list.html:20
+msgid "New project"
+msgstr "Nouveau projet"
+
+#: .\templates\includes\header.html:65 .\templates\includes\header.html:66
 msgid "Toggle dark mode"
 msgstr "Basculer le mode sombre"
 
-#: .\templates\includes\header.html:53
+#: .\templates\includes\header.html:74
 msgid "Language switch"
 msgstr "Changement de langue"
 
-#: .\templates\includes\header.html:79 .\templates\settings.html:4
-#: .\templates\settings.html:14
+#: .\templates\includes\header.html:100 .\templates\settings.html:4
+#: .\templates\settings.html:14 .\templates\team\project_form.html:34
 msgid "Settings"
 msgstr "Paramètres"
 
-#: .\templates\includes\header.html:84
-msgid "Jira"
-msgstr "Jira"
-
-#: .\templates\includes\header.html:94 .\templates\settings.html:91
+#: .\templates\includes\header.html:120 .\templates\settings.html:91
 msgid "Change password"
 msgstr "Changer le mot de passe"
 
-#: .\templates\includes\header.html:102
+#: .\templates\includes\header.html:128
 msgid "Log out"
 msgstr "Se déconnecter"
 
-#: .\templates\includes\header.html:111
+#: .\templates\includes\header.html:137
 msgid "Log in"
 msgstr "Se connecter"
 
@@ -1059,9 +1117,9 @@ msgstr "Etat"
 msgid "Type"
 msgstr "Type"
 
-#: .\templates\issue\issue_detail.html:41
-#: .\templates\jira\jira_config_list.html:36 .\templates\query.html:153
-#: .\templates\settings.html:102
+#: .\templates\issue\issue_detail.html:41 .\templates\query.html:153
+#: .\templates\settings.html:102 .\templates\team\project_devs.html:20
+#: .\templates\team\project_form.html:13 .\templates\team\project_list.html:33
 msgid "Project"
 msgstr "Projet"
 
@@ -1327,13 +1385,9 @@ msgstr "Apply only when the preview is exact."
 msgid "Review the execution result."
 msgstr "Vérifiez le résultat d’exécution."
 
-#: .\templates\jira\jira_config_list.html:5
-msgid "Mes configurations Jira"
-msgstr "Mes configurations Jira"
-
 #: .\templates\jira\jira_config_list.html:6
-msgid "Creer, tester et activer plusieurs connexions selon vos boards et vos contextes d'equipe."
-msgstr "Creer, tester et activer plusieurs connexions selon vos boards et vos contextes d'equipe."
+msgid "Your personal token for each Jira. Boards, projects and developers are set on the projects, shared with their members."
+msgstr "Votre token personnel pour chaque Jira. Les boards, projets et développeurs se règlent sur les projets, partagés avec leurs membres."
 
 #: .\templates\jira\jira_config_list.html:14
 msgid "Jira connections"
@@ -1344,119 +1398,95 @@ msgid "Ajouter"
 msgstr "Ajouter"
 
 #: .\templates\jira\jira_config_list.html:34 .\templates\query.html:145
-#: .\templates\settings.html:100
+#: .\templates\settings.html:100 .\templates\team\project_list.html:31
 msgid "URL"
 msgstr "URL"
 
-#: .\templates\jira\jira_config_list.html:35 .\templates\query.html:149
-#: .\templates\settings.html:101
-msgid "Board"
-msgstr "Board"
-
-#: .\templates\jira\jira_config_list.html:37
-msgid "Epic"
-msgstr "Epic"
-
-#: .\templates\jira\jira_config_list.html:38
+#: .\templates\jira\jira_config_list.html:35
 msgid "Dernier test"
 msgstr "Dernier test"
 
-#: .\templates\jira\jira_config_list.html:39
-msgid "Current"
-msgstr "Courante"
-
-#: .\templates\jira\jira_config_list.html:40
+#: .\templates\jira\jira_config_list.html:36
 #: .\templates\sprint\sprint_detail.html:34
 #: .\templates\sprint\sprint_list.html:45
 #: .\templates\sprint\sprint_report.html:24
+#: .\templates\team\project_list.html:36
 msgid "Actions"
 msgstr "Actions"
 
-#: .\templates\jira\jira_config_list.html:76
-msgid "Definir comme configuration courante"
-msgstr "Definir comme configuration courante"
-
-#: .\templates\jira\jira_config_list.html:82
+#: .\templates\jira\jira_config_list.html:65
 msgid "Tester la connexion"
 msgstr "Tester la connexion"
 
-#: .\templates\jira\jira_config_list.html:87
+#: .\templates\jira\jira_config_list.html:70
 msgid "Editer"
 msgstr "Editer"
 
-#: .\templates\jira\jira_config_list.html:94
+#: .\templates\jira\jira_config_list.html:77
 msgid "Supprimer"
 msgstr "Supprimer"
 
-#: .\templates\jira\jira_config_list.html:103
+#: .\templates\jira\jira_config_list.html:86
 msgid "Aucune configuration."
 msgstr "Aucune configuration."
 
-#: .\templates\jira\jira_config_list.html:124
+#: .\templates\jira\jira_config_list.html:106
 msgid "Saving..."
 msgstr "Enregistrement..."
 
-#: .\templates\jira\jira_config_list.html:125
+#: .\templates\jira\jira_config_list.html:107
 msgid "Testing..."
 msgstr "Test en cours..."
 
-#: .\templates\jira\jira_config_list.html:126
+#: .\templates\jira\jira_config_list.html:108
 msgid "Connection test in progress..."
 msgstr "Test de connexion en cours..."
 
-#: .\templates\jira\jira_config_list.html:127
+#: .\templates\jira\jira_config_list.html:109
 msgid "Connection OK"
 msgstr "Connexion OK"
 
-#: .\templates\jira\jira_config_list.html:128
+#: .\templates\jira\jira_config_list.html:110
 msgid "Connection failed"
 msgstr "Connexion échouée"
 
-#: .\templates\jira\jira_config_list.html:129
+#: .\templates\jira\jira_config_list.html:111
 msgid "unknown error"
 msgstr "erreur inconnue"
 
-#: .\templates\jira\jira_config_list.html:130
+#: .\templates\jira\jira_config_list.html:112
 msgid "Configuration saved."
 msgstr "Configuration enregistrée."
 
-#: .\templates\jira\jira_config_list.html:131
+#: .\templates\jira\jira_config_list.html:113
 msgid "Jira connection validated."
 msgstr "Jira connection validated."
 
-#: .\templates\jira\jira_config_list.html:132
+#: .\templates\jira\jira_config_list.html:114
 msgid "Jira connection failed."
 msgstr "Jira connection failed."
 
-#: .\templates\jira\jira_config_list.html:133
+#: .\templates\jira\jira_config_list.html:115
 msgid "Delete configuration"
 msgstr "Supprimer la configuration"
 
-#: .\templates\jira\jira_config_list.html:134
+#: .\templates\jira\jira_config_list.html:116
 msgid "Delete this Jira configuration?"
 msgstr "Supprimer cette configuration Jira ?"
 
-#: .\templates\jira\jira_config_list.html:135
+#: .\templates\jira\jira_config_list.html:117
 msgid "Delete"
 msgstr "Supprimer"
 
-#: .\templates\jira\jira_config_list.html:137
+#: .\templates\jira\jira_config_list.html:119
 msgid "Configuration deleted."
 msgstr "Configuration supprimée."
 
-#: .\templates\jira\jira_config_list.html:138
+#: .\templates\jira\jira_config_list.html:120
 msgid "Jira connection OK."
 msgstr "Jira connection OK."
 
-#: .\templates\jira\jira_config_list.html:139
-msgid "Current configuration updated."
-msgstr "Configuration courante mise à jour."
-
-#: .\templates\jira\jira_config_list.html:140
-msgid "Unable to save current configuration."
-msgstr "Impossible d’enregistrer la configuration courante."
-
-#: .\templates\jira\jira_config_list.html:141
+#: .\templates\jira\jira_config_list.html:121
 msgid "Unexpected response format"
 msgstr "Format de réponse inattendu"
 
@@ -1477,35 +1507,34 @@ msgid "Jira connection failed"
 msgstr "Échec de la connexion à Jira"
 
 #: .\templates\jira\jira_unavailable.html:26
-msgid "JiraFox reads everything live from Jira: complete your Jira configuration to use this page."
-msgstr "JiraFox lit tout en direct depuis Jira : complétez votre configuration Jira pour utiliser cette page."
+msgid "JiraFox reads everything live from Jira: complete your project and your Jira connection to use this page."
+msgstr "JiraFox lit tout en direct depuis Jira : complétez votre projet et votre connexion Jira pour utiliser cette page."
 
 #: .\templates\jira\jira_unavailable.html:28
 msgid "Jira could not be reached or refused the request. Check the URL and the API token, then try again."
 msgstr "Jira est injoignable ou a refusé la requête. Vérifiez l'URL et le token API, puis réessayez."
 
-#: .\templates\jira\jira_unavailable.html:41
-msgid "Open my Jira configurations"
-msgstr "Ouvrir mes configurations Jira"
-
-#: .\templates\jira\jira_unavailable.html:45
+#: .\templates\jira\jira_unavailable.html:48
 msgid "Try again"
 msgstr "Réessayer"
 
 #: .\templates\jira\partials\jira_config_modal_form.html:4
+#: .\templates\team\project_list.html:58
 msgid "Edit"
 msgstr "Modifier"
 
 #: .\templates\jira\partials\jira_config_modal_form.html:4
-#: .\templates\jira\partials\jira_config_modal_form.html:86
+#: .\templates\jira\partials\jira_config_modal_form.html:68
+#: .\templates\team\project_form.html:100
 msgid "Add"
 msgstr "Ajouter"
 
 #: .\templates\jira\partials\jira_config_modal_form.html:4
-msgid "a Jira configuration"
-msgstr "a Jira configuration"
+msgid "a Jira connection"
+msgstr "une connexion Jira"
 
 #: .\templates\jira\partials\jira_config_modal_form.html:20
+#: .\templates\team\project_form.html:47
 msgid "Jira URL"
 msgstr "URL Jira"
 
@@ -1517,39 +1546,24 @@ msgstr "Ex:"
 msgid "Token"
 msgstr "Token"
 
-#: .\templates\jira\partials\jira_config_modal_form.html:36
-msgid "Board ID"
-msgstr "ID du board"
-
-#: .\templates\jira\partials\jira_config_modal_form.html:40
-msgid "Project ID"
-msgstr "ID projet"
-
-#: .\templates\jira\partials\jira_config_modal_form.html:44
-msgid "Recurrent Epic Key"
-msgstr "Clé de l’epic récurrent"
-
-#: .\templates\jira\partials\jira_config_modal_form.html:50
-msgid "Current configuration"
-msgstr "Configuration courante"
-
-#: .\templates\jira\partials\jira_config_modal_form.html:60
+#: .\templates\jira\partials\jira_config_modal_form.html:42
 msgid "Last test:"
 msgstr "Dernier test :"
 
-#: .\templates\jira\partials\jira_config_modal_form.html:70
+#: .\templates\jira\partials\jira_config_modal_form.html:52
 msgid "Last error:"
 msgstr "Dernière erreur :"
 
-#: .\templates\jira\partials\jira_config_modal_form.html:77
+#: .\templates\jira\partials\jira_config_modal_form.html:59
 msgid "You can save and then test, or test directly after editing."
 msgstr "Vous pouvez enregistrer puis tester, ou tester directement après modification."
 
-#: .\templates\jira\partials\jira_config_modal_form.html:82
+#: .\templates\jira\partials\jira_config_modal_form.html:64
 msgid "Test connection"
 msgstr "Tester la connexion"
 
-#: .\templates\jira\partials\jira_config_modal_form.html:86
+#: .\templates\jira\partials\jira_config_modal_form.html:68
+#: .\templates\team\project_form.html:67
 msgid "Save"
 msgstr "Enregistrer"
 
@@ -1601,18 +1615,21 @@ msgstr "Aucun preset disponible."
 msgid "Recent queries"
 msgstr "Requêtes récentes"
 
-#: .\templates\query.html:141 .\templates\settings.html:97
-msgid "Current Jira configuration"
-msgstr "Configuration Jira courante"
+#: .\templates\query.html:149 .\templates\settings.html:101
+#: .\templates\team\project_list.html:32
+msgid "Board"
+msgstr "Board"
 
 #: .\templates\query.html:157 .\templates\settings.html:103
-#: .\templates\sprint\sprint_xls_report.html:21
-msgid "Team"
-msgstr "Equipe"
+#: .\templates\sprint\sprint_list.html:41
+#: .\templates\sprint\sprint_report.html:22
+#: .\templates\team\project_form.html:42 .\templates\team\project_list.html:30
+msgid "Name"
+msgstr "Nom"
 
-#: .\templates\query.html:162
-msgid "No active Jira configuration."
-msgstr "Aucune configuration Jira active."
+#: .\templates\query.html:162 .\templates\settings.html:114
+msgid "You have no project yet."
+msgstr "Vous n'avez encore aucun projet."
 
 #: .\templates\query.html:168
 msgid "Epic bootstrap"
@@ -1654,17 +1671,13 @@ msgstr "Gestion du mot de passe"
 msgid "Update your password from an authenticated session."
 msgstr "Update your password from an authenticated session."
 
-#: .\templates\settings.html:106
+#: .\templates\settings.html:107
+msgid "Manage the project"
+msgstr "Gérer le projet"
+
+#: .\templates\settings.html:110
 msgid "Manage Jira connections"
 msgstr "Gérer les connexions Jira"
-
-#: .\templates\settings.html:109
-msgid "No current Jira configuration is active for this account."
-msgstr "No current Jira configuration is active for this account."
-
-#: .\templates\settings.html:111
-msgid "Create a Jira connection"
-msgstr "Créer une connexion Jira"
 
 #: .\templates\sprint\sprint_detail.html:17
 msgid "Sprint backlog"
@@ -1720,18 +1733,13 @@ msgstr "Fermé"
 msgid "Filter"
 msgstr "Filtrer"
 
-#: .\templates\sprint\sprint_list.html:41
-#: .\templates\sprint\sprint_report.html:22
-msgid "Name"
-msgstr "Nom"
-
 #: .\templates\sprint\sprint_list.html:43
-#: .\templates\sprint\sprint_xls_report.html:98
+#: .\templates\sprint\sprint_xls_report.html:44
 msgid "Start"
 msgstr "Début"
 
 #: .\templates\sprint\sprint_list.html:44
-#: .\templates\sprint\sprint_xls_report.html:102
+#: .\templates\sprint\sprint_xls_report.html:48
 msgid "End"
 msgstr "Fin"
 
@@ -1927,145 +1935,276 @@ msgstr "Item age (days)"
 msgid "Capacity sheet"
 msgstr "Capacity sheet"
 
+#: .\templates\sprint\sprint_xls_report.html:21
+msgid "Team"
+msgstr "Equipe"
+
 #: .\templates\sprint\sprint_xls_report.html:22
 msgid "Ajuster la capacite, les conges et les temps recurrents avant generation du fichier."
 msgstr "Ajuster la capacite, les conges et les temps recurrents avant generation du fichier."
 
 #: .\templates\sprint\sprint_xls_report.html:26
+#: .\templates\team\project_devs.html:23
 msgid "Ajouter un dev"
 msgstr "Ajouter un dev"
 
-#: .\templates\sprint\sprint_xls_report.html:43
-msgid "Reordonner le dev"
-msgstr "Reordonner le dev"
-
-#: .\templates\sprint\sprint_xls_report.html:49
-msgid "Retirer de la team"
-msgstr "Retirer de la team"
-
-#: .\templates\sprint\sprint_xls_report.html:60
-msgid "Jira username: matches worklogs and assignees exactly. Without it, the developer is matched by name."
-msgstr "Identifiant Jira : associe exactement les worklogs et les assignés. Sans lui, le développeur est reconnu par son nom."
-
-#: .\templates\sprint\sprint_xls_report.html:60
-msgid "Jira ID"
-msgstr "ID Jira"
-
-#: .\templates\sprint\sprint_xls_report.html:61
-msgid "Ex: TDPTAV"
-msgstr "Ex : TDPTAV"
-
-#: .\templates\sprint\sprint_xls_report.html:64
-msgid "Workload"
-msgstr "Charge"
-
-#: .\templates\sprint\sprint_xls_report.html:68
-msgid "Holidays"
-msgstr "Congés"
-
-#: .\templates\sprint\sprint_xls_report.html:76
-msgid "Project meetings"
-msgstr "Réunions projet"
-
-#: .\templates\sprint\sprint_xls_report.html:80
-msgid "Other meetings"
-msgstr "Autres réunions"
-
-#: .\templates\sprint\sprint_xls_report.html:91
+#: .\templates\sprint\sprint_xls_report.html:37
 msgid "Logged sheet period"
 msgstr "Période du rapport des temps prestés"
 
-#: .\templates\sprint\sprint_xls_report.html:93
+#: .\templates\sprint\sprint_xls_report.html:39
 msgid "Set by hand."
 msgstr "Saisie manuellement."
 
-#: .\templates\sprint\sprint_xls_report.html:93
+#: .\templates\sprint\sprint_xls_report.html:39
 msgid "Jira sprint dates."
 msgstr "Dates du sprint dans Jira."
 
-#: .\templates\sprint\sprint_xls_report.html:94
+#: .\templates\sprint\sprint_xls_report.html:40
 msgid "Jira:"
 msgstr "Jira :"
 
-#: .\templates\sprint\sprint_xls_report.html:106
+#: .\templates\sprint\sprint_xls_report.html:52
 msgid "Save bounds"
 msgstr "Enregistrer les bornes"
 
-#: .\templates\sprint\sprint_xls_report.html:108
+#: .\templates\sprint\sprint_xls_report.html:54
 msgid "Reset to Jira dates"
 msgstr "Revenir aux dates Jira"
 
-#: .\templates\sprint\sprint_xls_report.html:114
+#: .\templates\sprint\sprint_xls_report.html:60
 msgid "Generer le Capacity Sheet"
 msgstr "Generer le Capacity Sheet"
 
-#: .\templates\sprint\sprint_xls_report.html:117
+#: .\templates\sprint\sprint_xls_report.html:63
 msgid "One tab per developer: planned vs logged hours and ticket status at sprint start and end."
 msgstr "Un onglet par développeur : heures prévues et loguées, statut des tickets au début et à la fin du sprint."
 
-#: .\templates\sprint\sprint_xls_report.html:118
+#: .\templates\sprint\sprint_xls_report.html:64
 msgid "Generate logged sheet"
 msgstr "Générer le rapport des temps prestés"
 
-#: .\templates\sprint\sprint_xls_report.html:129
+#: .\templates\team\_dev_table.html:13
+msgid "Reordonner le dev"
+msgstr "Reordonner le dev"
+
+#: .\templates\team\_dev_table.html:19
+msgid "Retirer de la team"
+msgstr "Retirer de la team"
+
+#: .\templates\team\_dev_table.html:30
+msgid "Jira username: matches worklogs and assignees exactly. Without it, the developer is matched by name."
+msgstr "Identifiant Jira : associe exactement les worklogs et les assignés. Sans lui, le développeur est reconnu par son nom."
+
+#: .\templates\team\_dev_table.html:30
+msgid "Jira ID"
+msgstr "ID Jira"
+
+#: .\templates\team\_dev_table.html:31
+msgid "Ex: TDPTAV"
+msgstr "Ex : TDPTAV"
+
+#: .\templates\team\_dev_table.html:34
+msgid "Workload"
+msgstr "Charge"
+
+#: .\templates\team\_dev_table.html:38
+msgid "Holidays"
+msgstr "Congés"
+
+#: .\templates\team\_dev_table.html:46
+msgid "Project meetings"
+msgstr "Réunions projet"
+
+#: .\templates\team\_dev_table.html:50
+msgid "Other meetings"
+msgstr "Autres réunions"
+
+#: .\templates\team\_dev_table_js.html:5
 msgid "Value saved."
 msgstr "Valeur enregistrée."
 
-#: .\templates\sprint\sprint_xls_report.html:130
+#: .\templates\team\_dev_table_js.html:6
 msgid "Unable to save value."
 msgstr "Impossible d’enregistrer la valeur."
 
-#: .\templates\sprint\sprint_xls_report.html:131
+#: .\templates\team\_dev_table_js.html:7
 msgid "Add developer"
 msgstr "Ajouter un développeur"
 
-#: .\templates\sprint\sprint_xls_report.html:132
+#: .\templates\team\_dev_table_js.html:8
 msgid "Developer name"
 msgstr "Nom du développeur"
 
-#: .\templates\sprint\sprint_xls_report.html:133
+#: .\templates\team\_dev_table_js.html:9
 msgid "Ex: Jane Doe"
 msgstr "Ex: Jane Doe"
 
-#: .\templates\sprint\sprint_xls_report.html:134
+#: .\templates\team\_dev_table_js.html:10 .\templates\team\project_form.html:67
 msgid "Create"
 msgstr "Créer"
 
-#: .\templates\sprint\sprint_xls_report.html:136
+#: .\templates\team\_dev_table_js.html:12
 msgid "Developer added."
 msgstr "Développeur ajouté."
 
-#: .\templates\sprint\sprint_xls_report.html:137
+#: .\templates\team\_dev_table_js.html:13
 msgid "Unable to create developer."
 msgstr "Impossible de créer le développeur."
 
-#: .\templates\sprint\sprint_xls_report.html:138
+#: .\templates\team\_dev_table_js.html:14
 msgid "Remove developer"
 msgstr "Retirer le développeur"
 
-#: .\templates\sprint\sprint_xls_report.html:139
+#: .\templates\team\_dev_table_js.html:15
 msgid "Remove this developer from the team?"
 msgstr "Retirer ce développeur de l’équipe ?"
 
-#: .\templates\sprint\sprint_xls_report.html:140
+#: .\templates\team\_dev_table_js.html:16
 msgid "Remove"
 msgstr "Retirer"
 
-#: .\templates\sprint\sprint_xls_report.html:141
+#: .\templates\team\_dev_table_js.html:17
 msgid "Developer removed from team."
 msgstr "Développeur retiré de l’équipe."
 
-#: .\templates\sprint\sprint_xls_report.html:142
+#: .\templates\team\_dev_table_js.html:18
 msgid "Unable to remove developer."
 msgstr "Impossible de retirer le développeur."
 
-#: .\templates\sprint\sprint_xls_report.html:143
+#: .\templates\team\_dev_table_js.html:19
 msgid "Column order saved."
 msgstr "Ordre des colonnes enregistré."
 
-#: .\templates\sprint\sprint_xls_report.html:144
+#: .\templates\team\_dev_table_js.html:20
 msgid "Unable to save column order."
 msgstr "Impossible d’enregistrer l’ordre des colonnes."
+
+#: .\templates\team\project_devs.html:4 .\templates\team\project_devs.html:13
+#: .\templates\team\project_form.html:24 .\templates\team\project_list.html:35
+#: .\templates\team\project_list.html:55
+msgid "Developers"
+msgstr "Développeurs"
+
+#: .\templates\team\project_devs.html:16
+msgid "The project's developers, shared by its members: capacity used by the capacity sheet, Jira ID used to match worklogs and assignees. Drag the columns to reorder them."
+msgstr "Les développeurs du projet, partagés par ses membres : capacité utilisée par le Capacity Sheet, ID Jira pour reconnaître worklogs et assignés. Glissez les colonnes pour les réordonner."
+
+#: .\templates\team\project_form.html:16
+msgid "Every member reads this board with their own Jira token: each needs a Jira connection for this URL."
+msgstr "Chaque membre lit ce board avec son propre token Jira : chacun a besoin d'une connexion Jira pour cette URL."
+
+#: .\templates\team\project_form.html:52
+msgid "Board ID"
+msgstr "ID du board"
+
+#: .\templates\team\project_form.html:57
+msgid "Project ID"
+msgstr "ID projet"
+
+#: .\templates\team\project_form.html:62
+msgid "Recurrent Epic Key"
+msgstr "Clé de l’epic récurrent"
+
+#: .\templates\team\project_form.html:76 .\templates\team\project_list.html:34
+msgid "Members"
+msgstr "Membres"
+
+#: .\templates\team\project_form.html:80
+msgid "you"
+msgstr "vous"
+
+#: .\templates\team\project_form.html:84
+msgid "Leave the project"
+msgstr "Quitter le projet"
+
+#: .\templates\team\project_form.html:84
+msgid "Remove from the project"
+msgstr "Retirer du projet"
+
+#: .\templates\team\project_form.html:94
+msgid "User"
+msgstr "Utilisateur"
+
+#: .\templates\team\project_form.html:104
+msgid "Every user is already a member."
+msgstr "Tous les utilisateurs sont déjà membres."
+
+#: .\templates\team\project_form.html:109
+msgid "Delete this project, its developers and its sprint bounds for every member?"
+msgstr "Supprimer ce projet, ses développeurs et ses bornes de sprint pour tous les membres ?"
+
+#: .\templates\team\project_form.html:112
+msgid "Delete the project"
+msgstr "Supprimer le projet"
+
+#: .\templates\team\project_list.html:8
+msgid "A project is a Jira board shared by its members, each with their own Jira token, and its developers. Switch project in the header."
+msgstr "Un projet est un board Jira partagé par ses membres, chacun avec son propre token Jira, et ses développeurs. Changez de projet dans le header."
+
+#: .\templates\team\project_list.html:67
+msgid "You are a member of no project yet: create one, or ask a member to add you."
+msgstr "Vous n'êtes encore membre d'aucun projet : créez-en un, ou demandez à un membre de vous ajouter."
+
+#~ msgid "Connexions Jira"
+#~ msgstr "Connexions Jira"
+
+#~ msgid "Gerer plusieurs boards, tester les acces et choisir la configuration courante."
+#~ msgstr "Gerer plusieurs boards, tester les acces et choisir la configuration courante."
+
+#~ msgid "Configurer"
+#~ msgstr "Configurer"
+
+#~ msgid "Current"
+#~ msgstr "Courante"
+
+#~ msgid "No current Jira configuration. Create one and mark it as current."
+#~ msgstr "Aucune configuration Jira courante. Créez-en une et marquez-la comme courante."
+
+#~ msgid "Several Jira configurations are marked as current. Keep only one."
+#~ msgstr "Plusieurs configurations Jira sont marquées comme courantes. N'en gardez qu'une."
+
+#~ msgid "Jira"
+#~ msgstr "Jira"
+
+#~ msgid "Mes configurations Jira"
+#~ msgstr "Mes configurations Jira"
+
+#~ msgid "Creer, tester et activer plusieurs connexions selon vos boards et vos contextes d'equipe."
+#~ msgstr "Creer, tester et activer plusieurs connexions selon vos boards et vos contextes d'equipe."
+
+#~ msgid "Epic"
+#~ msgstr "Epic"
+
+#~ msgid "Definir comme configuration courante"
+#~ msgstr "Definir comme configuration courante"
+
+#~ msgid "Current configuration updated."
+#~ msgstr "Configuration courante mise à jour."
+
+#~ msgid "Unable to save current configuration."
+#~ msgstr "Impossible d’enregistrer la configuration courante."
+
+#~ msgid "Open my Jira configurations"
+#~ msgstr "Ouvrir mes configurations Jira"
+
+#~ msgid "a Jira configuration"
+#~ msgstr "a Jira configuration"
+
+#~ msgid "Current configuration"
+#~ msgstr "Configuration courante"
+
+#~ msgid "Current Jira configuration"
+#~ msgstr "Configuration Jira courante"
+
+#~ msgid "No active Jira configuration."
+#~ msgstr "Aucune configuration Jira active."
+
+#~ msgid "No current Jira configuration is active for this account."
+#~ msgstr "No current Jira configuration is active for this account."
+
+#~ msgid "Create a Jira connection"
+#~ msgstr "Créer une connexion Jira"
 
 #~ msgid "Removed / carried over"
 #~ msgstr "Retirés / reportés"
