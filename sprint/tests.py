@@ -27,6 +27,7 @@ from sprint.logged_report import (
     status_at,
 )
 from sprint.models import SprintPeriod
+from sprint.report import SprintWorkbookBuilder
 from team.models import Team, TeamDev
 
 from JiraFox.services.dashboard import (
@@ -592,6 +593,27 @@ SCOPE_REPORT = {
         }
     },
 }
+
+
+class CapacitySheetTests(TestCase):
+    def test_capacity_sheet_can_be_filtered_by_developer(self):
+        team = Team.objects.create(name="Core")
+        TeamDev.objects.create(team=team, dev=Dev.objects.create(name="Alice"), order=0)
+        TeamDev.objects.create(team=team, dev=Dev.objects.create(name="Bob"), order=1)
+        jira = SimpleNamespace(
+            cfg=SimpleNamespace(team=team, jira_board_id=1, jira_project_id=7, jira_recurrent_epic_key="ABC-0"),
+            JIRA_ONLY_STANDARD_TYPES="issuetype in standardIssueTypes()",
+            get_next_sprint=lambda board_id: {"id": 2447},
+            run_jql=lambda jql, history=False: [ISSUES[0]] if "Epic Link" in jql else [],
+        )
+
+        workbook = load_workbook(BytesIO(SprintWorkbookBuilder(jira, 2446).build()))
+
+        sheet = workbook["Capacity sheet"]
+        self.assertEqual(sheet.auto_filter.ref, f"A1:E{sheet.max_row}")
+        self.assertEqual(workbook["Estimation VS Reality"].auto_filter.ref[:4], "A1:E")
+        ticket = next(row for row in sheet.iter_rows(values_only=True) if row[1] and row[1].startswith("ABC-1"))
+        self.assertEqual(ticket[0], "RECURRENTS")
 
 
 class SprintScopeFlowTests(TestCase):

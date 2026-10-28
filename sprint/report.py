@@ -44,6 +44,9 @@ class SprintWorkbookBuilder:
         reality_sheet = self.workbook.create_sheet("Estimation VS Reality")
         self._populate_reality_sheet(reality_sheet)
 
+        for worksheet in (capacity_sheet, reality_sheet):
+            self._add_filter(worksheet)
+
         buffer = BytesIO()
         self.workbook.save(buffer)
         buffer.seek(0)
@@ -99,6 +102,10 @@ class SprintWorkbookBuilder:
         row = self._write_member_metric_row(worksheet, row, "Meetings", lambda teamdev: teamdev.dev.other_meetings)
         return self._write_available_row(worksheet, row)
 
+    def _add_filter(self, worksheet) -> None:
+        # Filtering a developer's column on non-empty cells keeps their tickets, the metric rows and the sums.
+        worksheet.auto_filter.ref = f"A1:{get_column_letter(self.state_col)}{worksheet.max_row}"
+
     def _write_member_metric_row(self, worksheet, row: int, label: str, getter) -> int:
         worksheet.cell(row=row, column=self.start_col - 1, value=label)
         for index, teamdev in enumerate(self.teamdevs):
@@ -130,6 +137,8 @@ class SprintWorkbookBuilder:
         first_row = row
         for jql in jqls:
             for issue in self._run_jql_cached(jql):
+                # The section name on each ticket keeps it readable once the title rows are filtered out.
+                worksheet.cell(row=row, column=1, value=title)
                 row = self._write_issue_row(worksheet, row, issue, diff_spent_hours)
 
         return self._write_sum_row(worksheet, row, first_row)
