@@ -19,6 +19,7 @@ from sprint.logged_report import (
     LoggedWorkbookBuilder,
     build_dev_rows,
     build_unassigned_rows,
+    closed_ratio,
     planned_assignee_at,
     planned_hours_at,
     logged_hours,
@@ -306,6 +307,22 @@ class LoggedReportTests(SimpleTestCase):
         rows = build_unassigned_rows([{**ISSUES[0], "assignee": CARL}], ["Alice"], start, end)
         self.assertEqual([row["planned_hours"] for row in rows], [4.0, None])
 
+    def test_closed_tickets_share_counts_the_dev_tickets_at_the_sprint_end(self):
+        start, end = sprint_window(SPRINT, NOW)
+        categories = {"Done": "done", "In Progress": "indeterminate", "To Do": "new"}
+        devs = [DevIdentity("Alice"), DevIdentity("Bob")]
+        issues = [
+            ISSUES[0],  # Alice, Done
+            {**ISSUES[1], "assignee": ALICE},  # Alice, In Progress
+            {**ISSUES[1], "assignee": ALICE, "state": "To Do"},  # not started: left out
+            {**ISSUES[0], "subtask": True},  # sub-task: left out
+            # Handed over to Bob before the end: his.
+            {**ISSUES[0], "assignee_changes": [{"at": "2026-03-11T09:00:00.000+0100", "from": ALICE, "to": BOB}]},
+        ]
+
+        self.assertEqual(closed_ratio(issues, devs[0], devs, end, categories), (1, 2))
+        self.assertEqual(closed_ratio(issues, devs[1], devs, end, categories), (1, 1))
+
     def test_planned_time_is_the_remaining_estimate_at_sprint_start_for_the_dev_assigned_then(self):
         start, end = sprint_window(SPRINT, NOW)
         # Planned for Bob, handed over to Alice during the sprint.
@@ -432,8 +449,20 @@ class LoggedSheetViewTests(TestCase):
         self.team = Team.objects.create(name="Core")
         TeamDev.objects.create(team=self.team, dev=Dev.objects.create(name="Alice"), order=0)
 
-    def _fake_jira(self, team, worklogs=(), outside_issues=(), worklog_error=None):
-        self.worklog_windows, self.issue_id_queries = [], []
+    def _fake_jira(
+        self, team, worklogs=(), outside_issues=(), worklog_error=None, scope_report=None, removed_issues=(),
+        report_error=None,
+    ):
+        self.worklog_windows, self.issue_id_queries, self.key_queries = [], [], []
+
+        def get_sprint_scope_report(sprint_id):
+            if report_error:
+                raise report_error
+            return scope_report or {"completedIssues": [{"key": "ABC-1"}]}
+
+        def get_issues_with_worklogs_by_keys(keys):
+            self.key_queries.append(list(keys))
+            return [dict(issue) for issue in removed_issues if issue["key"] in keys]
 
         def get_worklogs_between(start, end):
             self.worklog_windows.append((start, end))
@@ -451,6 +480,9 @@ class LoggedSheetViewTests(TestCase):
             get_sprint_issues_with_worklogs=lambda sprint_id: ISSUES,
             get_worklogs_between=get_worklogs_between,
             get_issues_by_ids=get_issues_by_ids,
+            get_sprint_scope_report=get_sprint_scope_report,
+            get_issues_with_worklogs_by_keys=get_issues_with_worklogs_by_keys,
+            status_category_keys=lambda: {"Done": "done", "In Progress": "indeterminate", "To Do": "new"},
         )
 
     @patch("sprint.views.get_connected_jira_for_user")
@@ -468,6 +500,33 @@ class LoggedSheetViewTests(TestCase):
             [("2026-03-02T08:00:00+01:00", "2026-03-13T18:00:00+01:00")],
         )
         self.assertEqual(self.issue_id_queries, [])
+        self.assertEqual(self.key_queries, [])
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_logged_sheet_includes_tickets_moved_out_before_the_sprint_closed(self, mock_get_jira):
+        # Moved to the next sprint before this one closed: no longer in "sprint = 2446", still in Jira's report.
+        moved = {**ISSUES[0], "id": "107", "key": "ABC-7", "summary": "Moved on", "state": "In Progress",
+                 "status_changes": [], "worklogs": []}
+        report = {"completedIssues": [{"key": "ABC-1"}], "puntedIssues": [{"key": "ABC-7"}]}
+        mock_get_jira.return_value = self._fake_jira(self.team, scope_report=report, removed_issues=[moved])
+
+        response = self.client.get(reverse("sprint-logged-xls-export", args=[2446]))
+
+        self.assertEqual(self.key_queries, [["ABC-7"]])
+        alice = [[cell.value for cell in row] for row in load_workbook(BytesIO(response.content))["Alice"].iter_rows()]
+        self.assertEqual(alice[2], ["ABC-7 - Moved on", 4.0, "In Progress", 0, "=B3-D3", "In Progress", "Yes"])
+        # ABC-1 closed, ABC-7 started but not closed.
+        self.assertEqual(alice[-1][:3], ["Closed tickets", 0.5, "1 closed / 2 started"])
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_logged_sheet_survives_a_sprint_report_failure(self, mock_get_jira):
+        mock_get_jira.return_value = self._fake_jira(self.team, report_error=Timeout("read timed out"))
+
+        response = self.client.get(reverse("sprint-logged-xls-export", args=[2446]))
+
+        period = [[cell.value for cell in row] for row in load_workbook(BytesIO(response.content))["Period"].iter_rows()]
+        self.assertEqual(period[-1][0], "Not fetched")
+        self.assertIn("moved out of the sprint", period[-1][1])
 
     @patch("sprint.views.get_connected_jira_for_user")
     def test_logged_sheet_adds_time_logged_outside_the_sprint(self, mock_get_jira):

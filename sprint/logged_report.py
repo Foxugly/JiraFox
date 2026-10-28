@@ -8,6 +8,11 @@ Planned time is the sprint's load: the ticket's remaining estimate at the sprint
 estimate if created later), on the tab of the developer assigned at that moment only, both rebuilt
 from the changelog. Gap = planned - logged, so time on tickets planned for others counts as unplanned.
 
+The sprint's tickets are those of `sprint = <id>` plus those Jira's sprint report knows: a ticket
+moved to the next sprint before this one closed no longer matches the JQL but was still planned in it.
+Under the totals, the share of the developer's tickets (assigned at the sprint end, sub-tasks left out)
+closed by the sprint end, out of those started by then (To Do left out).
+
 Tickets outside the sprint the developer logged time on come last ("In sprint" = No, no planned
 time), followed by a Total row and an "Outside sprint" subtotal. An "Unassigned" tab lists the
 time logged on sprint tickets by people matching no team developer (one row per ticket and author),
@@ -41,6 +46,8 @@ UNASSIGNED_HEADERS = ("Ticket", "Planned (h)", "Status at sprint start", "Logged
 UNASSIGNED_SHEET_TITLE = "Unassigned"
 PERIOD_SHEET_TITLE = "Period"
 CREATED_DURING_SPRINT = "Created during sprint"
+# Jira sprint report buckets holding this sprint's tickets (completed in another sprint is not one).
+SPRINT_REPORT_BUCKETS = ("completedIssues", "issuesNotCompletedInCurrentSprint", "puntedIssues")
 SHEET_TITLE_MAX_LENGTH = 31
 INVALID_SHEET_TITLE_CHARS = re.compile(r"[\[\]:*?/\\]")
 
@@ -175,6 +182,31 @@ def planned_hours_at(issue: dict, start: datetime | None) -> float:
         return seconds_to_hours(float(seconds or 0))
     except (TypeError, ValueError):
         return 0.0
+
+
+def assignee_at(issue: dict, moment: datetime) -> dict | None:
+    return _value_at(issue.get("assignee_changes") or [], moment, issue.get("assignee"))
+
+
+def closed_ratio(
+    issues: Iterable[dict],
+    dev: DevIdentity,
+    devs: list[DevIdentity],
+    end: datetime,
+    status_categories: dict[str, str],
+) -> tuple[int, int]:
+    """(closed, started) among the developer's tickets at the sprint end, as on the sprint scope page."""
+    closed = started = 0
+    for issue in issues:
+        if issue.get("subtask") or resolve_dev(assignee_at(issue, end), devs) != dev:
+            continue
+        status = status_at(issue, end)
+        category = status_categories.get(status) if status else "new"
+        if category == "new":
+            continue
+        started += 1
+        closed += category == "done"
+    return closed, started
 
 
 def planned_assignee_at(issue: dict, start: datetime | None) -> dict | None:
@@ -342,9 +374,11 @@ class LoggedWorkbookBuilder:
         period: SprintPeriod | None = None,
         now: datetime | None = None,
         warnings: list[str] = (),
+        status_categories: dict[str, str] | None = None,
     ):
         self.sprint = sprint
         self.warnings = list(warnings)
+        self.status_categories = status_categories
         self.issues = issues
         self.devs = [DevIdentity.of(dev) for dev in devs]
         self.outside_issues = list(outside_issues)
@@ -361,7 +395,10 @@ class LoggedWorkbookBuilder:
         for dev in self.devs:
             worksheet = self.workbook.create_sheet(sheet_title(dev.name, used_titles))
             rows = build_dev_rows(self.issues, dev, self.start, self.end, self.devs, self.outside_issues)
-            self._populate(worksheet, rows)
+            closed = None
+            if self.status_categories is not None:
+                closed = closed_ratio(self.issues, dev, self.devs, self.end, self.status_categories)
+            self._populate(worksheet, rows, closed=closed)
 
         worksheet = self.workbook.create_sheet(sheet_title(UNASSIGNED_SHEET_TITLE, used_titles))
         self._populate(
@@ -386,7 +423,9 @@ class LoggedWorkbookBuilder:
             f"=B{row_index}-D{row_index}", row["end_status"], "Yes" if row["in_sprint"] else "No",
         )
 
-    def _populate(self, worksheet, rows: list[dict], headers: tuple[str, ...] = HEADERS) -> None:
+    def _populate(
+        self, worksheet, rows: list[dict], headers: tuple[str, ...] = HEADERS, closed: tuple[int, int] | None = None
+    ) -> None:
         for column, header in enumerate(headers, start=1):
             cell = worksheet.cell(row=1, column=column, value=header)
             cell.font = Font(bold=True)
@@ -413,12 +452,19 @@ class LoggedWorkbookBuilder:
             total_rows.append(
                 {1: "Outside sprint", 4: f'=SUMIF(G2:G{last_data_row},"No",D2:D{last_data_row})' if rows else 0}
             )
+        if closed is not None:
+            done, started = closed
+            total_rows.append(
+                {1: "Closed tickets", 2: done / started if started else "-", 3: f"{done} closed / {started} started"}
+            )
         for offset, totals in enumerate(total_rows):
             for column in range(1, len(headers) + 1):
                 cell = worksheet.cell(row=last_data_row + 1 + offset, column=column, value=totals.get(column))
                 cell.font = Font(bold=True)
                 cell.fill = self.total_fill
                 cell.border = self.border
+                if totals.get(1) == "Closed tickets" and column == 2:
+                    cell.number_format = "0%"
 
         for column, width in enumerate(self.column_widths[headers], start=1):
             worksheet.column_dimensions[chr(ord("A") + column - 1)].width = width
@@ -429,7 +475,7 @@ class LoggedWorkbookBuilder:
             ("Start", _excel_datetime(self.start)),
             ("End", _excel_datetime(self.end)),
             ("Bounds", "Set by hand" if self.period else "Jira sprint dates"),
-            *(("Not fetched", f"Time logged outside the sprint: {warning}") for warning in self.warnings),
+            *(("Not fetched", warning) for warning in self.warnings),
         )
         for row_index, (label, value) in enumerate(lines, start=1):
             worksheet.cell(row=row_index, column=1, value=label).font = Font(bold=True)
@@ -460,6 +506,19 @@ def fetch_outside_issues(
     return outside
 
 
+def fetch_removed_issues(jira: JiraManager, sprint_id: int, issues: list[dict]) -> list[dict]:
+    """Tickets of Jira's sprint report missing from `issues`: moved out of the sprint before it closed."""
+    report = jira.get_sprint_scope_report(sprint_id)
+    known = {issue.get("key") for issue in issues}
+    keys = []
+    for bucket in SPRINT_REPORT_BUCKETS:
+        for raw in report.get(bucket) or []:
+            if raw.get("key") and raw["key"] not in known:
+                known.add(raw["key"])
+                keys.append(raw["key"])
+    return jira.get_issues_with_worklogs_by_keys(keys) if keys else []
+
+
 def create_logged_xlsx_bytes(jira: JiraManager, sprint_id: int, now: datetime | None = None) -> bytes:
     team = jira.cfg.team
     devs = [
@@ -473,12 +532,21 @@ def create_logged_xlsx_bytes(jira: JiraManager, sprint_id: int, now: datetime | 
     start, end = sprint_window(sprint, now or timezone.now(), period)
     outside_issues: list[dict] = []
     warnings: list[str] = []
+    status_categories = None
+    # Each of these only completes the sheet: on failure, say what is missing instead.
+    try:
+        issues = issues + fetch_removed_issues(jira, sprint_id, issues)
+    except (JIRAError, RequestException, JiraUnavailable, RuntimeError) as exc:
+        warnings.append(f"Tickets moved out of the sprint before it closed: {describe_jira_error(exc)}")
+    try:
+        status_categories = jira.status_category_keys()
+    except (JIRAError, RequestException, JiraUnavailable) as exc:
+        warnings.append(f"Closed tickets share: {describe_jira_error(exc)}")
     if start:
         try:
             outside_issues = fetch_outside_issues(jira, issues, devs, start, end)
         except (JIRAError, RequestException, JiraUnavailable) as exc:
-            # The sprint itself is still worth reporting: say what is missing instead.
-            warnings.append(describe_jira_error(exc))
+            warnings.append(f"Time logged outside the sprint: {describe_jira_error(exc)}")
 
     return LoggedWorkbookBuilder(
         sprint=sprint,
@@ -488,4 +556,5 @@ def create_logged_xlsx_bytes(jira: JiraManager, sprint_id: int, now: datetime | 
         period=period,
         now=now,
         warnings=warnings,
+        status_categories=status_categories,
     ).build()

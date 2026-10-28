@@ -587,6 +587,15 @@ class JiraManager:
                 )
         return out
 
+    def get_issues_with_worklogs_by_keys(self, keys: List[str]) -> List[Dict[str, Any]]:
+        """The given issues with their status changes and all their worklogs."""
+        out: List[Dict[str, Any]] = []
+        page_size = self.WORKLOG_SEARCH_PAGE_SIZE
+        for index in range(0, len(keys), page_size):
+            chunk = ", ".join(quote_value(key) for key in keys[index:index + page_size])
+            out.extend(self._issues_with_worklogs(f"key in ({chunk}) ORDER BY key ASC", page_size))
+        return out
+
     def get_issues_by_ids(self, issue_ids: List[str]) -> List[Dict[str, Any]]:
         """The given issues with their status changes, without worklogs (the caller has them)."""
         out: List[Dict[str, Any]] = []
@@ -607,7 +616,7 @@ class JiraManager:
                 jql,
                 startAt=len(issues),
                 maxResults=min(self.WORKLOG_SEARCH_PAGE_SIZE, max_results - len(issues)),
-                fields="summary,status,assignee,created,timetracking",
+                fields="summary,status,assignee,created,timetracking,issuetype",
             )
             issues.extend(page)
             total = getattr(page, "total", None)
@@ -628,6 +637,7 @@ class JiraManager:
                     "state": getattr(getattr(fields, "status", None), "name", None),
                     "created": getattr(fields, "created", None),
                     "assignee": self._serialize_assignee(getattr(fields, "assignee", None)),
+                    "subtask": bool(getattr(getattr(fields, "issuetype", None), "subtask", False)),
                     "original_estimate_hours": _to_hours(
                         getattr(timetracking, "originalEstimateSeconds", None) if timetracking else None
                     ),
