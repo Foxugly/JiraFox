@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: JiraFox\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-28 09:44+0100\n"
+"POT-Creation-Date: 2026-10-28 09:49+0100\n"
 "PO-Revision-Date: 2026-09-15 00:00+0200\n"
 "Last-Translator: Codex <codex@local>\n"
 "Language-Team: Dutch <nl@local>\n"
@@ -1829,12 +1829,9 @@ msgid "Completed"
 msgstr "Afgerond"
 
 #: .\templates\sprint\sprint_scope_flow.html:109
+#: .\templates\sprint\sprint_scope_flow.html:110
 msgid "Not completed"
 msgstr "Niet afgerond"
-
-#: .\templates\sprint\sprint_scope_flow.html:110
-msgid "Removed / carried over"
-msgstr "Verwijderd / doorgeschoven"
 
 #: .\templates\sprint\sprint_scope_flow.html:111
 msgid "Completed in another sprint"
@@ -2069,3 +2066,6 @@ msgstr "Column order saved."
 #: .\templates\sprint\sprint_xls_report.html:144
 msgid "Unable to save column order."
 msgstr "Unable to save column order."
+
+#~ msgid "Removed / carried over"
+#~ msgstr "Verwijderd / doorgeschoven"

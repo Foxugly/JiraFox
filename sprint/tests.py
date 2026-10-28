@@ -775,7 +775,8 @@ class SprintScopeFlowTests(TestCase):
         user.save(update_fields=["language"])
         response = self.client.get(reverse("sprint-scope-flow", args=[2446]))
         self.assertContains(response, "Périmètre du sprint")
-        self.assertContains(response, "Retirés / reportés")
+        self.assertContains(response, "Non terminés")
+        self.assertNotContains(response, "Retirés")
         self.assertContains(response, "Tickets prévus clôturés")
         self.assertContains(response, "2 clôturés / 3 commencés")
 
