@@ -157,7 +157,13 @@ class JiraManagerStatusHistoryTests(SimpleTestCase):
             assignee = SimpleNamespace(
                 field="assignee", fromString=None, toString="Martin, Alice", **{"from": None, "to": "AMARTIN"}
             )
-            history = SimpleNamespace(created="2026-03-05T10:00:00.000+0000", items=[change, estimate, assignee])
+            sprint = SimpleNamespace(
+                field="Sprint", fromString="BKL Sprint 1", toString="BKL Sprint 1, BKL Sprint 2",
+                **{"from": "2440", "to": "2440, 2446"},
+            )
+            history = SimpleNamespace(
+                created="2026-03-05T10:00:00.000+0000", items=[change, estimate, assignee, sprint]
+            )
             return [
                 SimpleNamespace(
                     key=key,
@@ -182,6 +188,10 @@ class JiraManagerStatusHistoryTests(SimpleTestCase):
         )
         self.assertEqual(
             result["ABC-59"]["estimate_changes"], [{"at": "2026-03-05T10:00:00.000+0000", "from": "7200", "to": "0"}]
+        )
+        self.assertEqual(
+            result["ABC-59"]["sprint_changes"],
+            [{"at": "2026-03-05T10:00:00.000+0000", "from": "2440", "to": "2440, 2446"}],
         )
         self.assertEqual(
             result["ABC-59"]["assignee_changes"],

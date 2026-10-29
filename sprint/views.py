@@ -273,13 +273,20 @@ class SprintScopeFlowView(LoginRequiredMixin, TemplateView):
                 histories = None
         context["sprint"] = sprint
         context["scope"] = build_scope_flow(
-            report, jira.get_issue_url, histories=histories, start=start, end=end, status_categories=categories
+            report, jira.get_issue_url, histories=histories, start=start, end=end, status_categories=categories,
+            sprint_id=sprint_id,
         )
         completion = context["scope"]["completion"]
         context["completion"] = [
             (_("Planned issues closed"), completion["planned"]),
             (_("Added issues closed"), completion["added"]),
             (_("All issues closed"), completion["all"]),
+        ]
+        stability = context["scope"]["stability"]
+        context["stability"] = [
+            (_("Planned issues unchanged"), stability["planned"]),
+            (_("Added issues unchanged"), stability["added"]),
+            (_("All issues unchanged"), stability["all"]),
         ]
         return context
 

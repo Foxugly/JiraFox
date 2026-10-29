@@ -4,6 +4,10 @@
 {% block header %}
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-sankey@0.12.1/dist/chartjs-chart-sankey.min.js"></script>
+    <style>
+        .stability-matrix th { white-space: nowrap; font-weight: 500; }
+        .stability-matrix .stability-diagonal { box-shadow: inset 0 0 0 2px rgba(200, 71, 90, 0.7); font-weight: 600; }
+    </style>
 {% endblock %}
 
 {% block title %}JiraFox - Sprint {{ sprint.name }} - {% trans "Sprint scope" %}{% endblock %}
@@ -35,6 +39,23 @@
                 </div>
             </div>
 
+            <ul class="nav nav-tabs mb-3" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="scope-flow-tab" data-bs-toggle="tab" data-bs-target="#scope-flow-pane"
+                            type="button" role="tab" aria-controls="scope-flow-pane" aria-selected="true">
+                        {% trans "Flow" %}
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="scope-stability-tab" data-bs-toggle="tab" data-bs-target="#scope-stability-pane"
+                            type="button" role="tab" aria-controls="scope-stability-pane" aria-selected="false">
+                        {% trans "Unchanged status" %}
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+            <div class="tab-pane fade show active" id="scope-flow-pane" role="tabpanel" aria-labelledby="scope-flow-tab" tabindex="0">
             {% if scope.issues %}
                 <div class="row g-3 mb-3">
                     {% for label, rate in completion %}
@@ -68,6 +89,67 @@
                     </div>
                 {% endif %}
             </div>
+            </div>
+
+            <div class="tab-pane fade" id="scope-stability-pane" role="tabpanel" aria-labelledby="scope-stability-tab" tabindex="0">
+                <p class="inline-note">
+                    {% trans "Status of each issue when it entered the sprint (the sprint start for planned issues, the moment it was added otherwise) compared with its status at the sprint end." %}
+                </p>
+                {% if scope.issues and scope.has_history %}
+                    <div class="row g-3 mb-3">
+                        {% for label, rate in stability %}
+                            <div class="col-12 col-md-4">
+                                <div class="card p-3 h-100" title="{% trans 'Issues in the same status on entering the sprint and at its end, out of the issues not done yet on entering it.' %}">
+                                    <div class="text-uppercase text-secondary small mb-2">{{ label }}</div>
+                                    <div class="metric-value">{% if rate.percent is not None %}{{ rate.percent }} %{% else %}-{% endif %}</div>
+                                    <div class="inline-note mt-2">{% blocktrans with same=rate.same compared=rate.compared %}{{ same }} unchanged / {{ compared }} issues{% endblocktrans %}</div>
+                                    <div class="inline-note">{% blocktrans with still=rate.still %}including {{ still }} without any status change{% endblocktrans %}</div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="btn-group btn-group-sm mb-3" role="group" aria-label="{% trans 'Issues' %}">
+                        <input type="radio" class="btn-check" name="stabilityGroup" id="stabilityAll" value="all" checked>
+                        <label class="btn btn-outline-secondary" for="stabilityAll">{% trans "All issues" %}</label>
+                        <input type="radio" class="btn-check" name="stabilityGroup" id="stabilityPlanned" value="planned">
+                        <label class="btn btn-outline-secondary" for="stabilityPlanned">{% trans "Planned at start" %}</label>
+                        <input type="radio" class="btn-check" name="stabilityGroup" id="stabilityAdded" value="added">
+                        <label class="btn btn-outline-secondary" for="stabilityAdded">{% trans "Added during sprint" %}</label>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12 col-xl-6">
+                            <div class="card p-4 h-100">
+                                <h3 class="h6 mb-1">{% trans "Status on entering the sprint → status at the sprint end" %}</h3>
+                                <p class="inline-note mb-3">{% trans "The diagonal holds the issues in the same status; ↺ marks those that changed status and came back. Click a cell to list its issues." %}</p>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered align-middle text-center mb-0 stability-matrix">
+                                        <thead id="stabilityMatrixHead"></thead>
+                                        <tbody id="stabilityMatrixBody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-xl-6">
+                            <div class="card p-4 h-100">
+                                <h3 class="h6 mb-1">{% trans "Same status or not, by status on entering the sprint" %}</h3>
+                                <p class="inline-note mb-3">{% trans "Issues already done on entering the sprint are not shown. Click a bar to list its issues." %}</p>
+                                <div style="height: 360px;">
+                                    <canvas id="stabilityChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="card p-4 text-center py-5">
+                        <h3 class="h5 mb-2">
+                            {% if scope.issues %}{% trans "The status history is needed to compare the statuses." %}{% else %}{% trans "Aucune donnée à afficher" %}{% endif %}
+                        </h3>
+                    </div>
+                {% endif %}
+            </div>
+            </div>
 
             {% if scope.issues %}
                 <div class="card p-4 mt-3">
@@ -89,6 +171,7 @@
                                 <th>{% trans "Summary" %}</th>
                                 <th>{% trans "Origin" %}</th>
                                 <th>{% trans "Status at sprint start" %}</th>
+                                <th>{% trans "Status on entering the sprint" %}</th>
                                 <th>{% trans "Outcome" %}</th>
                                 <th>{% trans "Status at sprint end" %}</th>
                                 <th>{% trans "Current status" %}</th>
@@ -163,8 +246,9 @@
                     return td;
                 }
 
-                function render(nodes) {
-                    const shown = scope.issues.filter((issue) => nodes.every((node) => issueNodes(issue).includes(node)));
+                // `filter`: {label, test(issue)}, or null for all issues.
+                function render(filter) {
+                    const shown = filter ? scope.issues.filter(filter.test) : scope.issues;
                     rows.replaceChildren(...shown.map((issue) => {
                         const tr = document.createElement("tr");
                         const key = document.createElement("td");
@@ -176,17 +260,18 @@
                         link.textContent = issue.key;
                         key.appendChild(link);
                         tr.append(key, cell(issue.summary), cell(nodeLabel(`origin:${issue.origin}`)),
-                            cell(issue.status_start || "-"), cell(nodeLabel(`outcome:${issue.outcome}`)),
+                            cell(issue.status_start || "-"), cell(issue.status_entry || "-"),
+                            cell(nodeLabel(`outcome:${issue.outcome}`)),
                             cell(issue.status_end), cell(issue.status_current), cell(issue.assignee || "-"));
                         return tr;
                     }));
                     count.textContent = shown.length;
-                    filterLabel.textContent = nodes.length ? "— " + nodes.map(nodeLabel).join(" → ") : "";
-                    showAll.classList.toggle("d-none", !nodes.length);
+                    filterLabel.textContent = filter ? "— " + filter.label : "";
+                    showAll.classList.toggle("d-none", !filter);
                 }
 
-                showAll.addEventListener("click", () => render([]));
-                render([]);
+                showAll.addEventListener("click", () => render(null));
+                render(null);
 
                 const textColor = getComputedStyle(document.body).color;
                 new Chart(document.getElementById("scopeFlowChart"), {
@@ -224,9 +309,149 @@
                         onClick: (event, elements) => {
                             if (!elements.length) return;
                             const flow = scope.flows[elements[0].index];
-                            render([flow.from, flow.to]);
+                            const nodes = [flow.from, flow.to];
+                            render({
+                                label: nodes.map(nodeLabel).join(" → "),
+                                test: (issue) => nodes.every((node) => issueNodes(issue).includes(node))
+                            });
                         }
                     }
+                });
+
+                // Unchanged status tab: entry status vs end status, for the issues whose entry is known.
+                const matrixHead = document.getElementById("stabilityMatrixHead");
+                if (!matrixHead) return;
+                const matrixBody = document.getElementById("stabilityMatrixBody");
+                const groupLabels = {
+                    all: "{% trans 'All issues' %}",
+                    planned: "{% trans 'Planned at start' %}",
+                    added: "{% trans 'Added during sprint' %}"
+                };
+                const isDone = (status) => scope.status_categories[status] === "done";
+                let group = "all";
+                let stabilityChart = null;
+
+                function compared() {
+                    return scope.issues.filter((issue) => issue.status_entry && (group === "all" || issue.origin === group));
+                }
+
+                function inGroup(test) {
+                    return (issue) => issue.status_entry && (group === "all" || issue.origin === group) && test(issue);
+                }
+
+                function th(text, scopeAttr) {
+                    const cellEl = document.createElement("th");
+                    cellEl.textContent = text;
+                    if (scopeAttr) cellEl.scope = scopeAttr;
+                    return cellEl;
+                }
+
+                function renderMatrix() {
+                    const issues = compared();
+                    const statuses = scope.status_order.filter((status) =>
+                        issues.some((issue) => issue.status_entry === status || issue.status_end === status));
+                    const counts = {};
+                    let max = 0;
+                    issues.forEach((issue) => {
+                        const key = `${issue.status_entry}\u0000${issue.status_end}`;
+                        counts[key] = (counts[key] || 0) + 1;
+                        max = Math.max(max, counts[key]);
+                    });
+
+                    const headRow = document.createElement("tr");
+                    headRow.append(th("{% trans 'Entry ↓ / End →' %}"), ...statuses.map((status) => th(status, "col")));
+                    matrixHead.replaceChildren(headRow);
+
+                    matrixBody.replaceChildren(...statuses.map((entry) => {
+                        const tr = document.createElement("tr");
+                        tr.appendChild(th(entry, "row"));
+                        statuses.forEach((end) => {
+                            const td = document.createElement("td");
+                            const matching = issues.filter((issue) => issue.status_entry === entry && issue.status_end === end);
+                            const diagonal = entry === end;
+                            if (diagonal) td.classList.add("stability-diagonal");
+                            if (matching.length) {
+                                // Same status: warm, the stronger the more issues; changed: green.
+                                const alpha = 0.15 + 0.6 * matching.length / max;
+                                const rgb = diagonal && !isDone(entry) ? "200, 71, 90" : "46, 157, 91";
+                                td.style.backgroundColor = `rgba(${rgb}, ${alpha})`;
+                                td.style.cursor = "pointer";
+                                const roundTrips = diagonal ? matching.filter((issue) => issue.moved).length : 0;
+                                td.textContent = roundTrips ? `${matching.length} (↺ ${roundTrips})` : matching.length;
+                                td.addEventListener("click", () => render({
+                                    label: `${groupLabels[group]} — ${entry} → ${end}`,
+                                    test: inGroup((issue) => issue.status_entry === entry && issue.status_end === end)
+                                }));
+                            } else {
+                                td.textContent = "·";
+                                td.classList.add("text-secondary");
+                            }
+                            tr.appendChild(td);
+                        });
+                        return tr;
+                    }));
+                }
+
+                const barKinds = [
+                    {key: "still", label: "{% trans 'Same status, no change' %}", color: "#c8475a",
+                        test: (issue) => issue.status_end === issue.status_entry && !issue.moved},
+                    {key: "back", label: "{% trans 'Same status, changed and came back' %}", color: "#e07a1f",
+                        test: (issue) => issue.status_end === issue.status_entry && issue.moved},
+                    {key: "changed", label: "{% trans 'Changed status' %}", color: "#2e9d5b",
+                        test: (issue) => issue.status_end !== issue.status_entry}
+                ];
+
+                function renderBars() {
+                    const issues = compared().filter((issue) => !isDone(issue.status_entry));
+                    const statuses = scope.status_order.filter((status) => issues.some((issue) => issue.status_entry === status));
+                    const datasets = barKinds.map((kind) => ({
+                        label: kind.label,
+                        backgroundColor: kind.color,
+                        data: statuses.map((status) =>
+                            issues.filter((issue) => issue.status_entry === status && kind.test(issue)).length)
+                    }));
+                    if (stabilityChart) {
+                        stabilityChart.data.labels = statuses;
+                        stabilityChart.data.datasets = datasets;
+                        stabilityChart.update();
+                        return;
+                    }
+                    stabilityChart = new Chart(document.getElementById("stabilityChart"), {
+                        type: "bar",
+                        data: {labels: statuses, datasets},
+                        options: {
+                            indexAxis: "y",
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: {stacked: true, ticks: {precision: 0, color: textColor}},
+                                y: {stacked: true, ticks: {color: textColor}}
+                            },
+                            plugins: {legend: {position: "bottom", labels: {color: textColor}}},
+                            onClick: (event, elements) => {
+                                if (!elements.length) return;
+                                const kind = barKinds[elements[0].datasetIndex];
+                                const status = stabilityChart.data.labels[elements[0].index];
+                                render({
+                                    label: `${groupLabels[group]} — ${status} — ${kind.label}`,
+                                    test: inGroup((issue) => issue.status_entry === status && kind.test(issue))
+                                });
+                            }
+                        }
+                    });
+                }
+
+                document.querySelectorAll("input[name=stabilityGroup]").forEach((input) => {
+                    input.addEventListener("change", () => {
+                        group = input.value;
+                        renderMatrix();
+                        if (stabilityChart) renderBars();
+                    });
+                });
+                renderMatrix();
+                // A chart drawn in a hidden tab has no size: draw it when the tab is first shown.
+                document.getElementById("scope-stability-tab").addEventListener("shown.bs.tab", () => {
+                    if (!stabilityChart) renderBars();
                 });
             })();
         </script>

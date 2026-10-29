@@ -365,9 +365,10 @@ class JiraManager:
 
     def get_status_histories(self, keys: List[str]) -> Dict[str, Dict[str, Any]]:
         """
-        {key: {"state", "created", "status_changes", "estimate_changes", "assignee_changes"}} for the
-        given issues: just enough to rebuild their status, remaining estimate (seconds) and assignee
-        at any moment. Only the status field and the changelog are fetched.
+        {key: {"state", "created", "status_changes", "estimate_changes", "assignee_changes",
+        "sprint_changes"}} for the given issues: just enough to rebuild their status, remaining
+        estimate (seconds), assignee and sprints at any moment. Only the status field and the
+        changelog are fetched.
         """
         out: Dict[str, Dict[str, Any]] = {}
         # A changelog can be very long: few issues per request keeps each answer small.
@@ -411,6 +412,12 @@ class JiraManager:
                         }
                         for at, item in changes
                         if getattr(item, "field", "") == "assignee"
+                    ],
+                    # Raw values: sprint ids, "2440, 2446".
+                    "sprint_changes": [
+                        {"at": at, "from": getattr(item, "from", None), "to": getattr(item, "to", None)}
+                        for at, item in changes
+                        if getattr(item, "field", "") == "Sprint"
                     ],
                 }
         return out

@@ -827,6 +827,69 @@ class SprintScopeFlowTests(TestCase):
         self.assertEqual(scope["columns"]["end:In Test"], 3)
         self.assertTrue(scope["has_history"])
 
+    def test_stability_compares_the_status_on_entering_the_sprint_with_the_end(self):
+        start = datetime(2026, 3, 2, 8, tzinfo=dt_timezone.utc)
+        end = datetime(2026, 3, 13, 18, tzinfo=dt_timezone.utc)
+        histories = {
+            # Planned: To Do at the start, Done at the end.
+            "BKL1-1": {"state": "Done", "created": "2026-02-01T10:00:00.000+0000", "status_changes": [
+                {"at": "2026-03-05T10:00:00.000+0000", "from": "To Do", "to": "Done"},
+            ]},
+            # Added without a Sprint change in its changelog: entered when it was created.
+            "BKL1-2": {"state": "Done", "created": "2026-03-03T10:00:00.000+0000", "status_changes": [
+                {"at": "2026-03-09T10:00:00.000+0000", "from": "To Do", "to": "Done"},
+            ]},
+            # Planned: In Progress at both ends, but it went to In Test and back meanwhile.
+            "BKL1-4": {"state": "In Progress", "created": "2026-02-01T10:00:00.000+0000", "status_changes": [
+                {"at": "2026-02-20T10:00:00.000+0000", "from": "To Do", "to": "In Progress"},
+                {"at": "2026-03-10T10:00:00.000+0000", "from": "In Progress", "to": "In Test"},
+                {"at": "2026-03-11T10:00:00.000+0000", "from": "In Test", "to": "In Progress"},
+            ]},
+            # Added on 6 March, already In Progress, never moved after.
+            "BKL1-5": {
+                "state": "In Progress",
+                "created": "2026-03-01T10:00:00.000+0000",
+                "status_changes": [{"at": "2026-03-04T10:00:00.000+0000", "from": "To Do", "to": "In Progress"}],
+                "sprint_changes": [
+                    {"at": "2026-03-01T10:00:00.000+0000", "from": None, "to": "2440"},
+                    {"at": "2026-03-06T10:00:00.000+0000", "from": "2440", "to": "2440, 2446"},
+                ],
+            },
+            # Done before the sprint: same status, but not a stuck issue.
+            "BKL1-6": {"state": "Done", "created": "2026-02-01T10:00:00.000+0000", "status_changes": [
+                {"at": "2026-02-15T10:00:00.000+0000", "from": "To Do", "to": "Done"},
+            ]},
+        }
+
+        scope = build_scope_flow(
+            SCOPE_REPORT, lambda key: key, histories=histories, start=start, end=end,
+            status_categories={"To Do": "new", "In Test": "indeterminate"}, sprint_id=2446,
+        )
+
+        issues = {issue["key"]: issue for issue in scope["issues"]}
+        entries = {key: (issue["status_entry"], issue["status_end"], issue["moved"]) for key, issue in issues.items()}
+        self.assertEqual(
+            entries,
+            {
+                "BKL1-1": ("To Do", "Done", True),
+                "BKL1-2": ("To Do", "Done", True),
+                "BKL1-3": (None, "Canceled", None),
+                "BKL1-4": ("In Progress", "In Progress", True),
+                "BKL1-5": ("In Progress", "In Progress", False),
+                "BKL1-6": ("Done", "Done", False),
+            },
+        )
+        # Done on entry and unknown entry statuses are left out.
+        self.assertEqual(
+            scope["stability"],
+            {
+                "planned": {"same": 1, "still": 0, "compared": 2, "percent": 50},
+                "added": {"same": 1, "still": 1, "compared": 2, "percent": 50},
+                "all": {"same": 2, "still": 1, "compared": 4, "percent": 50},
+            },
+        )
+        self.assertEqual(scope["status_order"], ["To Do", "In Progress", "Done", "Canceled"])
+
     def _login_and_fake_jira(self, mock_get_jira, **overrides):
         user = get_user_model().objects.create_user(username="alice", password="secret")
         self.client.force_login(user)
@@ -865,6 +928,20 @@ class SprintScopeFlowTests(TestCase):
         self.assertContains(response, "Tickets prévus clôturés")
         self.assertContains(response, "2 clôturés / 3 commencés")
         self.assertContains(response, "2 clôturés / 3 au total")
+        self.assertContains(response, "Statut inchangé")
+        # No history: nothing to compare yet.
+        self.assertContains(response, "historique des statuts est nécessaire")
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_scope_page_shows_unchanged_statuses_with_the_history(self, mock_get_jira):
+        history = {"state": "In Progress", "created": "2026-02-01T10:00:00.000+0000", "status_changes": []}
+        self._login_and_fake_jira(mock_get_jira, get_status_histories=lambda keys: {"BKL1-4": history})
+
+        response = self.client.get(reverse("sprint-scope-flow", args=[2446]))
+
+        self.assertContains(response, "stabilityMatrixBody")
+        self.assertContains(response, "1 inchangés / 1 tickets")
+        self.assertContains(response, "dont 1 sans aucun changement de statut")
 
     @patch("sprint.views.get_connected_jira_for_user")
     def test_scope_page_falls_back_to_current_statuses_when_history_times_out(self, mock_get_jira):
