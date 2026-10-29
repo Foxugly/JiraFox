@@ -1,0 +1,30 @@
+# Dependabot — pip only (JiraFox has no workflows of its own).
+# Version updates keep requirements.txt current instead of waiting for a CVE;
+# minor/patch bumps come as one grouped PR, security fixes as another.
+# Routine majors are ignored (they need a decision); security fixes still pass.
+version: 2
+
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "05:00"
+      timezone: "Europe/Brussels"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
