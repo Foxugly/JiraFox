@@ -39,23 +39,6 @@
                 </div>
             </div>
 
-            <ul class="nav nav-tabs mb-3" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="scope-flow-tab" data-bs-toggle="tab" data-bs-target="#scope-flow-pane"
-                            type="button" role="tab" aria-controls="scope-flow-pane" aria-selected="true">
-                        {% trans "Flow" %}
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="scope-stability-tab" data-bs-toggle="tab" data-bs-target="#scope-stability-pane"
-                            type="button" role="tab" aria-controls="scope-stability-pane" aria-selected="false">
-                        {% trans "Unchanged status" %}
-                    </button>
-                </li>
-            </ul>
-
-            <div class="tab-content">
-            <div class="tab-pane fade show active" id="scope-flow-pane" role="tabpanel" aria-labelledby="scope-flow-tab" tabindex="0">
             {% if scope.issues %}
                 <div class="row g-3 mb-3">
                     {% for label, rate in completion %}
@@ -77,7 +60,38 @@
                     {% endfor %}
                 </div>
             {% endif %}
+            {% if scope.issues and scope.has_history %}
+                <div class="row g-3 mb-3">
+                    {% for label, rate in stability %}
+                        <div class="col-12 col-md-4">
+                            <div class="card p-3 h-100" title="{% trans 'Issues in the same status on entering the sprint and at its end, out of the issues not done yet on entering it.' %}">
+                                <div class="text-uppercase text-secondary small mb-2">{{ label }}</div>
+                                <div class="metric-value">{% if rate.percent is not None %}{{ rate.percent }} %{% else %}-{% endif %}</div>
+                                <div class="inline-note mt-2">{% blocktrans with same=rate.same compared=rate.compared %}{{ same }} unchanged / {{ compared }} issues{% endblocktrans %}</div>
+                                <div class="inline-note">{% blocktrans with still=rate.still %}including {{ still }} without any status change{% endblocktrans %}</div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
 
+            <ul class="nav nav-tabs mb-3" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="scope-flow-tab" data-bs-toggle="tab" data-bs-target="#scope-flow-pane"
+                            type="button" role="tab" aria-controls="scope-flow-pane" aria-selected="true">
+                        {% trans "Flow" %}
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="scope-stability-tab" data-bs-toggle="tab" data-bs-target="#scope-stability-pane"
+                            type="button" role="tab" aria-controls="scope-stability-pane" aria-selected="false">
+                        {% trans "Status evolution" %}
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+            <div class="tab-pane fade show active" id="scope-flow-pane" role="tabpanel" aria-labelledby="scope-flow-tab" tabindex="0">
             <div class="card p-4">
                 {% if scope.issues %}
                     <div style="height: 520px;">
@@ -96,19 +110,6 @@
                     {% trans "Status of each issue when it entered the sprint (the sprint start for planned issues, the moment it was added otherwise) compared with its status at the sprint end." %}
                 </p>
                 {% if scope.issues and scope.has_history %}
-                    <div class="row g-3 mb-3">
-                        {% for label, rate in stability %}
-                            <div class="col-12 col-md-4">
-                                <div class="card p-3 h-100" title="{% trans 'Issues in the same status on entering the sprint and at its end, out of the issues not done yet on entering it.' %}">
-                                    <div class="text-uppercase text-secondary small mb-2">{{ label }}</div>
-                                    <div class="metric-value">{% if rate.percent is not None %}{{ rate.percent }} %{% else %}-{% endif %}</div>
-                                    <div class="inline-note mt-2">{% blocktrans with same=rate.same compared=rate.compared %}{{ same }} unchanged / {{ compared }} issues{% endblocktrans %}</div>
-                                    <div class="inline-note">{% blocktrans with still=rate.still %}including {{ still }} without any status change{% endblocktrans %}</div>
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-
                     <div class="btn-group btn-group-sm mb-3" role="group" aria-label="{% trans 'Issues' %}">
                         <input type="radio" class="btn-check" name="stabilityGroup" id="stabilityAll" value="all" checked>
                         <label class="btn btn-outline-secondary" for="stabilityAll">{% trans "All issues" %}</label>
@@ -134,7 +135,7 @@
                         <div class="col-12 col-xl-6">
                             <div class="card p-4 h-100">
                                 <h3 class="h6 mb-1">{% trans "Same status or not, by status on entering the sprint" %}</h3>
-                                <p class="inline-note mb-3">{% trans "Issues already done on entering the sprint are not shown. Click a bar to list its issues." %}</p>
+                                <p class="inline-note mb-3">{% trans "Click a bar to list its issues." %}</p>
                                 <div style="height: 360px;">
                                     <canvas id="stabilityChart"></canvas>
                                 </div>
@@ -402,7 +403,7 @@
                 ];
 
                 function renderBars() {
-                    const issues = compared().filter((issue) => !isDone(issue.status_entry));
+                    const issues = compared();
                     const statuses = scope.status_order.filter((status) => issues.some((issue) => issue.status_entry === status));
                     const datasets = barKinds.map((kind) => ({
                         label: kind.label,

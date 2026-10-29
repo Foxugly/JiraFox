@@ -928,7 +928,7 @@ class SprintScopeFlowTests(TestCase):
         self.assertContains(response, "Tickets prévus clôturés")
         self.assertContains(response, "2 clôturés / 3 commencés")
         self.assertContains(response, "2 clôturés / 3 au total")
-        self.assertContains(response, "Statut inchangé")
+        self.assertContains(response, "Évolution des statuts")
         # No history: nothing to compare yet.
         self.assertContains(response, "historique des statuts est nécessaire")
 
