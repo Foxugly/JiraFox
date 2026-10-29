@@ -106,21 +106,32 @@ def build_scope_flow(
 
 def completion_rates(issues: list[dict], status_categories: dict[str, str]) -> dict[str, dict]:
     """
-    Per group: issues closed in the sprint out of the issues started by its end (not "To Do"),
-    whatever Jira's bucket: an issue removed from the sprint still counts by its status at the end.
-    Issues completed in another sprint are left out.
+    Per group: issues closed in the sprint out of the issues started by its end (not "To Do"), and
+    out of all the group's issues, whatever Jira's bucket: an issue removed from the sprint still
+    counts by its status at the end. Issues completed in another sprint are left out.
     """
     rates = {}
     for group in COMPLETION_GROUPS:
-        done = started = 0
+        done = started = total = 0
         for issue in issues:
             if group != "all" and issue["origin"] != group or issue["outcome"] == "done_elsewhere":
                 continue
+            total += 1
             category = status_categories.get(issue["status_end"])
             if issue["outcome"] == "done" or category == "done":
                 done += 1
             elif category == "new":
                 continue
             started += 1
-        rates[group] = {"done": done, "started": started, "percent": round(100 * done / started) if started else None}
+        rates[group] = {
+            "done": done,
+            "started": started,
+            "percent": _percent(done, started),
+            "total": total,
+            "percent_total": _percent(done, total),
+        }
     return rates
+
+
+def _percent(part: int, whole: int) -> int | None:
+    return round(100 * part / whole) if whole else None

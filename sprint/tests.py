@@ -771,19 +771,21 @@ class SprintScopeFlowTests(TestCase):
         self.assertEqual(
             scope["completion"],
             {
-                "planned": {"done": 2, "started": 3, "percent": 67},
-                "added": {"done": 1, "started": 2, "percent": 50},
-                "all": {"done": 3, "started": 5, "percent": 60},
+                "planned": {"done": 2, "started": 3, "percent": 67, "total": 3, "percent_total": 67},
+                "added": {"done": 1, "started": 2, "percent": 50, "total": 2, "percent_total": 50},
+                "all": {"done": 3, "started": 5, "percent": 60, "total": 5, "percent_total": 60},
             },
         )
 
-        # Still To Do at the end: not started, so not counted.
+        # Still To Do at the end: not started, so left out of the started rate but kept in the total.
         histories = {"BKL1-5": {"state": "To Do", "created": "2026-03-05T10:00:00.000+0000", "status_changes": []}}
         scope = build_scope_flow(
             SCOPE_REPORT, lambda key: key, histories=histories, start=datetime(2026, 3, 2, tzinfo=dt_timezone.utc),
             end=datetime(2026, 3, 13, tzinfo=dt_timezone.utc), status_categories={"To Do": "new"},
         )
-        self.assertEqual(scope["completion"]["added"], {"done": 1, "started": 1, "percent": 100})
+        self.assertEqual(
+            scope["completion"]["added"], {"done": 1, "started": 1, "percent": 100, "total": 2, "percent_total": 50}
+        )
 
     def test_statuses_at_sprint_start_and_end_come_from_the_changelog(self):
         start = datetime(2026, 3, 2, 8, tzinfo=dt_timezone.utc)
@@ -862,6 +864,7 @@ class SprintScopeFlowTests(TestCase):
         self.assertNotContains(response, "Retirés")
         self.assertContains(response, "Tickets prévus clôturés")
         self.assertContains(response, "2 clôturés / 3 commencés")
+        self.assertContains(response, "2 clôturés / 3 au total")
 
     @patch("sprint.views.get_connected_jira_for_user")
     def test_scope_page_falls_back_to_current_statuses_when_history_times_out(self, mock_get_jira):

@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: JiraFox\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-28 11:18+0100\n"
+"POT-Creation-Date: 2026-10-29 16:46+0100\n"
 "PO-Revision-Date: 2026-09-15 00:00+0200\n"
 "Last-Translator: Codex <codex@local>\n"
 "Language-Team: Dutch <nl@local>\n"
@@ -193,15 +193,15 @@ msgstr "Geef een begin en een einde op, het begin vóór het einde."
 msgid "Sprint bounds saved."
 msgstr "Sprintgrenzen opgeslagen."
 
-#: .\sprint\views.py:284
+#: .\sprint\views.py:280
 msgid "Planned issues closed"
 msgstr "Geplande tickets afgesloten"
 
-#: .\sprint\views.py:285
+#: .\sprint\views.py:281
 msgid "Added issues closed"
 msgstr "Toegevoegde tickets afgesloten"
 
-#: .\sprint\views.py:286
+#: .\sprint\views.py:282
 msgid "All issues closed"
 msgstr "Alle tickets afgesloten"
 
@@ -738,7 +738,7 @@ msgstr "Max. leeftijd"
 #: .\templates\dashboard.html:33 .\templates\dashboard\_aging_table.html:18
 #: .\templates\jira\bulk_labels.html:80 .\templates\jira\bulk_labels.html:136
 #: .\templates\query.html:65 .\templates\sprint\sprint_detail.html:29
-#: .\templates\sprint\sprint_scope_flow.html:80
+#: .\templates\sprint\sprint_scope_flow.html:88
 #: .\templates\sprint\sprint_wia.html:56
 msgid "Key"
 msgstr "Sleutel"
@@ -755,7 +755,7 @@ msgstr "Leeftijd"
 #: .\templates\dashboard.html:36 .\templates\dashboard\_aging_table.html:22
 #: .\templates\issue\issue_detail.html:37 .\templates\query.html:70
 #: .\templates\sprint\sprint_detail.html:33
-#: .\templates\sprint\sprint_scope_flow.html:87
+#: .\templates\sprint\sprint_scope_flow.html:95
 msgid "Assignee"
 msgstr "Toegewezen aan"
 
@@ -1219,7 +1219,7 @@ msgstr "Wijzigingen toepassen"
 
 #: .\templates\jira\bulk_labels.html:81 .\templates\jira\bulk_labels.html:137
 #: .\templates\query.html:66 .\templates\sprint\sprint_detail.html:30
-#: .\templates\sprint\sprint_scope_flow.html:81
+#: .\templates\sprint\sprint_scope_flow.html:89
 msgid "Summary"
 msgstr "Samenvatting"
 
@@ -1591,7 +1591,7 @@ msgstr "Query failed"
 msgid "Results"
 msgstr "Resultaten"
 
-#: .\templates\query.html:58 .\templates\sprint\sprint_scope_flow.html:211
+#: .\templates\query.html:58 .\templates\sprint\sprint_scope_flow.html:219
 msgid "issue(s)"
 msgstr "issue(s)"
 
@@ -1778,70 +1778,79 @@ msgid "Planned"
 msgstr "Gepland"
 
 #: .\templates\sprint\sprint_scope_flow.html:34
-#: .\templates\sprint\sprint_scope_flow.html:107
+#: .\templates\sprint\sprint_scope_flow.html:115
 msgid "Added during sprint"
 msgstr "Toegevoegd tijdens de sprint"
 
-#: .\templates\sprint\sprint_scope_flow.html:42
+#: .\templates\sprint\sprint_scope_flow.html:45
 msgid "Issues closed during the sprint out of the issues started by its end (To Do left out), including the issues removed from the sprint. Issues completed in another sprint are not counted."
 msgstr "Tickets afgesloten tijdens de sprint op de tickets die aan het einde gestart waren (zonder To Do), inclusief de tickets die uit de sprint zijn gehaald. Tickets afgerond in een andere sprint tellen niet mee."
 
-#: .\templates\sprint\sprint_scope_flow.html:45
+#: .\templates\sprint\sprint_scope_flow.html:47
 #, python-format
 msgid "%(done)s closed / %(started)s started"
 msgstr "%(done)s afgesloten / %(started)s gestart"
 
-#: .\templates\sprint\sprint_scope_flow.html:59
+#: .\templates\sprint\sprint_scope_flow.html:49
+msgid "Issues closed during the sprint out of all the issues, To Do included, including the issues removed from the sprint. Issues completed in another sprint are not counted."
+msgstr "Tickets afgesloten tijdens de sprint op alle tickets, To Do inbegrepen, inclusief de tickets die uit de sprint zijn gehaald. Tickets afgerond in een andere sprint tellen niet mee."
+
+#: .\templates\sprint\sprint_scope_flow.html:51
+#, python-format
+msgid "%(done)s closed / %(total)s in total"
+msgstr "%(done)s afgesloten / %(total)s in totaal"
+
+#: .\templates\sprint\sprint_scope_flow.html:67
 #: .\templates\sprint\sprint_weighted_throughput_distribution.html:34
 msgid "Aucune donnée à afficher"
 msgstr "Aucune donnée à afficher"
 
-#: .\templates\sprint\sprint_scope_flow.html:68
+#: .\templates\sprint\sprint_scope_flow.html:76
 msgid "Issues"
 msgstr "Issues"
 
-#: .\templates\sprint\sprint_scope_flow.html:72
+#: .\templates\sprint\sprint_scope_flow.html:80
 msgid "Show all"
 msgstr "Alles tonen"
 
-#: .\templates\sprint\sprint_scope_flow.html:75
+#: .\templates\sprint\sprint_scope_flow.html:83
 msgid "Click a flow of the diagram to list its issues."
 msgstr "Klik op een stroom in het diagram om de issues ervan te tonen."
 
-#: .\templates\sprint\sprint_scope_flow.html:82
+#: .\templates\sprint\sprint_scope_flow.html:90
 msgid "Origin"
 msgstr "Herkomst"
 
-#: .\templates\sprint\sprint_scope_flow.html:83
+#: .\templates\sprint\sprint_scope_flow.html:91
 msgid "Status at sprint start"
 msgstr "Status bij de start van de sprint"
 
-#: .\templates\sprint\sprint_scope_flow.html:84
+#: .\templates\sprint\sprint_scope_flow.html:92
 msgid "Outcome"
 msgstr "Uitkomst"
 
-#: .\templates\sprint\sprint_scope_flow.html:85
+#: .\templates\sprint\sprint_scope_flow.html:93
 msgid "Status at sprint end"
 msgstr "Status aan het einde van de sprint"
 
-#: .\templates\sprint\sprint_scope_flow.html:86
+#: .\templates\sprint\sprint_scope_flow.html:94
 msgid "Current status"
 msgstr "Huidige status"
 
-#: .\templates\sprint\sprint_scope_flow.html:106
+#: .\templates\sprint\sprint_scope_flow.html:114
 msgid "Planned at start"
 msgstr "Gepland bij de start"
 
-#: .\templates\sprint\sprint_scope_flow.html:108
+#: .\templates\sprint\sprint_scope_flow.html:116
 msgid "Completed"
 msgstr "Afgerond"
 
-#: .\templates\sprint\sprint_scope_flow.html:109
-#: .\templates\sprint\sprint_scope_flow.html:110
+#: .\templates\sprint\sprint_scope_flow.html:117
+#: .\templates\sprint\sprint_scope_flow.html:118
 msgid "Not completed"
 msgstr "Niet afgerond"
 
-#: .\templates\sprint\sprint_scope_flow.html:111
+#: .\templates\sprint\sprint_scope_flow.html:119
 msgid "Completed in another sprint"
 msgstr "Afgerond in een andere sprint"
 
