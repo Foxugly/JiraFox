@@ -217,11 +217,7 @@ def get_api_sprint_kanban_issues(request, sprint_id: int) -> JsonResponse:
     jira = get_connected_jira_for_user(request.user)
     data_issues = {}
     for i in _get_sprint_standard_issues(jira, sprint_id, full=False):
-        state = get_issue_status(i)
-        if state in data_issues:
-            data_issues[state].append(i)
-        else:
-            data_issues[state] = [i, ]
+        data_issues.setdefault(get_issue_status(i), []).append(build_sprint_issue_item(i))
     data = []
     for state, list_issues in data_issues.items():
         data.append({"name": state, "issues": list_issues})

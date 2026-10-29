@@ -158,6 +158,30 @@ class SprintPagesTests(TestCase):
         self.assertEqual(payload["items"][0]["issueType"], "Bug")
 
     @patch("sprint.views.get_connected_jira_for_user")
+    def test_sprint_kanban_api_gives_assignee_names_per_status(self, mock_get_jira):
+        mock_get_jira.return_value = SimpleNamespace(
+            JIRA_ONLY_STANDARD_TYPES="issuetype in standardIssueTypes()",
+            get_cached_sprint_issues=lambda sprint_id, jql_extra=None, full=None: [
+                {
+                    "key": "ABC-1",
+                    "summary": "Issue title",
+                    "state": "In Progress",
+                    "assignee": {"displayName": "Jane Doe", "accountId": "42"},
+                    "url": "https://jira.example/browse/ABC-1",
+                },
+                {"key": "ABC-2", "summary": "Unassigned", "state": "In Progress", "assignee": None},
+            ],
+        )
+
+        response = self.client.get(reverse("sprint-api-kanban", args=[12]))
+
+        self.assertEqual(response.status_code, 200)
+        [column] = response.json()
+        self.assertEqual(column["name"], "In Progress")
+        self.assertEqual([i["assignee"] for i in column["issues"]], ["Jane Doe", ""])
+        self.assertEqual(column["issues"][0]["url"], "https://jira.example/browse/ABC-1")
+
+    @patch("sprint.views.get_connected_jira_for_user")
     def test_sprint_wia_api_returns_statuses_and_items(self, mock_get_jira):
         mock_get_jira.return_value = SimpleNamespace(
             JIRA_ONLY_STANDARD_TYPES="issuetype in standardIssueTypes()",

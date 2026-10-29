@@ -15,12 +15,13 @@
     function issueCard(issue) {
         const key = escapeHtml(issue.key);
         const summary = escapeHtml(issue.summary ?? "-");
-        const assignee = escapeHtml(issue.assignee ?? "-");
+        const assignee = escapeHtml(issue.assignee || "-");
+        const url = escapeHtml(issue.url || "");
 
         return `
             <button type="button"
                     class="card w-100 text-start mb-2 shadow-sm kanban-card"
-                    data-issue-key="${key}"
+                    data-issue-url="${url}"
                     style="cursor:pointer;">
                 <div class="card-body py-3">
                     <div class="d-flex justify-content-between align-items-start gap-2">
@@ -71,8 +72,8 @@
 
             root.querySelectorAll(".kanban-card").forEach((button) => {
                 button.addEventListener("click", () => {
-                    const key = button.getAttribute("data-issue-key");
-                    window.open(`https://jira.sm-ms.lan//browse/${encodeURIComponent(key)}`, "_blank", "noopener,noreferrer");
+                    const url = button.getAttribute("data-issue-url");
+                    if (url) window.open(url, "_blank", "noopener,noreferrer");
                 });
             });
         } catch (error) {
