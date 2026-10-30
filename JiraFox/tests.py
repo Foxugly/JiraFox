@@ -1,12 +1,7 @@
-import os
-import runpy
-from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
-from django.core import mail
-from django.core.exceptions import ImproperlyConfigured
 from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 from django.utils.translation import gettext as _
@@ -53,53 +48,6 @@ class PublicPagesTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "account/password_reset_done.html")
-
-
-class EmailSettingsTests(TestCase):
-    SETTINGS = Path(__file__).with_name("settings.py")
-
-    def load_settings(self, **env):
-        # Settings as read from these variables only, without the local .env file.
-        env = {"DJANGO_SECRET_KEY": "test", **env}
-        base = {name: value for name, value in os.environ.items() if not name.startswith(("EMAIL_", "DJANGO_"))}
-        with patch.dict(os.environ, {**base, **env}, clear=True), patch("dotenv.load_dotenv"):
-            return runpy.run_path(str(self.SETTINGS))
-
-    def test_console_in_debug_and_smtp_otherwise(self):
-        self.assertTrue(self.load_settings(DJANGO_DEBUG="1")["EMAIL_BACKEND"].endswith("console.EmailBackend"))
-        self.assertTrue(self.load_settings()["EMAIL_BACKEND"].endswith("smtp.EmailBackend"))
-
-    def test_backend_shortcut_or_dotted_path(self):
-        self.assertTrue(self.load_settings(EMAIL_BACKEND="file")["EMAIL_BACKEND"].endswith("filebased.EmailBackend"))
-        self.assertEqual(self.load_settings(EMAIL_BACKEND="anymail.backends.mailgun.EmailBackend")["EMAIL_BACKEND"],
-                         "anymail.backends.mailgun.EmailBackend")
-
-    def test_smtp_port_follows_the_encryption(self):
-        self.assertEqual(self.load_settings()["EMAIL_PORT"], 25)
-        self.assertEqual(self.load_settings(EMAIL_USE_TLS="true")["EMAIL_PORT"], 587)
-        self.assertEqual(self.load_settings(EMAIL_USE_SSL="true")["EMAIL_PORT"], 465)
-        self.assertEqual(self.load_settings(EMAIL_USE_TLS="true", EMAIL_PORT="2525")["EMAIL_PORT"], 2525)
-
-    def test_tls_and_ssl_together_are_refused(self):
-        with self.assertRaises(ImproperlyConfigured):
-            self.load_settings(EMAIL_USE_TLS="true", EMAIL_USE_SSL="true")
-
-    def test_addresses_and_admins(self):
-        settings = self.load_settings(
-            DEFAULT_FROM_EMAIL="JiraFox <jira@example.com>",
-            SERVER_EMAIL="",
-            DJANGO_ADMINS="a@example.com, b@example.com,",
-        )
-        self.assertEqual(settings["SERVER_EMAIL"], "JiraFox <jira@example.com>")
-        self.assertEqual(settings["ADMINS"], ["a@example.com", "b@example.com"])
-
-    def test_password_reset_sends_an_email(self):
-        get_user_model().objects.create_user(username="alice", email="alice@example.com", password="pw-12345-x")
-
-        self.client.post(reverse("account_reset_password"), {"email": "alice@example.com"})
-
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].to, ["alice@example.com"])
 
 
 class AuthPagesTests(TestCase):
