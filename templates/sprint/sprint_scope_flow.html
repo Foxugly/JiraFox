@@ -64,7 +64,7 @@
                 <div class="row g-3 mb-3">
                     {% for label, rate in stability %}
                         <div class="col-12 col-md-4">
-                            <div class="card p-3 h-100" title="{% trans 'Issues in the same status on entering the sprint and at its end, out of the issues not done yet on entering it.' %}">
+                            <div class="card p-3 h-100" title="{% trans 'Issues in the same status on entering the sprint and at its end, out of the issues whose status on entering it is known.' %}">
                                 <div class="text-uppercase text-secondary small mb-2">{{ label }}</div>
                                 <div class="metric-value">{% if rate.percent is not None %}{{ rate.percent }} %{% else %}-{% endif %}</div>
                                 <div class="inline-note mt-2">{% blocktrans with same=rate.same compared=rate.compared %}{{ same }} unchanged / {{ compared }} issues{% endblocktrans %}</div>

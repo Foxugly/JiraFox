@@ -186,14 +186,14 @@ def status_moved(history: dict, since: datetime, end: datetime) -> bool:
 def stability_rates(issues: list[dict], status_categories: dict[str, str]) -> dict[str, dict]:
     """
     Per group: issues in the same status on entering the sprint and at its end, out of the issues
-    whose entry status is known and not done already; `still` ones never changed status meanwhile.
+    whose entry status is known (done ones included); `still` ones never changed status meanwhile.
     """
     rates = {}
     for group in COMPLETION_GROUPS:
         same = still = compared = 0
         for issue in issues:
             entry = issue["status_entry"]
-            if group != "all" and issue["origin"] != group or not entry or status_categories.get(entry) == "done":
+            if group != "all" and issue["origin"] != group or not entry:
                 continue
             compared += 1
             if entry == issue["status_end"]:

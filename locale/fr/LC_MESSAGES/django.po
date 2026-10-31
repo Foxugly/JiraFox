@@ -1815,8 +1815,8 @@ msgid "%(done)s closed / %(total)s in total"
 msgstr "%(done)s clôturés / %(total)s au total"
 
 #: .\templates\sprint\sprint_scope_flow.html:67
-msgid "Issues in the same status on entering the sprint and at its end, out of the issues not done yet on entering it."
-msgstr "Tickets dans le même statut à leur entrée dans le sprint et à sa fin, sur les tickets pas encore terminés à leur entrée."
+msgid "Issues in the same status on entering the sprint and at its end, out of the issues whose status on entering it is known."
+msgstr "Tickets dans le même statut à leur entrée dans le sprint et à sa fin, sur les tickets dont le statut à l'entrée est connu."
 
 #: .\templates\sprint\sprint_scope_flow.html:70
 #, python-format

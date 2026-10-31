@@ -879,13 +879,13 @@ class SprintScopeFlowTests(TestCase):
                 "BKL1-6": ("Done", "Done", False),
             },
         )
-        # Done on entry and unknown entry statuses are left out.
+        # Unknown entry statuses are left out; done on entry counts (BKL1-6, planned, unchanged).
         self.assertEqual(
             scope["stability"],
             {
-                "planned": {"same": 1, "still": 0, "compared": 2, "percent": 50},
+                "planned": {"same": 2, "still": 1, "compared": 3, "percent": 67},
                 "added": {"same": 1, "still": 1, "compared": 2, "percent": 50},
-                "all": {"same": 2, "still": 1, "compared": 4, "percent": 50},
+                "all": {"same": 3, "still": 2, "compared": 5, "percent": 60},
             },
         )
         self.assertEqual(scope["status_order"], ["To Do", "In Progress", "Done", "Canceled"])
