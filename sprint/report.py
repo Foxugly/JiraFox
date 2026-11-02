@@ -4,11 +4,15 @@ from typing import Iterable
 from openpyxl import Workbook
 from openpyxl.styles import Border, PatternFill, Side
 from openpyxl.utils import get_column_letter
+from openpyxl.worksheet.datavalidation import DataValidation
 
 from jiramodule.services.jira_client import JiraManager
 from team.models import TeamDev
 
 from .logged_report import DevIdentity, resolve_dev
+
+# Choices of the capacity sheet's Decision column, one per ticket.
+DECISIONS = ("Incoming", "Next", "Backlog", "Cancelled")
 
 
 class SprintWorkbookBuilder:
@@ -29,6 +33,7 @@ class SprintWorkbookBuilder:
         self.member_names = [teamdev.dev.name for teamdev in self.teamdevs]
         self.members = [DevIdentity.from_dev(teamdev.dev) for teamdev in self.teamdevs]
         self.state_col = self.start_col + len(self.member_names)
+        self.decision_col = self.state_col + 1
         self.sum_rows: list[int] = []
         self.current_sprint_id = sprint_id
         self.next_sprint_id = (self.jira.get_next_sprint(self.jira.cfg.jira_board_id) or {}).get("id")
@@ -44,8 +49,8 @@ class SprintWorkbookBuilder:
         reality_sheet = self.workbook.create_sheet("Estimation VS Reality")
         self._populate_reality_sheet(reality_sheet)
 
-        for worksheet in (capacity_sheet, reality_sheet):
-            self._add_filter(worksheet)
+        self._add_filter(capacity_sheet, self.decision_col)
+        self._add_filter(reality_sheet, self.state_col)
 
         buffer = BytesIO()
         self.workbook.save(buffer)
@@ -54,15 +59,20 @@ class SprintWorkbookBuilder:
 
     def _populate_capacity_sheet(self, worksheet) -> None:
         row = self._write_header(worksheet, 1)
-        row = self._write_section(worksheet, "RECURRENTS", row + 1, [self._jql_recurrents()])
+        cell = worksheet.cell(row=1, column=self.decision_col, value="Decision")
+        cell.fill = self.fill_sum
+        decisions = DataValidation(type="list", formula1=f'"{",".join(DECISIONS)}"', allow_blank=True)
+        worksheet.add_data_validation(decisions)
+        row = self._write_section(worksheet, "RECURRENTS", row + 1, [self._jql_recurrents()], decisions=decisions)
         row = self._write_section(
             worksheet,
             "PROJECTS",
             row + 1,
             [self._jql_projects_current(), self._jql_projects_next()],
+            decisions=decisions,
         )
-        row = self._write_section(worksheet, "BKL", row + 1, [self._jql_backlog_remaining()])
-        row = self._write_section(worksheet, "NEW BKL", row + 1, [self._jql_new_backlog()])
+        row = self._write_section(worksheet, "BKL", row + 1, [self._jql_backlog_remaining()], decisions=decisions)
+        row = self._write_section(worksheet, "NEW BKL", row + 1, [self._jql_new_backlog()], decisions=decisions)
         row = self._write_total_sum(worksheet, row)
         self._apply_sheet_border(worksheet, row - 1)
 
@@ -102,9 +112,9 @@ class SprintWorkbookBuilder:
         row = self._write_member_metric_row(worksheet, row, "Meetings", lambda teamdev: teamdev.dev.other_meetings)
         return self._write_available_row(worksheet, row)
 
-    def _add_filter(self, worksheet) -> None:
+    def _add_filter(self, worksheet, last_col: int) -> None:
         # Filtering a developer's column on non-empty cells keeps their tickets, the metric rows and the sums.
-        worksheet.auto_filter.ref = f"A1:{get_column_letter(self.state_col)}{worksheet.max_row}"
+        worksheet.auto_filter.ref = f"A1:{get_column_letter(last_col)}{worksheet.max_row}"
 
     def _write_member_metric_row(self, worksheet, row: int, label: str, getter) -> int:
         worksheet.cell(row=row, column=self.start_col - 1, value=label)
@@ -128,7 +138,15 @@ class SprintWorkbookBuilder:
             cell.fill = self.fill_sum
         return row + 1
 
-    def _write_section(self, worksheet, title: str, row: int, jqls: list[str], diff_spent_hours: bool = False) -> int:
+    def _write_section(
+        self,
+        worksheet,
+        title: str,
+        row: int,
+        jqls: list[str],
+        diff_spent_hours: bool = False,
+        decisions: DataValidation | None = None,
+    ) -> int:
         worksheet.cell(row=row, column=1, value=title)
         for column in range(1, 3 + len(self.member_names)):
             worksheet.cell(row=row, column=column).fill = self.fill_title
@@ -139,6 +157,9 @@ class SprintWorkbookBuilder:
             for issue in self._run_jql_cached(jql):
                 # The section name on each ticket keeps it readable once the title rows are filtered out.
                 worksheet.cell(row=row, column=1, value=title)
+                if decisions is not None:
+                    # Only the ticket rows get the drop-down list, not the titles or the sums.
+                    decisions.add(worksheet.cell(row=row, column=self.decision_col))
                 row = self._write_issue_row(worksheet, row, issue, diff_spent_hours)
 
         return self._write_sum_row(worksheet, row, first_row)
@@ -204,7 +225,7 @@ class SprintWorkbookBuilder:
             top=Side(style="medium"),
             bottom=Side(style="medium"),
         )
-        end_column = max(self.state_col, 10)
+        end_column = max(self.decision_col, 10)
         for row_cells in worksheet.iter_rows(min_row=1, max_row=end_row, min_col=1, max_col=end_column):
             for cell in row_cells:
                 cell.border = border

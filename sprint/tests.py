@@ -733,10 +733,36 @@ class CapacitySheetTests(TestCase):
         workbook = load_workbook(BytesIO(SprintWorkbookBuilder(jira, 2446).build()))
 
         sheet = workbook["Capacity sheet"]
-        self.assertEqual(sheet.auto_filter.ref, f"A1:E{sheet.max_row}")
+        self.assertEqual(sheet.auto_filter.ref, f"A1:F{sheet.max_row}")
         self.assertEqual(workbook["Estimation VS Reality"].auto_filter.ref[:4], "A1:E")
         ticket = next(row for row in sheet.iter_rows(values_only=True) if row[1] and row[1].startswith("ABC-1"))
         self.assertEqual(ticket[0], "RECURRENTS")
+
+    def test_capacity_sheet_has_a_decision_list_on_each_ticket(self):
+        team = Team.objects.create(name="Core")
+        TeamDev.objects.create(team=team, dev=Dev.objects.create(name="Alice"), order=0)
+        TeamDev.objects.create(team=team, dev=Dev.objects.create(name="Bob"), order=1)
+        jira = SimpleNamespace(
+            cfg=SimpleNamespace(team=team, jira_board_id=1, jira_project_id=7, jira_recurrent_epic_key="ABC-0"),
+            JIRA_ONLY_STANDARD_TYPES="issuetype in standardIssueTypes()",
+            get_next_sprint=lambda board_id: {"id": 2447},
+            run_jql=lambda jql, history=False: [ISSUES[0]] if "Epic Link" in jql or "ORDER BY" in jql else [],
+        )
+
+        workbook = load_workbook(BytesIO(SprintWorkbookBuilder(jira, 2446).build()))
+
+        sheet = workbook["Capacity sheet"]
+        self.assertEqual(sheet["F1"].value, "Decision")
+        ticket_rows = [
+            cell.row for cell in sheet["B"] if isinstance(cell.value, str) and cell.value.startswith("ABC-1")
+        ]
+        self.assertEqual(len(ticket_rows), 3)  # RECURRENTS, BKL and NEW BKL
+        (validation,) = sheet.data_validations.dataValidation
+        self.assertEqual(validation.type, "list")
+        self.assertEqual(validation.formula1, '"Incoming,Next,Backlog,Cancelled"')
+        self.assertEqual(sorted(str(validation.sqref).split()), sorted(f"F{row}" for row in ticket_rows))
+        self.assertEqual(workbook["Estimation VS Reality"].data_validations.dataValidation, [])
+        self.assertIsNone(workbook["Estimation VS Reality"]["F1"].value)
 
 
 class SprintScopeFlowTests(TestCase):
