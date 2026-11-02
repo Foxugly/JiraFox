@@ -2312,3 +2312,7 @@ msgstr "Vous n'êtes encore membre d'aucun projet : créez-en un, ou demandez à
 
 #~ msgid "Removed / carried over"
 #~ msgstr "Retirés / reportés"
+
+#: templates/sprint/sprint_scope_flow.html
+msgid "No status"
+msgstr "Sans statut"

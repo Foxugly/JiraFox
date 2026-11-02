@@ -2312,3 +2312,7 @@ msgstr "U bent nog geen lid van een project: maak er een aan, of vraag een lid o
 
 #~ msgid "Removed / carried over"
 #~ msgstr "Verwijderd / doorgeschoven"
+
+#: templates/sprint/sprint_scope_flow.html
+msgid "No status"
+msgstr "Geen status"

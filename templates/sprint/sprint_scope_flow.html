@@ -319,7 +319,8 @@
                     }
                 });
 
-                // Unchanged status tab: entry status vs end status, for the issues whose entry is known.
+                // Status evolution tab: entry status vs end status. An issue whose entry status is
+                // unknown (created after it entered the sprint, or without history) counts as "No status".
                 const matrixHead = document.getElementById("stabilityMatrixHead");
                 if (!matrixHead) return;
                 const matrixBody = document.getElementById("stabilityMatrixBody");
@@ -329,15 +330,22 @@
                     added: "{% trans 'Added during sprint' %}"
                 };
                 const isDone = (status) => scope.status_categories[status] === "done";
+                const NO_STATUS = "{% trans 'No status' %}";
+                const entryOf = (issue) => issue.status_entry || NO_STATUS;
+                // The entry statuses of the issues, in workflow order, "No status" first.
+                function entryStatuses(issues) {
+                    const known = scope.status_order.filter((status) => issues.some((issue) => issue.status_entry === status));
+                    return issues.some((issue) => !issue.status_entry) ? [NO_STATUS, ...known] : known;
+                }
                 let group = "all";
                 let stabilityChart = null;
 
                 function compared() {
-                    return scope.issues.filter((issue) => issue.status_entry && (group === "all" || issue.origin === group));
+                    return scope.issues.filter((issue) => group === "all" || issue.origin === group);
                 }
 
                 function inGroup(test) {
-                    return (issue) => issue.status_entry && (group === "all" || issue.origin === group) && test(issue);
+                    return (issue) => (group === "all" || issue.origin === group) && test(issue);
                 }
 
                 function th(text, scopeAttr) {
@@ -351,10 +359,12 @@
                     const issues = compared();
                     const statuses = scope.status_order.filter((status) =>
                         issues.some((issue) => issue.status_entry === status || issue.status_end === status));
+                    // "No status" is only ever an entry: an extra first row, never a column.
+                    const entries = issues.some((issue) => !issue.status_entry) ? [NO_STATUS, ...statuses] : statuses;
                     const counts = {};
                     let max = 0;
                     issues.forEach((issue) => {
-                        const key = `${issue.status_entry}\u0000${issue.status_end}`;
+                        const key = `${entryOf(issue)}\u0000${issue.status_end}`;
                         counts[key] = (counts[key] || 0) + 1;
                         max = Math.max(max, counts[key]);
                     });
@@ -363,12 +373,12 @@
                     headRow.append(th("{% trans 'Entry ↓ / End →' %}"), ...statuses.map((status) => th(status, "col")));
                     matrixHead.replaceChildren(headRow);
 
-                    matrixBody.replaceChildren(...statuses.map((entry) => {
+                    matrixBody.replaceChildren(...entries.map((entry) => {
                         const tr = document.createElement("tr");
                         tr.appendChild(th(entry, "row"));
                         statuses.forEach((end) => {
                             const td = document.createElement("td");
-                            const matching = issues.filter((issue) => issue.status_entry === entry && issue.status_end === end);
+                            const matching = issues.filter((issue) => entryOf(issue) === entry && issue.status_end === end);
                             const diagonal = entry === end;
                             if (diagonal) td.classList.add("stability-diagonal");
                             if (matching.length) {
@@ -381,7 +391,7 @@
                                 td.textContent = roundTrips ? `${matching.length} (↺ ${roundTrips})` : matching.length;
                                 td.addEventListener("click", () => render({
                                     label: `${groupLabels[group]} — ${entry} → ${end}`,
-                                    test: inGroup((issue) => issue.status_entry === entry && issue.status_end === end)
+                                    test: inGroup((issue) => entryOf(issue) === entry && issue.status_end === end)
                                 }));
                             } else {
                                 td.textContent = "·";
@@ -395,21 +405,21 @@
 
                 const barKinds = [
                     {key: "still", label: "{% trans 'Same status, no change' %}", color: "#c8475a",
-                        test: (issue) => issue.status_end === issue.status_entry && !issue.moved},
+                        test: (issue) => issue.status_end === entryOf(issue) && !issue.moved},
                     {key: "back", label: "{% trans 'Same status, changed and came back' %}", color: "#e07a1f",
-                        test: (issue) => issue.status_end === issue.status_entry && issue.moved},
+                        test: (issue) => issue.status_end === entryOf(issue) && issue.moved},
                     {key: "changed", label: "{% trans 'Changed status' %}", color: "#2e9d5b",
-                        test: (issue) => issue.status_end !== issue.status_entry}
+                        test: (issue) => issue.status_end !== entryOf(issue)}
                 ];
 
                 function renderBars() {
                     const issues = compared();
-                    const statuses = scope.status_order.filter((status) => issues.some((issue) => issue.status_entry === status));
+                    const statuses = entryStatuses(issues);
                     const datasets = barKinds.map((kind) => ({
                         label: kind.label,
                         backgroundColor: kind.color,
                         data: statuses.map((status) =>
-                            issues.filter((issue) => issue.status_entry === status && kind.test(issue)).length)
+                            issues.filter((issue) => entryOf(issue) === status && kind.test(issue)).length)
                     }));
                     if (stabilityChart) {
                         stabilityChart.data.labels = statuses;
@@ -435,7 +445,7 @@
                                 const status = stabilityChart.data.labels[elements[0].index];
                                 render({
                                     label: `${groupLabels[group]} — ${status} — ${kind.label}`,
-                                    test: inGroup((issue) => issue.status_entry === status && kind.test(issue))
+                                    test: inGroup((issue) => entryOf(issue) === status && kind.test(issue))
                                 });
                             }
                         }
