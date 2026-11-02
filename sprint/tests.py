@@ -11,7 +11,7 @@ from openpyxl import load_workbook
 from requests.exceptions import Timeout
 
 from dev.models import Dev
-from sprint.scope_flow import build_scope_flow
+from sprint.scope_flow import START_NO_STATUS, build_scope_flow
 from sprint.logged_report import (
     HEADERS,
     UNASSIGNED_HEADERS,
@@ -822,6 +822,10 @@ class SprintScopeFlowTests(TestCase):
         flows = {(flow["from"], flow["to"]): flow["flow"] for flow in scope["flows"]}
         self.assertEqual(flows[("start:To Do", "origin:planned")], 1)
         self.assertEqual(flows[("start:In Progress", "origin:planned")], 1)
+        # Planned without a known start status (no history for BKL1-3 and BKL1-6): "No status".
+        self.assertEqual(flows[(START_NO_STATUS, "origin:planned")], 2)
+        self.assertEqual(scope["columns"][START_NO_STATUS], 0)
+        self.assertNotIn((START_NO_STATUS, "origin:added"), flows)
         self.assertEqual(flows[("outcome:removed", "end:In Test")], 1)
         self.assertEqual(scope["columns"]["start:To Do"], 0)
         self.assertEqual(scope["columns"]["end:In Test"], 3)

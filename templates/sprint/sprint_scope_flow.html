@@ -211,6 +211,9 @@
                     "outcome:done_elsewhere": "#3aa6a0"
                 };
                 const statusColors = {new: "#8a94a6", indeterminate: "#4a8fe0", done: "#2e9d5b"};
+                // Issues whose status is unknown: "start:" in the diagram, null entry status in the tab.
+                const NO_STATUS = "{% trans 'No status' %}";
+                labels["start:"] = NO_STATUS;
                 Object.entries(scope.status_categories).forEach(([name, category]) => {
                     ["start", "end"].forEach((side) => {
                         labels[`${side}:${name}`] = name;
@@ -233,7 +236,7 @@
                 });
                 const color = (key) => colors[key] || "#8a94a6";
                 const nodeLabel = (key) => labels[key] || key;
-                const issueNodes = (issue) => [`start:${issue.status_start}`, `origin:${issue.origin}`,
+                const issueNodes = (issue) => [`start:${issue.status_start || ""}`, `origin:${issue.origin}`,
                     `outcome:${issue.outcome}`, `end:${issue.status_end}`];
 
                 const rows = document.getElementById("scopeIssueRows");
@@ -330,7 +333,6 @@
                     added: "{% trans 'Added during sprint' %}"
                 };
                 const isDone = (status) => scope.status_categories[status] === "done";
-                const NO_STATUS = "{% trans 'No status' %}";
                 const entryOf = (issue) => issue.status_entry || NO_STATUS;
                 // The entry statuses of the issues, in workflow order, "No status" first.
                 function entryStatuses(issues) {

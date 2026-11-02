@@ -32,6 +32,9 @@ COMPLETION_GROUPS = (PLANNED, ADDED, "all")
 # Diagram columns, left to right.
 COLUMNS = {"start": 0, "origin": 1, "outcome": 2, "end": 3}
 
+# Start node of the planned issues whose status at the sprint start is unknown ("No status").
+START_NO_STATUS = "start:"
+
 # Status order of the stability matrix: by Jira category, then the usual workflow order.
 CATEGORY_ORDER = {"new": 0, "indeterminate": 1, "done": 2}
 
@@ -51,7 +54,8 @@ def build_scope_flow(
     issues only), origin -> outcome, then outcome -> status at the sprint end.
 
     Without `histories` (or for an issue missing from it) the end status is the current one and
-    the start status is unknown.
+    the start status is unknown. With histories, a planned issue whose start status is unknown
+    flows from START_NO_STATUS.
 
     `status_entry` is the status when the issue entered the sprint (its start for planned issues)
     and `moved` whether its status changed between then and the end, for the stability tab.
@@ -100,6 +104,8 @@ def build_scope_flow(
         ]
         if issue["status_start"]:
             steps.insert(0, (f"start:{issue['status_start']}", f"origin:{issue['origin']}"))
+        elif issue["origin"] == PLANNED and histories:
+            steps.insert(0, (START_NO_STATUS, f"origin:{PLANNED}"))
         for step in steps:
             counts[step] = counts.get(step, 0) + 1
 
