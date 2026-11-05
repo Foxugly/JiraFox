@@ -146,7 +146,8 @@ def _normalize(text: str) -> str:
 
 
 _BULLET = re.compile(r"^\s*(?:[-*•]|\d+[.)])\s+")
-_HEADING = re.compile(r"^\s*#+\s*(.*?)\s*#*\s*$")
+_MARKUP = " 	#*_"
+_BOLD = re.compile(r"^\s*(?:\*\*|__).+(?:\*\*|__)\s*$")
 SECTIONS = (
     ("situation", "ou en est l'equipe", "OÙ EN EST L'ÉQUIPE"),
     ("trend", "tendance", "TENDANCE"),
@@ -195,8 +196,10 @@ class CopilotManualProvider(AnalysisProvider):
                 risks.append(Risk(risk_title, " ".join(risk_lines).strip()))
 
         for line in text.splitlines():
-            heading = _HEADING.match(line)
-            name = _normalize(heading.group(1)) if heading else None
+            # Copilot's rendered text loses the "#": a heading is also bold or alone on its line.
+            plain = line.strip(_MARKUP).rstrip(":").strip(_MARKUP)
+            is_title = line.lstrip().startswith("#") or bool(_BOLD.match(line))
+            name = _normalize(plain)
             section = next((key for key, norm, _ in SECTIONS if norm == name), None)
             if section:
                 close_risk()
@@ -205,11 +208,11 @@ class CopilotManualProvider(AnalysisProvider):
             elif current is None or not line.strip():
                 continue
             elif current == "risks":
-                if heading:
+                if is_title and plain:
                     close_risk()
-                    risk_title, risk_lines = heading.group(1).strip(), []
+                    risk_title, risk_lines = plain, []
                 elif risk_title is not None:
-                    risk_lines.append(line.strip())
+                    risk_lines.append(_BULLET.sub("", line).strip())
             else:
                 bullet = _BULLET.sub("", line).strip()
                 if bullet:

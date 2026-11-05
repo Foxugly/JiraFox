@@ -1556,3 +1556,14 @@ class AnalysisTests(SimpleTestCase):
 
         self.assertEqual(stored, {"situation": ["a"], "trend": ["b"], "risks": [{"title": "t", "text": "x"}]})
         self.assertEqual(Analysis.from_session(stored), analysis)
+
+    def test_parse_accepts_bold_bare_and_hashed_bold_headings(self):
+        text = (
+            "**OÙ EN EST L'ÉQUIPE**\n- Un\n## **TENDANCE**\n- Deux\nRisques :\n"
+            "**Risque A**\n- Detail A\n### Risque B\nTexte B.\n"
+        )
+        analysis = PROVIDERS["copilot"].parse(text)
+
+        self.assertEqual((analysis.situation, analysis.trend), (["Un"], ["Deux"]))
+        self.assertEqual(analysis.risks, [Risk("Risque A", "Detail A"), Risk("Risque B", "Texte B.")])
+        self.assertEqual(PROVIDERS["copilot"].parse("TENDANCE\n- a\nOu en est l'equipe\n- b\nRISQUES").trend, ["a"])
