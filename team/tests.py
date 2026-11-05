@@ -202,3 +202,29 @@ class ReportTemplateUploadTests(TestCase):
         self.assertTrue(response.context["form"].errors["report_template"])
         self.project.refresh_from_db()
         self.assertFalse(self.project.report_template)
+
+    def _save_without_upload(self):
+        return self.client.post(reverse("project_edit", args=[self.project.id]), {"name": "Renamed"})
+
+    def test_saving_without_a_new_upload_keeps_the_stored_template(self):
+        self._upload(_deck(6))
+        self.project.refresh_from_db()
+        stored = self.project.report_template.name
+
+        response = self._save_without_upload()
+
+        self.assertRedirects(response, reverse("project_edit", args=[self.project.id]))
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.name, "Renamed")
+        self.assertEqual(self.project.report_template.name, stored)
+
+    def test_saving_still_works_when_the_stored_template_is_gone_from_disk(self):
+        self._upload(_deck(6))
+        self.project.refresh_from_db()
+        self.project.report_template.storage.delete(self.project.report_template.name)
+
+        response = self._save_without_upload()
+
+        self.assertRedirects(response, reverse("project_edit", args=[self.project.id]))
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.name, "Renamed")
