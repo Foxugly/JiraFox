@@ -12,6 +12,14 @@ from requests.exceptions import Timeout
 
 from dev.models import Dev
 from sprint.scope_flow import START_NO_STATUS, build_scope_flow, consistency_errors
+from sprint.report_metrics import (
+    age_in_status_days,
+    cycle_time_days,
+    kanban_snapshot,
+    percentile,
+    sprint_metrics,
+    went_back,
+)
 from sprint.logged_report import (
     HEADERS,
     UNASSIGNED_HEADERS,
@@ -1095,3 +1103,190 @@ class SprintScopeFlowTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "alert-warning")
         self.assertFalse(response.context["scope"]["has_history"])
+
+
+def _metric_history(created, state, *changes):
+    return {
+        "state": state,
+        "created": created,
+        "status_changes": [{"at": at, "from": old, "to": new} for at, old, new in changes],
+    }
+
+
+METRIC_CATEGORIES = {"To Do": "new", "In Progress": "indeterminate", "Pending": "new", "Done": "done"}
+
+
+class ReportMetricsTests(SimpleTestCase):
+    def _scope(self, statuses, added=()):
+        """Scope of issues K<n> whose status is `statuses[n]` = (name, category)."""
+        names = list(statuses.values())
+        report = {
+            "completedIssues": [],
+            "issuesNotCompletedInCurrentSprint": [],
+            "issueKeysAddedDuringSprint": {f"K{n}": [] for n in added},
+            "entityData": {
+                "statuses": {
+                    str(i): {"statusName": name, "status": {"statusCategory": {"key": cat}}}
+                    for i, (name, cat) in enumerate(names)
+                }
+            },
+        }
+        for i, (n, (name, cat)) in enumerate(statuses.items()):
+            bucket = "completedIssues" if cat == "done" else "issuesNotCompletedInCurrentSprint"
+            report[bucket].append({"key": f"K{n}", "summary": f"Issue {n}", "statusId": i})
+        return build_scope_flow(report, lambda key: f"https://jira/{key}")
+
+    def test_sprint_metrics_counts_the_planned_and_added_issues(self):
+        scope = self._scope(
+            {1: ("Done", "done"), 2: ("Done", "done"), 3: ("In Progress", "indeterminate"), 4: ("Done", "done")},
+            added=[4],
+        )
+
+        metrics = sprint_metrics(scope, None, None)
+
+        self.assertEqual((metrics["planned"], metrics["added"]), (3, 1))
+        self.assertEqual((metrics["closed"], metrics["throughput"]), (3, 3))
+        self.assertEqual(metrics["percent_planned_closed"], 67)
+        self.assertEqual(metrics["percent_added"], 25)
+        self.assertEqual((metrics["wip_end"], metrics["not_started"]), (1, 0))
+        self.assertIsNone(metrics["cycle_median"])
+
+    def test_sprint_metrics_separates_not_started_from_wip(self):
+        scope = self._scope({1: ("To Do", "new"), 2: ("In Progress", "indeterminate"), 3: ("Done", "done")})
+
+        metrics = sprint_metrics(scope, None, None)
+
+        self.assertEqual((metrics["not_started"], metrics["wip_end"], metrics["closed"]), (1, 1, 1))
+
+    def test_sprint_metrics_takes_the_cycle_times_of_the_closed_issues(self):
+        end = datetime(2026, 3, 13, tzinfo=dt_timezone.utc)
+        scope = self._scope({1: ("Done", "done"), 2: ("Done", "done")})
+        scope["status_categories"].update(METRIC_CATEGORIES)
+        histories = {
+            key: _metric_history(
+                "2026-03-01T08:00:00.000+0100",
+                "Done",
+                ("2026-03-02T09:00:00.000+0100", "To Do", "In Progress"),
+                (f"2026-03-0{day}T09:00:00.000+0100", "In Progress", "Done"),
+            )
+            for key, day in (("K1", 3), ("K2", 4))  # from Monday 09:00: 1 and 2 business days
+        }
+
+        metrics = sprint_metrics(scope, histories, end)
+
+        self.assertEqual(metrics["cycle_median"], 1.5)
+        self.assertEqual(metrics["cycle_p85"], 1.85)
+
+    def test_cycle_time_starts_at_the_first_started_status(self):
+        history = _metric_history(
+            "2026-03-01T08:00:00.000+0100",
+            "Done",
+            ("2026-03-02T09:00:00.000+0100", "To Do", "In Progress"),  # a Monday
+            ("2026-03-04T09:00:00.000+0100", "In Progress", "Done"),
+        )
+        end = datetime(2026, 3, 13, tzinfo=dt_timezone.utc)
+
+        self.assertEqual(cycle_time_days(history, METRIC_CATEGORIES, end), 2.0)
+
+        # "Pending" is To Do-like for Jira, yet listed as started: it starts the clock.
+        pending = _metric_history(
+            "2026-03-01T08:00:00.000+0100",
+            "Done",
+            ("2026-03-02T09:00:00.000+0100", "To Do", "Pending"),
+            ("2026-03-04T09:00:00.000+0100", "Pending", "Done"),
+        )
+        self.assertEqual(cycle_time_days(pending, METRIC_CATEGORIES, end), 0.0)  # the clock starts at Done
+        self.assertEqual(cycle_time_days(pending, {**METRIC_CATEGORIES, "Pending": "indeterminate"}, end), 2.0)
+
+    def test_cycle_time_is_none_without_a_done_transition(self):
+        history = _metric_history(
+            "2026-03-01T08:00:00.000+0100",
+            "In Progress",
+            ("2026-03-02T09:00:00.000+0100", "To Do", "In Progress"),
+        )
+
+        self.assertIsNone(cycle_time_days(history, METRIC_CATEGORIES, datetime(2026, 3, 13, tzinfo=dt_timezone.utc)))
+
+    def test_cycle_time_ignores_a_done_transition_after_the_end(self):
+        history = _metric_history(
+            "2026-03-01T08:00:00.000+0100",
+            "Done",
+            ("2026-03-02T09:00:00.000+0100", "To Do", "In Progress"),
+            ("2026-03-20T09:00:00.000+0100", "In Progress", "Done"),
+        )
+
+        self.assertIsNone(cycle_time_days(history, METRIC_CATEGORIES, datetime(2026, 3, 13, tzinfo=dt_timezone.utc)))
+
+    def test_percentile_interpolates(self):
+        self.assertEqual(percentile([1, 2, 3, 4], 50), 2.5)
+        self.assertEqual(percentile([4, 3, 2, 1], 85), 3.55)
+        self.assertIsNone(percentile([], 50))
+
+    def test_empty_sprint_gives_gaps_not_zeros(self):
+        scope = self._scope({})
+
+        metrics = sprint_metrics(scope, None, None)
+
+        self.assertIsNone(metrics["percent_planned_closed"])
+        self.assertIsNone(metrics["percent_added"])
+        self.assertIsNone(metrics["cycle_median"])
+        self.assertIsNone(metrics["cycle_p85"])
+
+    def test_kanban_snapshot_is_rebuilt_at_the_given_date(self):
+        scope = self._scope({1: ("Done", "done"), 2: ("In Progress", "indeterminate"), 3: ("To Do", "new")})
+        histories = {
+            # Done now, but still in progress at the snapshot date.
+            "K1": _metric_history(
+                "2026-02-01T08:00:00.000+0100",
+                "Done",
+                ("2026-02-02T09:00:00.000+0100", "To Do", "In Progress"),
+                ("2026-04-01T09:00:00.000+0100", "In Progress", "Done"),
+            ),
+            "K2": _metric_history(
+                "2026-02-01T08:00:00.000+0100",
+                "In Progress",
+                ("2026-03-09T09:00:00.000+0100", "To Do", "In Progress"),
+            ),
+            "K3": _metric_history("2026-02-01T08:00:00.000+0100", "To Do"),
+        }
+        at = datetime(2026, 3, 13, 9, 0, tzinfo=timezone.get_default_timezone())
+
+        snapshot = kanban_snapshot(scope, histories, at, limit=1)
+
+        self.assertEqual(snapshot["wip"], 2)
+        self.assertEqual(snapshot["aging"], 1)  # K1 for weeks, K2 for 4 business days
+        self.assertEqual(snapshot["aging_percent"], 50)
+        self.assertEqual([item["key"] for item in snapshot["oldest"]], ["K1"])
+        self.assertEqual(snapshot["oldest"][0]["status"], "In Progress")
+        self.assertEqual(snapshot["oldest"][0]["url"], "https://jira/K1")
+        self.assertGreater(snapshot["oldest"][0]["age_days"], 10)
+        self.assertEqual(len(kanban_snapshot(scope, histories, at)["oldest"]), 2)
+
+    def test_went_back_detects_a_return_to_to_do(self):
+        back = _metric_history(
+            "2026-03-01T08:00:00.000+0100",
+            "To Do",
+            ("2026-03-02T09:00:00.000+0100", "To Do", "In Progress"),
+            ("2026-03-03T09:00:00.000+0100", "In Progress", "To Do"),
+        )
+        forward = _metric_history(
+            "2026-03-01T08:00:00.000+0100",
+            "Done",
+            ("2026-03-02T09:00:00.000+0100", "To Do", "In Progress"),
+            ("2026-03-03T09:00:00.000+0100", "In Progress", "Done"),
+        )
+        end = datetime(2026, 3, 13, tzinfo=dt_timezone.utc)
+
+        self.assertTrue(went_back(back, METRIC_CATEGORIES, end))
+        self.assertFalse(went_back(forward, METRIC_CATEGORIES, end))
+        self.assertFalse(went_back(back, METRIC_CATEGORIES, datetime(2026, 3, 2, 12, tzinfo=dt_timezone.utc)))
+
+    def test_age_in_status_counts_from_the_last_change(self):
+        history = _metric_history(
+            "2026-03-01T08:00:00.000+0100",
+            "In Progress",
+            ("2026-03-02T09:00:00.000+0100", "To Do", "In Progress"),
+        )
+        at = datetime(2026, 3, 4, 9, tzinfo=timezone.get_default_timezone())
+
+        self.assertEqual(age_in_status_days(history, at), 2.0)

@@ -15,6 +15,7 @@ from django.utils.translation import gettext as _
 from jiramodule.status import CANONICAL_ORDER
 
 from .logged_report import parse_jira_datetime, status_at
+from .report_metrics import is_closed, is_started_status
 
 PLANNED = "planned"
 ADDED = "added"
@@ -205,10 +206,9 @@ def completion_rates(issues: list[dict], status_categories: dict[str, str]) -> d
             if group != "all" and issue["origin"] != group:
                 continue
             total += 1
-            category = status_categories.get(issue["status_end"])
-            if issue["outcome"] == "done" or category == "done":
+            if is_closed(issue, status_categories):
                 done += 1
-            elif category == "new":
+            elif not is_started_status(issue["status_end"], status_categories):
                 not_started.append(issue["key"])
                 continue
             started += 1
