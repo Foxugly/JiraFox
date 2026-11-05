@@ -96,6 +96,7 @@ def build_scope_flow(
                 {
                     "key": key,
                     "summary": raw.get("summary") or "",
+                    "type": raw.get("typeName") or "",
                     "assignee": raw.get("assigneeName") or "",
                     "origin": origin,
                     "outcome": outcome,

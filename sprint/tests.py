@@ -13,6 +13,9 @@ from jira.exceptions import JIRAError
 from requests.exceptions import Timeout
 
 from dev.models import Dev
+from sprint.analysis import (
+    PROVIDERS, Analysis, AnalysisParseError, Risk, build_dossier, risky_keys,
+)
 from sprint.report_data import (
     build_report_data,
     sprint_warning_lines,
@@ -1429,3 +1432,127 @@ class ReportDataTests(TestCase):
         self.assertEqual(len(lines), 3)
         self.assertTrue(any("BKL1-7" in line for line in lines))
         self.assertTrue(any("Jira ne répond pas" in line for line in lines))
+
+
+class AnalysisTests(SimpleTestCase):
+    CATEGORIES = {"A faire": "new", "En cours": "indeterminate", "Termine": "done"}
+    GOOD = (
+        "Intro ignoree\n## OÙ EN EST L'ÉQUIPE\n- Une\n* Deux\n• Trois\n1. Quatre\n"
+        "## TENDANCE\n- Cinq\n## RISQUES\n### Risque A\nTexte A.\n### Risque B\nTexte B\nsuite.\n"
+        "### Risque C\nTexte C.\n### Risque D\nTexte D.\n"
+    )
+
+    @staticmethod
+    def _issue(key, summary, assignee, origin="planned", outcome="done", start="A faire", end="Termine"):
+        return {
+            "key": key, "summary": summary, "type": "Story", "assignee": assignee, "origin": origin,
+            "outcome": outcome, "status_start": start, "status_end": end,
+        }
+
+    def _data(self):
+        issues = [
+            self._issue("BKL1-1", "Page de login", "Alice"),
+            self._issue("BKL1-2", "Export PDF", "Bob", outcome="not_done", end="En cours"),
+            self._issue("BKL1-3", "Idee en attente", "", outcome="not_done", end="A faire"),
+        ]
+        histories = {
+            "BKL1-1": {"created": "2026-01-01T08:00:00.000+01:00", "status_changes": []},
+            "BKL1-2": {
+                "created": "2026-01-01T08:00:00.000+01:00",
+                "status_changes": [
+                    {"at": "2026-01-06T09:00:00.000+01:00", "from": "A faire", "to": "En cours"},
+                    {"at": "2026-01-07T09:00:00.000+01:00", "from": "En cours", "to": "A faire"},
+                    {"at": "2026-01-08T09:00:00.000+01:00", "from": "A faire", "to": "En cours"},
+                ],
+            },
+            "BKL1-3": {"created": "2026-01-01T08:00:00.000+01:00", "status_changes": []},
+        }
+        sprint = {
+            "id": 1, "name": "Sprint 1", "state": "closed",
+            "startDate": "2026-01-05T08:00:00.000+01:00", "endDate": "2026-01-16T18:00:00.000+01:00",
+            "completeDate": None,
+        }
+        metrics = {
+            "planned": 3, "added": 0, "closed": 1, "not_started": 1, "throughput": 1, "cycle_median": 2.0,
+            "cycle_p85": 3.0, "wip_end": 1, "percent_planned_closed": 33, "percent_added": 0,
+        }
+        entry = {
+            "sprint": sprint, "metrics": metrics, "warnings": {}, "histories": histories,
+            "categories": self.CATEGORIES,
+            "scope": {"issues": issues, "status_categories": self.CATEGORIES, "totals": {"planned": 3, "added": 0}},
+        }
+        return {
+            "title_period": "Sprint 1", "in_progress": False, "project_name": "Backlog", "sprints": [entry],
+            "focus": sprint, "snapshot": None, "totals": {},
+        }
+
+    def test_parse_reads_the_three_sections(self):
+        analysis = PROVIDERS["copilot"].parse(self.GOOD)
+
+        self.assertEqual(analysis.situation, ["Une", "Deux", "Trois", "Quatre"])
+        self.assertEqual(analysis.trend, ["Cinq"])
+        self.assertEqual(analysis.risks[0], Risk("Risque A", "Texte A."))
+        self.assertEqual(analysis.risks[1].text, "Texte B suite.")
+
+    def test_parse_tolerates_case_accents_and_hash_count(self):
+        text = "# Ou en est l'equipe  \n- Un\n### tendance\n- Deux\n#### RISQUES\n## Titre\nExplication."
+        analysis = PROVIDERS["copilot"].parse(text)
+
+        self.assertEqual((analysis.situation, analysis.trend), (["Un"], ["Deux"]))
+        self.assertEqual(analysis.risks, [Risk("Titre", "Explication.")])
+
+    def test_parse_keeps_at_most_three_risks(self):
+        self.assertEqual(len(PROVIDERS["copilot"].parse(self.GOOD).risks), 3)
+
+    def test_parse_without_sections_raises_a_clear_error(self):
+        with self.assertRaises(AnalysisParseError) as raised:
+            PROVIDERS["copilot"].parse("## OÙ EN EST L'ÉQUIPE\n- Un\n## TENDANCE\n- Deux")
+        self.assertIn("RISQUES", str(raised.exception))
+        with self.assertRaises(AnalysisParseError) as raised:
+            PROVIDERS["copilot"].parse("Bonjour")
+        self.assertIn("TENDANCE", str(raised.exception))
+
+    def test_prompt_embeds_the_dossier_and_the_rules(self):
+        prompt = PROVIDERS["copilot"].prompt("DOSSIER-X")
+
+        self.assertIn("DOSSIER-X", prompt)
+        for expected in ("## OÙ EN EST L'ÉQUIPE", "## TENDANCE", "## RISQUES", "### Titre du risque", "5 à 7", "3 risques"):
+            self.assertIn(expected, prompt)
+
+    def test_no_ai_provider_needs_no_prompt_and_parses_to_an_empty_analysis(self):
+        provider = PROVIDERS["none"]
+
+        self.assertFalse(provider.needs_prompt)
+        self.assertTrue(PROVIDERS["copilot"].needs_prompt)
+        self.assertEqual(provider.parse("peu importe"), Analysis([], [], []))
+
+    def test_risky_keys_are_not_started_or_went_back(self):
+        self.assertEqual(sorted(risky_keys(self._data())), ["BKL1-2", "BKL1-3"])
+        self.assertEqual(len(risky_keys(self._data(), limit=1)), 1)
+
+    def test_dossier_has_titles_assignees_and_descriptions_of_risky_issues_only(self):
+        descriptions = {"BKL1-2": "Contexte de l'export", "BKL1-1": "NE DOIT PAS APPARAITRE", "BKL1-3": "x" * 600}
+        dossier = build_dossier(self._data(), descriptions)
+
+        self.assertIn("BKL1-1 | Story | Page de login | Alice | A faire → Termine | prévu | done |", dossier)
+        self.assertIn("BKL1-2 | Story | Export PDF | Bob | A faire → En cours | prévu | not_done |", dossier)
+        self.assertIn("revenu en arrière: oui", dossier)
+        self.assertIn("revenu en arrière: non", dossier)
+        self.assertIn("Contexte de l'export", dossier)
+        self.assertNotIn("NE DOIT PAS APPARAITRE", dossier)
+        self.assertNotIn("x" * 501, dossier)
+        self.assertIn("Sprint 1", dossier)
+
+    def test_dossier_never_contains_the_token(self):
+        data = self._data()
+        data["cfg"] = SimpleNamespace(jira_token="SECRET")
+
+        self.assertNotIn("SECRET", build_dossier(data, {}))
+
+    def test_analysis_round_trips_through_the_session(self):
+        analysis = Analysis(["a"], ["b"], [Risk("t", "x")])
+
+        stored = analysis.to_session()
+
+        self.assertEqual(stored, {"situation": ["a"], "trend": ["b"], "risks": [{"title": "t", "text": "x"}]})
+        self.assertEqual(Analysis.from_session(stored), analysis)
