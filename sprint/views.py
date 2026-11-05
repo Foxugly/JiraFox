@@ -6,6 +6,7 @@ from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.utils.dateparse import parse_date
+from django.utils import translation
 from django.utils.text import slugify
 from django.utils.translation import gettext as _
 from django.views import View
@@ -385,6 +386,21 @@ def _ids(values) -> list[int]:
     return ids
 
 
+def _french_report_data(jira, sprints, focus=None) -> dict:
+    # The warnings land in the speaker notes and the cache: always French, whatever the UI language.
+    with translation.override("fr"):
+        return build_report_data(jira, sprints, focus=focus)
+
+
+def _warning_rows(data) -> list[dict]:
+    """Each sprint with its warnings; the scope errors apart, for the red alert."""
+    return [
+        {**entry, "warning_lines": sprint_warning_lines(entry["warnings"], scope_errors=False),
+         "scope_errors": entry["warnings"]["scope_errors"]}
+        for entry in data["sprints"]
+    ]
+
+
 class SprintTrendsView(LoginRequiredMixin, TemplateView):
     """Closed sprints side by side: pick a range or sprints, see the trends, start the report."""
 
@@ -411,12 +427,8 @@ class SprintTrendsView(LoginRequiredMixin, TemplateView):
             requested=bool(picked or (start and end)),
         )
         if selected:
-            data = build_report_data(jira, selected)
-            context["rows"] = [
-                {**entry, "warning_lines": sprint_warning_lines(entry["warnings"]),
-                 "scope_errors": entry["warnings"]["scope_errors"]}
-                for entry in data["sprints"]
-            ]
+            data = _french_report_data(jira, selected)
+            context["rows"] = _warning_rows(data)
             context["snapshot"] = data["snapshot"]
             context["focus"] = data["focus"]
             context["report_query"] = "&amp;".join(f"sprint={sprint['id']}" for sprint in selected)
@@ -424,6 +436,7 @@ class SprintTrendsView(LoginRequiredMixin, TemplateView):
             context["chart_data"] = {
                 "labels": [entry["sprint"].get("name") or str(entry["sprint"]["id"]) for entry in data["sprints"]],
                 "throughput": [m["throughput"] for m in metrics],
+                "wip_end": [m["wip_end"] for m in metrics],
                 "cycle_median": [m["cycle_median"] for m in metrics],
                 "cycle_p85": [m["cycle_p85"] for m in metrics],
                 "percent_planned_closed": [m["percent_planned_closed"] for m in metrics],
@@ -474,14 +487,14 @@ class ManagementReportView(LoginRequiredMixin, View):
         if not sprints:
             messages.error(request, _("Pick at least one sprint to build a report."))
             return redirect("sprint-trends")
-        data = build_report_data(jira, sprints, focus=focus)
+        data = _french_report_data(jira, sprints, focus=focus)
         ids = [sprint["id"] for sprint in sprints]
         focus_id = focus["id"] if focus else None
         provider = PROVIDERS.get(source.get("provider") or "copilot", PROVIDERS["copilot"])
         action = request.POST.get("action") if request.method == "POST" else None
         context = {
             "ids": ids, "request_ids": _ids(source.getlist("sprint")), "focus_id": focus_id, "data": data,
-            "provider": provider, "providers": list(PROVIDERS.values()),
+            "provider": provider, "providers": list(PROVIDERS.values()), "warning_rows": _warning_rows(data),
         }
 
         stored = request.session.get(SESSION_KEY) or {}
@@ -521,7 +534,9 @@ class ManagementReportView(LoginRequiredMixin, View):
         project = getattr(jira.cfg, "project", None)
         template = getattr(project, "report_template", None)
         template_path = template.path if template else None
-        response = HttpResponse(build_deck(data, analysis, template_path), content_type=PPTX_CONTENT_TYPE)
+        with translation.override("fr"):
+            deck = build_deck(data, analysis, template_path)
+        response = HttpResponse(deck, content_type=PPTX_CONTENT_TYPE)
         name = slugify(getattr(project, "name", "") or "") or "sprint"
         response["Content-Disposition"] = (
             f'attachment; filename="rapport-direction-{name}-{timezone.localdate():%Y-%m-%d}.pptx"'

@@ -12,6 +12,7 @@
                 {% trans "Sprints in this report:" %}
                 {% for entry in data.sprints %}{{ entry.sprint.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
             </div>
+            {% include "sprint/sprint_warnings.html" with rows=warning_rows %}
             <div class="btn-group btn-group-sm mb-3" role="group">
                 {% for p in providers %}
                     <a class="btn {% if p.key == provider.key %}btn-primary{% else %}btn-outline-secondary{% endif %}"

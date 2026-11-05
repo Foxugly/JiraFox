@@ -39,6 +39,7 @@ EXPECTED_SHAPES = {
     ROWS_EXAMPLE: (TITLE, TITLE) + tuple(name for row in RISK_ROWS for name in row),
 }
 ANNEX_ROWS = 12
+SYNTHESIS_BULLETS = 7
 R_NS = "{http://schemas.openxmlformats.org/officeDocument/2006/relationships}"
 # Boxes as fractions of the slide (left, top, width, height), measured on the company template.
 BODY = (0.074, 0.31, 0.853, 0.64)
@@ -335,11 +336,19 @@ def _ai_slide_end(prs, slide):
 
 def _synthesis_slide(prs, examples, data, analysis):
     slide = _titled(prs, examples, STACKED_EXAMPLE, "Synthèse", data["title_period"])
+    # The two frames hold 7 bullets at most: the first ones are kept, in order, the rest go to the notes.
+    situation = analysis.situation[:SYNTHESIS_BULLETS]
+    trend = analysis.trend[:SYNTHESIS_BULLETS - len(situation)]
+    cut = analysis.situation[len(situation):] + analysis.trend[len(trend):]
     _fill(slide, "Rectangle 24", ["OÙ EN EST L'ÉQUIPE"], wrap=False)
-    _fill(slide, "ZoneTexte 58", [f"• {line}" for line in analysis.situation] or ["-"], 0)
+    _fill(slide, "ZoneTexte 58", [f"• {line}" for line in situation] or ["-"], 0)
     _fill(slide, "Rectangle 16", ["TENDANCE"], wrap=False)
-    _fill(slide, "ZoneTexte 58", [f"• {line}" for line in analysis.trend] or ["-"], 1)
+    _fill(slide, "ZoneTexte 58", [f"• {line}" for line in trend] or ["-"], 1)
     _ai_slide_end(prs, slide)
+    if cut:
+        _notes(slide, [f"{len(cut)} puce(s) au-delà de {SYNTHESIS_BULLETS} non reprise(s) sur la slide :"] + [
+            f"• {line}" for line in cut
+        ])
 
 
 def _single(data) -> bool:
@@ -444,9 +453,6 @@ def _risks_slide(prs, examples, data, analysis):
         if number < len(risks):
             _fill(slide, label, [f"Risque {number + 1}"])
             _fill(slide, text, [risks[number].title, risks[number].text])
-        elif number == 0:
-            _fill(slide, label, ["-"])
-            _fill(slide, text, ["Aucun risque", "L'analyse ne signale aucun risque."])
         else:
             _remove(slide, label)
             _remove(slide, text)
@@ -458,7 +464,8 @@ def _annex_slides(prs, examples, data):
     several = len(entries) > 1
     rows = []
     for entry in entries:
-        issues = entry["scope"]["issues"]
+        # An issue removed from the sprint is neither closed nor left unfinished by the team.
+        issues = [issue for issue in entry["scope"]["issues"] if issue["outcome"] != "removed"]
         closed = [issue for issue in issues if is_closed(issue, entry["categories"])]
         for issue in closed + [issue for issue in issues if issue not in closed]:
             rows.append(([_name(entry)] if several else []) + [issue["key"], issue["summary"], issue["status_end"]])
@@ -484,7 +491,10 @@ def _annex_slides(prs, examples, data):
 
 
 def build_deck(data: dict, analysis, template_path: str | None) -> bytes:
-    """The report deck: 9 slides, 7 without the AI analysis (more when the annex spans several)."""
+    """
+    The report deck: 9 slides, 7 without the AI analysis (more when the annex spans several). Without
+    any risk the risks slide is left out rather than claiming there is none.
+    """
     prs, notice = _open_template(template_path)
     originals = list(prs.slides)
     examples = originals[:6]
@@ -495,7 +505,7 @@ def build_deck(data: dict, analysis, template_path: str | None) -> bytes:
     _flow_slide(prs, examples, data)
     _predictability_slide(prs, examples, data)
     _kanban_slide(prs, examples, data)
-    if analysis is not None:
+    if analysis is not None and analysis.risks:
         _risks_slide(prs, examples, data, analysis)
     _annex_slides(prs, examples, data)
     _clone(prs, examples[END_EXAMPLE])

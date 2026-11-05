@@ -58,7 +58,7 @@
                 </div>
                 <div class="row g-4">
                     <div class="col-lg-6">
-                        <h3 class="h6">{% trans "Throughput and cycle time (business days)" %}</h3>
+                        <h3 class="h6">{% trans "Throughput, WIP at sprint end and cycle time (business days)" %}</h3>
                         <canvas id="trendsChart"></canvas>
                     </div>
                     <div class="col-lg-6">
@@ -113,20 +113,7 @@
                         </tbody>
                     </table>
                 </div>
-                {% for row in rows %}
-                    {% if row.scope_errors %}
-                        <div class="alert alert-danger py-2 mb-2">
-                            <strong>{{ row.sprint.name }}</strong> - {% trans "These figures do not add up, do not trust them:" %}
-                            <ul class="mb-0">{% for error in row.scope_errors %}<li>{{ error }}</li>{% endfor %}</ul>
-                        </div>
-                    {% endif %}
-                    {% if row.warning_lines %}
-                        <div class="alert alert-warning py-2 mb-2">
-                            <strong>{{ row.sprint.name }}</strong>
-                            <ul class="mb-0">{% for line in row.warning_lines %}<li>{{ line }}</li>{% endfor %}</ul>
-                        </div>
-                    {% endif %}
-                {% endfor %}
+                {% include "sprint/sprint_warnings.html" with rows=rows %}
             </div>
 
             <script>
@@ -138,6 +125,7 @@
                             labels: d.labels,
                             datasets: [
                                 {type: "bar", label: "{% trans 'Throughput' %}", data: d.throughput, backgroundColor: "#2f7de1", yAxisID: "y"},
+                                {type: "bar", label: "{% trans 'WIP at sprint end' %}", data: d.wip_end, backgroundColor: "#6c757d", yAxisID: "y"},
                                 {type: "line", label: "{% trans 'Median cycle' %}", data: d.cycle_median, borderColor: "#2e9d5b", backgroundColor: "#2e9d5b", yAxisID: "y1", spanGaps: false},
                                 {type: "line", label: "P85", data: d.cycle_p85, borderColor: "#e07a1f", backgroundColor: "#e07a1f", yAxisID: "y1", spanGaps: false}
                             ]

@@ -1171,6 +1171,30 @@ class ReportMetricsTests(SimpleTestCase):
 
         self.assertEqual((metrics["not_started"], metrics["wip_end"], metrics["closed"]), (1, 1, 1))
 
+    def test_wip_end_leaves_out_the_issues_removed_from_the_sprint(self):
+        scope = self._scope({1: ("In Progress", "indeterminate"), 2: ("In Progress", "indeterminate")})
+        scope["issues"][1]["outcome"] = "removed"
+
+        self.assertEqual(sprint_metrics(scope, None, None)["wip_end"], 1)
+
+    def test_kanban_snapshot_takes_the_creation_status_before_any_change(self):
+        # Created straight in progress, moved back to To Do after the snapshot date.
+        scope = self._scope({1: ("To Do", "new")})
+        scope["status_categories"].update(METRIC_CATEGORIES)
+        histories = {
+            "K1": _metric_history(
+                "2026-03-02T09:00:00.000+0100",
+                "To Do",
+                ("2026-03-20T09:00:00.000+0100", "In Progress", "To Do"),
+            ),
+        }
+        at = datetime(2026, 3, 4, 9, tzinfo=timezone.get_default_timezone())
+
+        snapshot = kanban_snapshot(scope, histories, at)
+
+        self.assertEqual(snapshot["wip"], 1)
+        self.assertAlmostEqual(snapshot["oldest"][0]["age_days"], 16 / 7.2, places=2)
+
     def test_sprint_metrics_takes_the_cycle_times_of_the_closed_issues(self):
         end = datetime(2026, 3, 13, tzinfo=dt_timezone.utc)
         scope = self._scope({1: ("Done", "done"), 2: ("Done", "done")})
@@ -1446,6 +1470,16 @@ class ReportDataTests(TestCase):
 
         self.assertEqual(calls, [("scope", 1), ("scope", 2), ("scope", 2)])
 
+    def test_cache_depends_on_the_started_statuses(self):
+        calls = []
+        closed = self._sprint(1, "2026-01-05", "2026-01-16")
+
+        build_report_data(self._jira(calls, cfg=SimpleNamespace(pk=1, started_statuses=["Pending"])), [closed])
+        build_report_data(self._jira(calls, cfg=SimpleNamespace(pk=1, started_statuses=["Pending"])), [closed])
+        build_report_data(self._jira(calls, cfg=SimpleNamespace(pk=1, started_statuses=["Review"])), [closed])
+
+        self.assertEqual(calls, [("scope", 1), ("scope", 1)])
+
     def test_sprint_warning_lines_write_one_sentence_per_warning(self):
         lines = sprint_warning_lines(
             {
@@ -1507,7 +1541,10 @@ class AnalysisTests(SimpleTestCase):
         entry = {
             "sprint": sprint, "metrics": metrics, "warnings": {}, "histories": histories,
             "categories": self.CATEGORIES,
-            "scope": {"issues": issues, "status_categories": self.CATEGORIES, "totals": {"planned": 3, "added": 0}},
+            "scope": {
+                "issues": issues, "status_categories": self.CATEGORIES, "totals": {"planned": 3, "added": 0},
+                "done_elsewhere": [{"key": "BKL1-8", "summary": "Fini ailleurs", "url": ""}],
+            },
         }
         return {
             "title_period": "Sprint 1", "in_progress": False, "project_name": "Backlog", "sprints": [entry],
@@ -1562,8 +1599,9 @@ class AnalysisTests(SimpleTestCase):
         descriptions = {"BKL1-2": "Contexte de l'export", "BKL1-1": "NE DOIT PAS APPARAITRE", "BKL1-3": "x" * 600}
         dossier = build_dossier(self._data(), descriptions)
 
-        self.assertIn("BKL1-1 | Story | Page de login | Alice | A faire → Termine | prévu | done |", dossier)
-        self.assertIn("BKL1-2 | Story | Export PDF | Bob | A faire → En cours | prévu | not_done |", dossier)
+        self.assertIn("BKL1-1 | Story | Page de login | Alice | A faire → Termine | prévu | clôturé |", dossier)
+        self.assertIn("BKL1-2 | Story | Export PDF | Bob | A faire → En cours | prévu | non terminé |", dossier)
+        self.assertIn("BKL1-8 — Fini ailleurs", dossier)
         self.assertIn("revenu en arrière: oui", dossier)
         self.assertIn("revenu en arrière: non", dossier)
         self.assertIn("Contexte de l'export", dossier)
@@ -1595,6 +1633,57 @@ class AnalysisTests(SimpleTestCase):
         self.assertEqual((analysis.situation, analysis.trend), (["Un"], ["Deux"]))
         self.assertEqual(analysis.risks, [Risk("Risque A", "Detail A"), Risk("Risque B", "Texte B.")])
         self.assertEqual(PROVIDERS["copilot"].parse("TENDANCE\n- a\nOu en est l'equipe\n- b\nRISQUES").trend, ["a"])
+
+    def test_parse_accepts_a_heading_ending_with_a_question_mark(self):
+        text = "## Où en est l'équipe ?\n- Un\n## Tendance :\n- Deux\n## Risques ?\n### Dette\nTexte."
+
+        self.assertEqual(PROVIDERS["copilot"].parse(text).situation, ["Un"])
+
+    def test_parse_reads_risks_copied_as_plain_text(self):
+        # Copilot's rendered answer, copied: no "#", no "**", one paragraph per line.
+        text = (
+            "Où en est l'équipe\nLe sprint avance.\nTendance\nStable.\nRisques\nVoici les risques :\n"
+            "Dette technique\nLe module X ralentit tout.\nExport PDF\nLivraison incertaine.\n\n"
+            "Recrutement\n\nUn départ non remplacé.\n"
+        )
+
+        analysis = PROVIDERS["copilot"].parse(text)
+
+        self.assertEqual((analysis.situation, analysis.trend), (["Le sprint avance."], ["Stable."]))
+        self.assertEqual(
+            analysis.risks,
+            [
+                Risk("Dette technique", "Le module X ralentit tout."),
+                Risk("Export PDF", "Livraison incertaine."),
+                Risk("Recrutement", "Un départ non remplacé."),
+            ],
+        )
+
+    def test_parse_reads_risks_written_as_bullets(self):
+        head = "## OÙ EN EST L'ÉQUIPE\n- Un\n## TENDANCE\n- Deux\n## RISQUES\n"
+        parse = PROVIDERS["copilot"].parse
+
+        self.assertEqual(
+            parse(head + "- **Dette** : le module X ralentit.\n- Export PDF : livraison incertaine.\n").risks,
+            [Risk("Dette", "le module X ralentit."), Risk("Export PDF", "livraison incertaine.")],
+        )
+        self.assertEqual(
+            parse(head + "1. **Dette**\nLe module X ralentit.\n2. **Export PDF :**\nLivraison incertaine.\n").risks,
+            [Risk("Dette", "Le module X ralentit."), Risk("Export PDF", "Livraison incertaine.")],
+        )
+        # Under a marked title, a "x : y" bullet is part of the explanation.
+        self.assertEqual(parse(head + "### Dette\n- Impact : retard\n").risks, [Risk("Dette", "Impact : retard")])
+
+    def test_parse_refuses_risks_it_cannot_read_and_empty_sections(self):
+        parse = PROVIDERS["copilot"].parse
+        with self.assertRaises(AnalysisParseError) as raised:
+            parse("## OÙ EN EST L'ÉQUIPE\n- Un\n## TENDANCE\n- Deux\n## RISQUES\nVoici les risques :\n")
+        self.assertIn("RISQUES", str(raised.exception))
+        with self.assertRaises(AnalysisParseError) as raised:
+            parse("## OÙ EN EST L'ÉQUIPE\n## TENDANCE\n- Deux\n## RISQUES\n")
+        self.assertIn("OÙ EN EST L'ÉQUIPE", str(raised.exception))
+        # An empty RISQUES section is no risk to show, not an error.
+        self.assertEqual(parse("## OÙ EN EST L'ÉQUIPE\n- Un\n## TENDANCE\n- Deux\n## RISQUES\n").risks, [])
 
 
 TINY_PNG = base64.b64decode(
@@ -1760,6 +1849,37 @@ class PptxReportTests(SimpleTestCase):
         for slide in (slides[1], slides[6]):
             self.assertEqual(self._texts(slide)[-1], self.DISCLAIMER)
 
+    def test_risks_slide_is_left_out_without_risks(self):
+        deck = self._build(analysis=Analysis(["Situation un"], ["Tendance un"], []))
+
+        self.assertEqual(len(deck.slides), 8)
+        everything = "\n".join(text for slide in deck.slides for text in self._texts(slide))
+        self.assertNotIn("Aucun risque", everything)
+        self.assertNotIn("Risques", [self._texts(slide)[0] for slide in deck.slides if self._texts(slide)])
+
+    def test_synthesis_slide_keeps_at_most_seven_bullets(self):
+        analysis = Analysis([f"S{n}" for n in range(1, 7)], ["T1", "T2", "T3"], [Risk("R", "x")])
+
+        slide = self._build(analysis=analysis).slides[1]
+
+        text = "\n".join(self._texts(slide))
+        for kept in ("S1", "S6", "T1"):
+            self.assertIn(f"• {kept}", text)
+        for cut in ("T2", "T3"):
+            self.assertNotIn(f"• {cut}", text)
+        notes = slide.notes_slide.notes_text_frame.text
+        self.assertIn("T2", notes)
+        self.assertIn("T3", notes)
+
+    def test_annex_leaves_out_the_issues_removed_from_the_sprint(self):
+        data = self._data()
+        data["sprints"][1]["scope"]["issues"].append(self._issue("BKL1-7", "Sorti du sprint", "removed", "En cours"))
+
+        annex = "\n".join(self._texts(self._build(data).slides[5]))
+
+        self.assertIn("BKL1-2", annex)
+        self.assertNotIn("BKL1-7", annex)
+
     def test_warnings_go_to_the_speaker_notes_not_the_slide(self):
         deck = self._build(self._data(warnings={"without_history": ["BKL1-9"]}), self._analysis())
 
@@ -1879,7 +1999,8 @@ class ManagementReportViewTests(TestCase):
             3: self._sprint(3, "2026-02-02", "2026-02-13"),
             4: self._sprint(4, "2026-02-16", "2026-02-27", state="active"),
         }
-        user = get_user_model().objects.create_user(username="alice", password="secret", language="fr")
+        language = overrides.pop("language", "fr")
+        user = get_user_model().objects.create_user(username="alice", password="secret", language=language)
         self.client.force_login(user)
         fake = dict(
             cfg=SimpleNamespace(pk=1, jira_board_id=638, project=SimpleNamespace(name="Mon Projet", report_template=None)),
@@ -1928,7 +2049,45 @@ class ManagementReportViewTests(TestCase):
             response = self.client.get(reverse("sprint-trends"), {"sprint": ["1"]})
 
         self.assertContains(response, '<div class="alert alert-danger')
-        self.assertContains(response, "Les chiffres divergent")
+        self.assertContains(response, "Les chiffres divergent", count=1)  # in the red alert only
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_trends_chart_shows_the_wip_at_the_sprint_end(self, mock_get_jira):
+        self._login(mock_get_jira)
+
+        response = self.client.get(reverse("sprint-trends"), {"sprint": ["1", "2"]})
+
+        self.assertEqual(len(response.context["chart_data"]["wip_end"]), 2)
+        self.assertContains(response, "d.wip_end")
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_report_page_shows_the_warnings_of_each_sprint(self, mock_get_jira):
+        self._login(mock_get_jira, get_sprint_issue_keys=lambda sprint_id: {"BKL1-1", "BKL1-99"})
+
+        with patch("sprint.report_data.consistency_errors", return_value=["Les chiffres divergent"]):
+            response = self.client.get(reverse("sprint-management-report"), {"sprint": ["1", "2"]})
+
+        self.assertContains(response, '<div class="alert alert-danger')
+        self.assertContains(response, "Les chiffres divergent", count=2)  # once per sprint
+        self.assertContains(response, "BKL1-99")
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_speaker_notes_are_french_whatever_the_ui_language(self, mock_get_jira):
+        from django.utils.translation import gettext
+        from pptx import Presentation
+
+        self._login(mock_get_jira, language="en")
+
+        def errors(scope):
+            return [gettext("Closed rate (%(group)s) does not add up.") % {"group": "all"}]
+
+        with patch("sprint.report_data.consistency_errors", side_effect=errors):
+            response = self.client.post(
+                reverse("sprint-management-report"), {"action": "generate", "provider": "none", "sprint": ["1"]}
+            )
+
+        deck = Presentation(BytesIO(response.content))
+        self.assertIn("Le taux de clôture (all) ne tombe pas juste.", deck.slides[1].notes_slide.notes_text_frame.text)
 
     @patch("sprint.views.get_connected_jira_for_user")
     def test_report_page_shows_the_full_dossier_before_copying(self, mock_get_jira):

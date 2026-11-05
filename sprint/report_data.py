@@ -3,6 +3,7 @@ Gathers the Jira data of the sprints of a management report. `load_sprint_scope`
 scope page shows; `build_report_data` shapes it for the AI dossier and the PowerPoint.
 """
 
+import hashlib
 from datetime import date
 
 from django.core.cache import cache
@@ -103,7 +104,10 @@ def _loaded_sprint(jira, sprint: dict) -> dict:
     """`load_sprint_scope`, cached for a day when the sprint is closed and nothing went wrong."""
     if sprint.get("state") != "closed":
         return load_sprint_scope(jira, sprint)
-    key = f"report-sprint:{getattr(jira.cfg, 'pk', None)}:{sprint['id']}"
+    # The started statuses change the figures: a new list must not reuse the old ones.
+    started = ",".join(sorted(getattr(jira.cfg, "started_statuses", None) or ()))
+    started_hash = hashlib.sha1(started.encode("utf-8")).hexdigest()[:8]
+    key = f"report-sprint:{getattr(jira.cfg, 'pk', None)}:{sprint['id']}:{started_hash}"
     loaded = cache.get(key)
     if loaded is None:
         loaded = load_sprint_scope(jira, sprint)
@@ -184,8 +188,11 @@ def _plural(count: int, singular: str, plural: str) -> str:
     return singular if count == 1 else plural
 
 
-def sprint_warning_lines(warnings: dict) -> list[str]:
-    """One French sentence per non-empty warning, for the speaker notes and the multi-sprint page."""
+def sprint_warning_lines(warnings: dict, *, scope_errors: bool = True) -> list[str]:
+    """
+    One French sentence per non-empty warning, for the speaker notes and the report pages. The pages
+    show the scope errors apart, in red: they pass `scope_errors=False`.
+    """
     lines = []
     late = [issue["key"] for issue in warnings.get("planned_created_late") or []]
     if late:
@@ -215,5 +222,6 @@ def sprint_warning_lines(warnings: dict) -> list[str]:
         lines.append(f"Historique des statuts indisponible : {warnings['history_error']}")
     if warnings.get("missing_check_error"):
         lines.append(f"Contrôle des tickets manquants impossible : {warnings['missing_check_error']}")
-    lines.extend(warnings.get("scope_errors") or [])
+    if scope_errors:
+        lines.extend(warnings.get("scope_errors") or [])
     return lines

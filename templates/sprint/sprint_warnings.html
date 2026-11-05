@@ -1,0 +1,15 @@
+{% load i18n %}
+{% for row in rows %}
+    {% if row.scope_errors %}
+        <div class="alert alert-danger py-2 mb-2">
+            <strong>{{ row.sprint.name }}</strong> - {% trans "These figures do not add up, do not trust them:" %}
+            <ul class="mb-0">{% for error in row.scope_errors %}<li>{{ error }}</li>{% endfor %}</ul>
+        </div>
+    {% endif %}
+    {% if row.warning_lines %}
+        <div class="alert alert-warning py-2 mb-2">
+            <strong>{{ row.sprint.name }}</strong>
+            <ul class="mb-0">{% for line in row.warning_lines %}<li>{{ line }}</li>{% endfor %}</ul>
+        </div>
+    {% endif %}
+{% endfor %}

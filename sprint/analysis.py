@@ -16,6 +16,7 @@ from .report_metrics import age_in_status_days, is_closed, is_started_status, we
 DESCRIPTION_LIMIT = 500
 MAX_RISKS = 3
 ORIGIN_LABELS = {"planned": "prévu", "added": "ajouté"}
+OUTCOME_LABELS = {"done": "clôturé", "not_done": "non terminé", "removed": "retiré"}
 
 
 class AnalysisParseError(ValueError):
@@ -110,12 +111,17 @@ def _sprint_block(entry: dict) -> list[str]:
                 [
                     issue["key"], issue.get("type") or "-", issue["summary"], issue["assignee"] or "non assigné",
                     f"{issue['status_start'] or '?'} → {issue['status_end'] or '?'}",
-                    ORIGIN_LABELS.get(issue["origin"], issue["origin"]), issue["outcome"],
+                    ORIGIN_LABELS.get(issue["origin"], issue["origin"]),
+                    OUTCOME_LABELS.get(issue["outcome"], issue["outcome"]),
                     _number(None if age is None else round(age, 1)),
                     f"revenu en arrière: {'oui' if _went_back(entry, issue['key']) else 'non'}",
                 ]
             )
         )
+    elsewhere = entry["scope"].get("done_elsewhere") or []
+    if elsewhere:
+        lines.append("Terminés ailleurs (hors des chiffres du sprint) :")
+        lines += [f"{issue['key']} — {issue['summary'] or '-'}" for issue in elsewhere]
     return lines
 
 
@@ -147,7 +153,11 @@ def _normalize(text: str) -> str:
 
 _BULLET = re.compile(r"^\s*(?:[-*•]|\d+[.)])\s+")
 _MARKUP = " 	#*_"
-_BOLD = re.compile(r"^\s*(?:\*\*|__).+(?:\*\*|__)\s*$")
+# "**Title** : text", "**Title :** text" or "**Title**" alone.
+_BOLD_TITLE = re.compile(r"^(\*\*|__)(.+?)\1\s*(?:([:：–—-])\s*)?(.*)$")
+# "Title : text" on a bullet: a short title, then a colon and a space.
+_COLON_TITLE = re.compile(r"^([^:]{1,80}?)\s*:\s+(.+)$")
+_LETTER = re.compile(r"\w")
 SECTIONS = (
     ("situation", "ou en est l'equipe", "OÙ EN EST L'ÉQUIPE"),
     ("trend", "tendance", "TENDANCE"),
@@ -187,44 +197,101 @@ class CopilotManualProvider(AnalysisProvider):
 
     def parse(self, text: str) -> Analysis:
         found: dict[str, list[str]] = {}
-        current, risk_title = None, None
-        risks: list[Risk] = []
-        risk_lines: list[str] = []
-
-        def close_risk():
-            if risk_title is not None:
-                risks.append(Risk(risk_title, " ".join(risk_lines).strip()))
-
+        current, after_blank = None, False
+        reader = _RiskReader()
         for line in text.splitlines():
             # Copilot's rendered text loses the "#": a heading is also bold or alone on its line.
-            plain = line.strip(_MARKUP).rstrip(":").strip(_MARKUP)
-            is_title = line.lstrip().startswith("#") or bool(_BOLD.match(line))
-            name = _normalize(plain)
+            name = _normalize(line.strip(_MARKUP).rstrip(":?").strip(_MARKUP))
             section = next((key for key, norm, _ in SECTIONS if norm == name), None)
             if section:
-                close_risk()
-                risk_title, risk_lines, current = None, [], section
+                reader.close()
+                current, after_blank = section, False
                 found.setdefault(section, [])
-            elif current is None or not line.strip():
+            elif current is None:
                 continue
-            elif current == "risks":
-                if is_title and plain:
-                    close_risk()
-                    risk_title, risk_lines = plain, []
-                elif risk_title is not None:
-                    risk_lines.append(_BULLET.sub("", line).strip())
+            elif not line.strip():
+                after_blank = True
             else:
-                bullet = _BULLET.sub("", line).strip()
-                if bullet:
+                if current == "risks":
+                    reader.feed(line, after_blank)
+                elif bullet := _BULLET.sub("", line).strip():
                     found[current].append(bullet)
-        close_risk()
+                after_blank = False
+        reader.close()
         missing = [label for key, _, label in SECTIONS if key not in found]
         if missing:
             raise AnalysisParseError(
                 "Réponse inutilisable : il manque le titre " + ", ".join(f"« {label} »" for label in missing)
                 + ". Demandez à Copilot de respecter exactement le format imposé."
             )
-        return Analysis(found["situation"], found["trend"], risks[:MAX_RISKS])
+        empty = [label for key, _, label in SECTIONS[:2] if not found[key]]
+        if empty:
+            raise AnalysisParseError(
+                "Réponse inutilisable : la section " + ", ".join(f"« {label} »" for label in empty)
+                + " est vide. Demandez à Copilot de respecter exactement le format imposé."
+            )
+        if reader.seen and not reader.risks:
+            # Never let an unread section pass for "no risk": the deck would tell the board so.
+            raise AnalysisParseError(
+                "Réponse inutilisable : la section « RISQUES » n'est pas vide, mais aucun risque n'a pu y être lu. "
+                "Chaque risque doit avoir un titre (« ### Titre ») suivi de son explication."
+            )
+        return Analysis(found["situation"], found["trend"], reader.risks[:MAX_RISKS])
+
+
+class _RiskReader:
+    """
+    The RISQUES section, line by line. A risk is a marked title (# or **bold**) and its explanation,
+    a "title : text" bullet, or, in plain text copied from Copilot, a bare title line followed by its
+    explanation: a bare line after an explanation, or after a blank line, starts the next risk.
+    """
+
+    def __init__(self):
+        self.risks: list[Risk] = []
+        self.seen = False  # a meaningful line, whether or not it gave a risk
+        self.title, self.lines = None, []
+        self.marked = self.bulleted = False
+
+    def close(self):
+        if self.title is not None:
+            self.risks.append(Risk(self.title, " ".join(self.lines).strip()))
+        self.title, self.lines = None, []
+
+    def _start(self, title: str, text: str = "", *, marked: bool = False, bulleted: bool = False):
+        self.close()
+        self.title, self.lines = title, [text] if text else []
+        self.marked, self.bulleted = marked, bulleted
+
+    def feed(self, line: str, after_blank: bool):
+        if not _LETTER.search(line):
+            return  # a separator such as "---"
+        self.seen = True
+        bullet = bool(_BULLET.match(line))
+        body = _BULLET.sub("", line).strip()
+        waiting = self.title is not None and not self.lines  # a title still without its explanation
+        bold = _BOLD_TITLE.match(body)
+        if bold and not (bold.group(3) or not bold.group(4) or bold.group(2).rstrip().endswith((":", "："))):
+            bold = None  # bold words starting a sentence, not a title
+        if line.lstrip().startswith("#"):
+            self._start(body.strip(_MARKUP).rstrip(":").strip(_MARKUP), marked=True)
+        elif bold:
+            title, rest = bold.group(2).strip().rstrip(":：").strip(), bold.group(4).strip()
+            self._start(title, rest, marked=not rest, bulleted=bullet)
+        elif bullet:
+            colon = _COLON_TITLE.match(body)
+            if colon and not waiting and not self.marked:
+                self._start(colon.group(1).strip(_MARKUP), colon.group(2).strip(), bulleted=True)
+            elif self.title is None or (self.bulleted and not waiting):
+                self._start(body, bulleted=True)
+            else:
+                self.lines.append(body)
+        elif self.title is None:
+            if not body.endswith(":"):  # "Voici les risques :" only introduces them
+                self._start(body)
+        elif waiting or (self.marked and not after_blank):
+            self.lines.append(body)
+        else:
+            self._start(body)
 
 
 class NoAIProvider(AnalysisProvider):

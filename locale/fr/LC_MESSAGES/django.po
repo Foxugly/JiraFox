@@ -2423,8 +2423,8 @@ msgstr "Aucun sprint clôturé sur cette période"
 msgid "Trends"
 msgstr "Tendances"
 
-msgid "Throughput and cycle time (business days)"
-msgstr "Débit et temps de cycle (jours ouvrés)"
+msgid "Throughput, WIP at sprint end and cycle time (business days)"
+msgstr "Débit, WIP en fin de sprint et temps de cycle (jours ouvrés)"
 
 msgid "Planned issues closed and added issues (%)"
 msgstr "Tickets prévus terminés et tickets ajoutés (%)"
@@ -2455,6 +2455,9 @@ msgstr "Cycle médian"
 
 msgid "Throughput"
 msgstr "Débit"
+
+msgid "WIP at sprint end"
+msgstr "WIP en fin de sprint"
 
 msgid "Days"
 msgstr "Jours"

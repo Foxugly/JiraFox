@@ -46,7 +46,9 @@ def _business_days(start: datetime, end: datetime) -> float:
 def _started_at(history: dict, categories: dict[str, str], end: datetime | None) -> datetime | None:
     """First entry into a started status (the creation date if the issue was created started)."""
     changes = _changes(history, end)
-    initial = changes[0][1] if changes else history.get("state")
+    # The status at creation is the "from" of the first change ever, even one after `end`.
+    first = _changes(history, None)
+    initial = first[0][1] if first else history.get("state")
     created = parse_jira_datetime(history.get("created"))
     if created and _is_active(initial, categories):
         return created
@@ -88,8 +90,12 @@ def sprint_metrics(scope: dict, histories: dict | None, end: datetime | None) ->
         if (days := cycle_time_days(history, categories, end)) is not None
     ]
     planned, added = scope["totals"]["planned"], scope["totals"]["added"]
-    not_started = [
-        issue for issue in issues if not is_closed(issue, categories) and not is_started_status(issue["status_end"], categories)
+    open_issues = [issue for issue in issues if not is_closed(issue, categories)]
+    not_started = [issue for issue in open_issues if not is_started_status(issue["status_end"], categories)]
+    # An issue removed from the sprint is no longer the team's work in progress.
+    wip_end = [
+        issue for issue in open_issues
+        if issue["outcome"] != "removed" and is_started_status(issue["status_end"], categories)
     ]
     return {
         "planned": planned,
@@ -99,7 +105,7 @@ def sprint_metrics(scope: dict, histories: dict | None, end: datetime | None) ->
         "throughput": len(closed),
         "cycle_median": percentile(cycles, 50),
         "cycle_p85": percentile(cycles, 85),
-        "wip_end": len(issues) - len(closed) - len(not_started),
+        "wip_end": len(wip_end),
         "percent_planned_closed": scope["completion"]["planned"]["percent_total"],
         "percent_added": _percent(added, planned + added),
     }

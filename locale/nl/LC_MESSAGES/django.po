@@ -2423,8 +2423,8 @@ msgstr "Geen afgesloten sprint in deze periode"
 msgid "Trends"
 msgstr "Trends"
 
-msgid "Throughput and cycle time (business days)"
-msgstr "Doorvoer en doorlooptijd (werkdagen)"
+msgid "Throughput, WIP at sprint end and cycle time (business days)"
+msgstr "Doorvoer, WIP aan het einde van de sprint en doorlooptijd (werkdagen)"
 
 msgid "Planned issues closed and added issues (%)"
 msgstr "Afgeronde geplande tickets en toegevoegde tickets (%)"
@@ -2455,6 +2455,9 @@ msgstr "Mediane doorlooptijd"
 
 msgid "Throughput"
 msgstr "Doorvoer"
+
+msgid "WIP at sprint end"
+msgstr "WIP aan het einde van de sprint"
 
 msgid "Days"
 msgstr "Dagen"
