@@ -158,6 +158,8 @@ _BOLD_TITLE = re.compile(r"^(\*\*|__)(.+?)\1\s*(?:([:：–—-])\s*)?(.*)$")
 # "Title : text" on a bullet: a short title, then a colon and a space.
 _COLON_TITLE = re.compile(r"^([^:]{1,80}?)\s*:\s+(.+)$")
 _LETTER = re.compile(r"\w")
+_NO_RISK = re.compile(r"^(?:aucun|pas de) risques?(?!\w)")  # "Aucun risque identifié."
+_SENTENCE_END = (".", "!", "?", "…", ";")
 SECTIONS = (
     ("situation", "ou en est l'equipe", "OÙ EN EST L'ÉQUIPE"),
     ("trend", "tendance", "TENDANCE"),
@@ -243,7 +245,11 @@ class _RiskReader:
     """
     The RISQUES section, line by line. A risk is a marked title (# or **bold**) and its explanation,
     a "title : text" bullet, or, in plain text copied from Copilot, a bare title line followed by its
-    explanation: a bare line after an explanation, or after a blank line, starts the next risk.
+    explanation. Under a marked title, every following line, even after a blank one, is explanation
+    until the next marked title or top-level bullet; under a bullet, so is any deeper-indented line.
+    Under a bare title, consecutive lines are explanation: the next bare title comes after a blank
+    line, or right after a sentence when it reads as a title (no final punctuation).
+    "Aucun risque identifié." alone means no risk.
     """
 
     def __init__(self):
@@ -251,47 +257,57 @@ class _RiskReader:
         self.seen = False  # a meaningful line, whether or not it gave a risk
         self.title, self.lines = None, []
         self.marked = self.bulleted = False
+        self.indent = 0
 
     def close(self):
         if self.title is not None:
             self.risks.append(Risk(self.title, " ".join(self.lines).strip()))
         self.title, self.lines = None, []
 
-    def _start(self, title: str, text: str = "", *, marked: bool = False, bulleted: bool = False):
+    def _start(self, title: str, text: str = "", *, marked=False, bulleted=False, indent=0):
         self.close()
         self.title, self.lines = title, [text] if text else []
-        self.marked, self.bulleted = marked, bulleted
+        self.marked, self.bulleted, self.indent = marked, bulleted, indent
 
     def feed(self, line: str, after_blank: bool):
         if not _LETTER.search(line):
             return  # a separator such as "---"
+        body = _BULLET.sub("", line).strip()
+        if self.title is None and not self.risks and _NO_RISK.match(_normalize(body.strip(_MARKUP))):
+            return
         self.seen = True
         bullet = bool(_BULLET.match(line))
-        body = _BULLET.sub("", line).strip()
+        indent = len(line) - len(line.lstrip())
         waiting = self.title is not None and not self.lines  # a title still without its explanation
         bold = _BOLD_TITLE.match(body)
         if bold and not (bold.group(3) or not bold.group(4) or bold.group(2).rstrip().endswith((":", "："))):
             bold = None  # bold words starting a sentence, not a title
-        if line.lstrip().startswith("#"):
+        if self.title is not None and self.bulleted and indent > self.indent:
+            self.lines.append(body)  # a sub-bullet
+        elif line.lstrip().startswith("#"):
             self._start(body.strip(_MARKUP).rstrip(":").strip(_MARKUP), marked=True)
         elif bold:
             title, rest = bold.group(2).strip().rstrip(":：").strip(), bold.group(4).strip()
-            self._start(title, rest, marked=not rest, bulleted=bullet)
+            self._start(title, rest, marked=not rest, bulleted=bullet, indent=indent)
         elif bullet:
             colon = _COLON_TITLE.match(body)
             if colon and not waiting and not self.marked:
-                self._start(colon.group(1).strip(_MARKUP), colon.group(2).strip(), bulleted=True)
+                self._start(colon.group(1).strip(_MARKUP), colon.group(2).strip(), bulleted=True, indent=indent)
             elif self.title is None or (self.bulleted and not waiting):
-                self._start(body, bulleted=True)
+                self._start(body, bulleted=True, indent=indent)
             else:
                 self.lines.append(body)
         elif self.title is None:
             if not body.endswith(":"):  # "Voici les risques :" only introduces them
                 self._start(body)
-        elif waiting or (self.marked and not after_blank):
+        elif waiting or self.marked or not (after_blank or self._reads_as_next_title(body)):
             self.lines.append(body)
         else:
             self._start(body)
+
+    def _reads_as_next_title(self, body: str) -> bool:
+        # "Le module X ralentit tout." then "Export PDF": one paragraph per line, as Copilot renders it.
+        return self.lines[-1].endswith(_SENTENCE_END) and not body.endswith(_SENTENCE_END)
 
 
 class NoAIProvider(AnalysisProvider):

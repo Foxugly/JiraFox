@@ -1674,6 +1674,36 @@ class AnalysisTests(SimpleTestCase):
         # Under a marked title, a "x : y" bullet is part of the explanation.
         self.assertEqual(parse(head + "### Dette\n- Impact : retard\n").risks, [Risk("Dette", "Impact : retard")])
 
+    def test_parse_keeps_a_multi_paragraph_explanation_under_a_marked_title(self):
+        head = "## OÙ EN EST L'ÉQUIPE\n- Un\n## TENDANCE\n- Deux\n## RISQUES\n"
+
+        self.assertEqual(
+            PROVIDERS["copilot"].parse(head + "### Dette\nPremière phrase.\n\nDeuxième paragraphe.\n### Export\nTexte.\n").risks,
+            [Risk("Dette", "Première phrase. Deuxième paragraphe."), Risk("Export", "Texte.")],
+        )
+
+    def test_parse_keeps_sub_bullets_in_the_explanation(self):
+        head = "## OÙ EN EST L'ÉQUIPE\n- Un\n## TENDANCE\n- Deux\n## RISQUES\n"
+
+        self.assertEqual(
+            PROVIDERS["copilot"].parse(head + "- **Dette** : le module.\n  - détail un\n  - détail deux\n- **Export** : texte.\n").risks,
+            [Risk("Dette", "le module. détail un détail deux"), Risk("Export", "texte.")],
+        )
+
+    def test_parse_reads_no_risk_as_an_empty_list(self):
+        head = "## OÙ EN EST L'ÉQUIPE\n- Un\n## TENDANCE\n- Deux\n## RISQUES\n"
+        for sentence in ("Aucun risque identifié.", "Pas de risque", "Aucun risque majeur.", "**AUCUN RISQUE IDENTIFIE**"):
+            with self.subTest(sentence):
+                self.assertEqual(PROVIDERS["copilot"].parse(head + sentence + "\n").risks, [])
+
+    def test_parse_reads_consecutive_lines_after_a_bare_title_as_its_explanation(self):
+        head = "## OÙ EN EST L'ÉQUIPE\n- Un\n## TENDANCE\n- Deux\n## RISQUES\n"
+
+        self.assertEqual(
+            PROVIDERS["copilot"].parse(head + "Dette technique\nLigne un.\nLigne deux.\n\nExport\nTexte.\n").risks,
+            [Risk("Dette technique", "Ligne un. Ligne deux."), Risk("Export", "Texte.")],
+        )
+
     def test_parse_refuses_risks_it_cannot_read_and_empty_sections(self):
         parse = PROVIDERS["copilot"].parse
         with self.assertRaises(AnalysisParseError) as raised:
