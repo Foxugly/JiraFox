@@ -62,6 +62,11 @@
                                 <label class="form-label" for="{{ form.jira_recurrent_epic_key.id_for_label }}">{% trans "Recurrent Epic Key" %}</label>
                                 {{ form.jira_recurrent_epic_key }}
                             </div>
+                            <div class="col-12">
+                                <label class="form-label" for="{{ form.started_statuses.id_for_label }}">{% trans "Statuses counted as started" %}</label>
+                                {{ form.started_statuses }}
+                                <div class="form-text">{% trans "Comma-separated. Jira puts some statuses in its To Do category (grey): the sprint scope then counts their issues as not started. List here the ones that mean the work has begun." %}</div>
+                            </div>
                         </div>
                         <button type="submit" class="btn btn-primary mt-4">
                             {% if mode == "edit" %}{% trans "Save" %}{% else %}{% trans "Create" %}{% endif %}

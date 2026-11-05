@@ -2359,3 +2359,21 @@ msgid "%(counter)s issue of the sprint was already done outside of it, so it is 
 msgid_plural "%(counter)s issues of the sprint were already done outside of it, so they are left out of these figures (remove them from the sprint in Jira):"
 msgstr[0] "%(counter)s ticket du sprint était déjà terminé en dehors de celui-ci, il est donc exclu de ces chiffres (retire-le du sprint dans Jira) :"
 msgstr[1] "%(counter)s tickets du sprint étaient déjà terminés en dehors de celui-ci, ils sont donc exclus de ces chiffres (retire-les du sprint dans Jira) :"
+
+msgid "Statuses counted as started"
+msgstr "Statuts comptés comme commencés"
+
+msgid "Comma-separated. Jira puts some statuses in its To Do category (grey): the sprint scope then counts their issues as not started. List here the ones that mean the work has begun."
+msgstr "Séparés par des virgules. Jira range certains statuts dans sa catégorie « À faire » (gris) : le périmètre du sprint compte alors leurs tickets comme non commencés. Liste ici ceux qui signifient que le travail a commencé."
+
+#, python-format
+msgid "%(counter)s not started"
+msgid_plural "%(counter)s not started"
+msgstr[0] "%(counter)s non commencé"
+msgstr[1] "%(counter)s non commencés"
+
+#, python-format
+msgid "%(counter)s issue counted as planned by Jira was created after the sprint start date (%(start)s): the sprint was started later than that date, or the issue was created right in it. Its status on entering the sprint is its status at creation:"
+msgid_plural "%(counter)s issues counted as planned by Jira were created after the sprint start date (%(start)s): the sprint was started later than that date, or they were created right in it. Their status on entering the sprint is their status at creation:"
+msgstr[0] "%(counter)s ticket compté comme prévu par Jira a été créé après la date de début du sprint (%(start)s) : le sprint a été démarré après cette date, ou le ticket a été créé directement dedans. Son statut à l'entrée dans le sprint est son statut à la création :"
+msgstr[1] "%(counter)s tickets comptés comme prévus par Jira ont été créés après la date de début du sprint (%(start)s) : le sprint a été démarré après cette date, ou les tickets ont été créés directement dedans. Leur statut à l'entrée dans le sprint est leur statut à la création :"

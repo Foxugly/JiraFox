@@ -17,7 +17,7 @@ from jiramodule.services.jira_config_service import get_connected_jira_for_user,
 from jiramodule.status import CANONICAL_ORDER, STATUS_EXCLUDED
 from jiramodule.utils.datetime_utils import hours_to_business_days
 from team.models import TeamDev
-from .logged_report import create_logged_xlsx_bytes, sprint_window
+from .logged_report import create_logged_xlsx_bytes, parse_jira_datetime, sprint_window
 from .models import SprintPeriod
 from .report import create_xlsx_bytes
 from .scope_flow import OUTCOMES as SCOPE_OUTCOMES, build_scope_flow, consistency_errors
@@ -274,7 +274,7 @@ class SprintScopeFlowView(LoginRequiredMixin, TemplateView):
         context["sprint"] = sprint
         context["scope"] = build_scope_flow(
             report, jira.get_issue_url, histories=histories, start=start, end=end, status_categories=categories,
-            sprint_id=sprint_id,
+            sprint_id=sprint_id, started_statuses=getattr(jira.cfg, "started_statuses", ()),
         )
         completion = context["scope"]["completion"]
         context["completion"] = [
@@ -283,6 +283,12 @@ class SprintScopeFlowView(LoginRequiredMixin, TemplateView):
             (_("All issues closed"), completion["all"], "all"),
         ]
         context["scope_errors"] = consistency_errors(context["scope"])
+        context["sprint_start"] = start
+        context["planned_created_late"] = [
+            {**issue, "created_at": parse_jira_datetime(issue["created"])}
+            for issue in context["scope"]["issues"]
+            if issue["created_after_start"]
+        ]
         context["jira_browse_url"] = jira.get_issue_url("")
         report_keys = {issue["key"] for issue in context["scope"]["issues"]}
         elsewhere_keys = {issue["key"] for issue in context["scope"]["done_elsewhere"]}

@@ -41,6 +41,12 @@
                             <ul class="mb-0">{% for error in scope_errors %}<li>{{ error }}</li>{% endfor %}</ul>
                         </div>
                     {% endif %}
+                    {% if planned_created_late %}
+                        <div class="alert alert-warning py-2 mt-2 mb-0">
+                            {% blocktrans count counter=planned_created_late|length with start=sprint_start|date:"d/m/Y H:i" %}{{ counter }} issue counted as planned by Jira was created after the sprint start date ({{ start }}): the sprint was started later than that date, or the issue was created right in it. Its status on entering the sprint is its status at creation:{% plural %}{{ counter }} issues counted as planned by Jira were created after the sprint start date ({{ start }}): the sprint was started later than that date, or they were created right in it. Their status on entering the sprint is their status at creation:{% endblocktrans %}
+                            {% for issue in planned_created_late %}<a href="{{ issue.url }}" target="_blank" rel="noopener" title="{{ issue.summary }}">{{ issue.key }}</a> ({{ issue.created_at|date:"d/m H:i" }}){% if not forloop.last %}, {% endif %}{% endfor %}
+                        </div>
+                    {% endif %}
                     {% if scope.done_elsewhere %}
                         <div class="alert alert-warning py-2 mt-2 mb-0">
                             {% blocktrans count counter=scope.done_elsewhere|length %}{{ counter }} issue of the sprint was already done outside of it, so it is left out of these figures (remove it from the sprint in Jira):{% plural %}{{ counter }} issues of the sprint were already done outside of it, so they are left out of these figures (remove them from the sprint in Jira):{% endblocktrans %}
@@ -92,6 +98,12 @@
                                         <div class="inline-note mt-2">{% blocktrans with done=rate.done total=rate.total %}{{ done }} closed / {{ total }} in total{% endblocktrans %}</div>
                                     </div>
                                 </div>
+                                {% if rate.not_started %}
+                                    <div class="inline-note mt-2">
+                                        <a href="#scope-issues" class="scope-not-started" data-group="{{ group }}"
+                                           data-label="{{ label }}">{% blocktrans count counter=rate.not_started|length %}{{ counter }} not started{% plural %}{{ counter }} not started{% endblocktrans %}</a>
+                                    </div>
+                                {% endif %}
                             </div>
                         </div>
                     {% endfor %}
@@ -190,7 +202,7 @@
             </div>
 
             {% if scope.issues %}
-                <div class="card p-4 mt-3">
+                <div class="card p-4 mt-3" id="scope-issues">
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
                         <h3 class="h5 mb-0">
                             {% trans "Issues" %} <span id="scopeFilterLabel" class="text-secondary fw-normal"></span>
@@ -310,6 +322,15 @@
                 }
 
                 showAll.addEventListener("click", () => render(null));
+                // "N not started" under the closed rates: the issues still in a To Do-like status.
+                document.querySelectorAll(".scope-not-started").forEach((link) => {
+                    link.addEventListener("click", (event) => {
+                        event.preventDefault();
+                        const keys = new Set(scope.completion[link.dataset.group].not_started);
+                        render({label: `${link.dataset.label} — ${link.textContent.trim()}`, test: (issue) => keys.has(issue.key)});
+                        document.getElementById("scope-issues").scrollIntoView({behavior: "smooth"});
+                    });
+                });
                 render(null);
 
                 const textColor = getComputedStyle(document.body).color;

@@ -823,9 +823,9 @@ class SprintScopeFlowTests(TestCase):
         self.assertEqual(
             scope["completion"],
             {
-                "planned": {"done": 2, "started": 3, "percent": 67, "total": 3, "percent_total": 67},
-                "added": {"done": 1, "started": 2, "percent": 50, "total": 2, "percent_total": 50},
-                "all": {"done": 3, "started": 5, "percent": 60, "total": 5, "percent_total": 60},
+                "planned": {"done": 2, "started": 3, "percent": 67, "total": 3, "percent_total": 67, "not_started": []},
+                "added": {"done": 1, "started": 2, "percent": 50, "total": 2, "percent_total": 50, "not_started": []},
+                "all": {"done": 3, "started": 5, "percent": 60, "total": 5, "percent_total": 60, "not_started": []},
             },
         )
 
@@ -836,8 +836,38 @@ class SprintScopeFlowTests(TestCase):
             end=datetime(2026, 3, 13, tzinfo=dt_timezone.utc), status_categories={"To Do": "new"},
         )
         self.assertEqual(
-            scope["completion"]["added"], {"done": 1, "started": 1, "percent": 100, "total": 2, "percent_total": 50}
+            scope["completion"]["added"],
+            {"done": 1, "started": 1, "percent": 100, "total": 2, "percent_total": 50, "not_started": ["BKL1-5"]},
         )
+
+        # A To Do-like status listed as started: BKL1-5 then counts as started.
+        histories = {"BKL1-5": {"state": "Pending", "created": "2026-03-05T10:00:00.000+0000", "status_changes": []}}
+        scope = build_scope_flow(
+            SCOPE_REPORT, lambda key: key, histories=histories, start=datetime(2026, 3, 2, tzinfo=dt_timezone.utc),
+            end=datetime(2026, 3, 13, tzinfo=dt_timezone.utc), status_categories={"Pending": "new"},
+            started_statuses=["pending"],
+        )
+        self.assertEqual(scope["status_categories"]["Pending"], "indeterminate")
+        self.assertEqual(scope["completion"]["added"]["started"], 2)
+        self.assertEqual(scope["completion"]["added"]["not_started"], [])
+        self.assertEqual(consistency_errors(scope), [])
+
+    def test_planned_issue_created_after_the_start_enters_with_its_status_at_creation(self):
+        # Jira counts BKL1-1 as planned, but it was created on 4 March, after the 2 March start date.
+        histories = {"BKL1-1": {"state": "Done", "created": "2026-03-04T10:00:00.000+0000", "status_changes": [
+            {"at": "2026-03-06T10:00:00.000+0000", "from": "Open", "to": "Done"},
+        ]}}
+        scope = build_scope_flow(
+            SCOPE_REPORT, lambda key: key, histories=histories, start=datetime(2026, 3, 2, tzinfo=dt_timezone.utc),
+            end=datetime(2026, 3, 13, tzinfo=dt_timezone.utc), sprint_id=2446,
+        )
+
+        issue = next(issue for issue in scope["issues"] if issue["key"] == "BKL1-1")
+        self.assertTrue(issue["created_after_start"])
+        self.assertIsNone(issue["status_start"])
+        self.assertEqual((issue["status_entry"], issue["moved"]), ("Open", True))
+        self.assertFalse(next(issue for issue in scope["issues"] if issue["key"] == "BKL1-3")["created_after_start"])
+        self.assertEqual(consistency_errors(scope), [])
 
     def test_statuses_at_sprint_start_and_end_come_from_the_changelog(self):
         start = datetime(2026, 3, 2, 8, tzinfo=dt_timezone.utc)
@@ -1020,8 +1050,26 @@ class SprintScopeFlowTests(TestCase):
         self.assertContains(response, 'href="https://jira.example/browse/BKL1-7"')
         self.assertContains(response, "1 ticket n'a pas d'historique de statut")
         self.assertNotContains(response, "alert-danger")
+        # BKL1-3 is planned but has no history: no "created after the start" alert for it.
+        self.assertNotContains(response, "créé après la date de début du sprint")
         self.assertContains(response, "1 ticket du sprint était déjà terminé en dehors de celui-ci")
         self.assertContains(response, 'href="https://jira.example/browse/BKL1-6"')
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_scope_page_lists_late_planned_issues_and_links_the_not_started_ones(self, mock_get_jira):
+        late = {"state": "To Do", "created": "2026-03-04T10:00:00.000+0000", "status_changes": []}
+        self._login_and_fake_jira(
+            mock_get_jira,
+            get_status_histories=lambda keys: {"BKL1-4": late},
+            status_category_keys=lambda: {"To Do": "new"},
+        )
+
+        response = self.client.get(reverse("sprint-scope-flow", args=[2446]))
+
+        self.assertEqual([issue["key"] for issue in response.context["planned_created_late"]], ["BKL1-4"])
+        self.assertContains(response, "1 ticket compté comme prévu par Jira a été créé après la date de début du sprint")
+        self.assertContains(response, 'href="https://jira.example/browse/BKL1-4"')
+        self.assertContains(response, 'class="scope-not-started" data-group="planned"')
 
     @patch("sprint.views.get_connected_jira_for_user")
     def test_scope_page_says_when_the_report_coverage_cannot_be_checked(self, mock_get_jira):

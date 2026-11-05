@@ -2359,3 +2359,21 @@ msgid "%(counter)s issue of the sprint was already done outside of it, so it is 
 msgid_plural "%(counter)s issues of the sprint were already done outside of it, so they are left out of these figures (remove them from the sprint in Jira):"
 msgstr[0] "%(counter)s ticket van de sprint was al buiten de sprint afgerond en telt dus niet mee in deze cijfers (haal het uit de sprint in Jira):"
 msgstr[1] "%(counter)s tickets van de sprint waren al buiten de sprint afgerond en tellen dus niet mee in deze cijfers (haal ze uit de sprint in Jira):"
+
+msgid "Statuses counted as started"
+msgstr "Statussen die als gestart tellen"
+
+msgid "Comma-separated. Jira puts some statuses in its To Do category (grey): the sprint scope then counts their issues as not started. List here the ones that mean the work has begun."
+msgstr "Gescheiden door komma's. Jira plaatst sommige statussen in de categorie To Do (grijs): de sprintscope telt hun tickets dan als niet gestart. Som hier de statussen op die betekenen dat het werk begonnen is."
+
+#, python-format
+msgid "%(counter)s not started"
+msgid_plural "%(counter)s not started"
+msgstr[0] "%(counter)s niet gestart"
+msgstr[1] "%(counter)s niet gestart"
+
+#, python-format
+msgid "%(counter)s issue counted as planned by Jira was created after the sprint start date (%(start)s): the sprint was started later than that date, or the issue was created right in it. Its status on entering the sprint is its status at creation:"
+msgid_plural "%(counter)s issues counted as planned by Jira were created after the sprint start date (%(start)s): the sprint was started later than that date, or they were created right in it. Their status on entering the sprint is their status at creation:"
+msgstr[0] "%(counter)s ticket dat Jira als gepland telt, werd na de startdatum van de sprint (%(start)s) aangemaakt: de sprint werd later gestart, of het ticket werd er rechtstreeks in aangemaakt. De status bij het binnenkomen in de sprint is de status bij aanmaak:"
+msgstr[1] "%(counter)s tickets die Jira als gepland telt, werden na de startdatum van de sprint (%(start)s) aangemaakt: de sprint werd later gestart, of de tickets werden er rechtstreeks in aangemaakt. Hun status bij het binnenkomen in de sprint is hun status bij aanmaak:"

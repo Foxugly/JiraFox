@@ -52,6 +52,7 @@ def build_scope_flow(
     end: datetime | None = None,
     status_categories: dict[str, str] | None = None,
     sprint_id: int | None = None,
+    started_statuses: list[str] | tuple[str, ...] = (),
 ) -> dict:
     """
     Nodes are keyed "start:<status>", "origin:<x>", "outcome:<x>" and "end:<status>" so a status
@@ -62,8 +63,12 @@ def build_scope_flow(
     the start status is unknown. With histories, a planned issue whose start status is unknown
     flows from START_NO_STATUS.
 
-    `status_entry` is the status when the issue entered the sprint (its start for planned issues)
-    and `moved` whether its status changed between then and the end, for the stability tab.
+    `status_entry` is the status when the issue entered the sprint (its start for planned issues,
+    or its creation if Jira counts it planned though created later) and `moved` whether its status
+    changed between then and the end, for the stability tab.
+
+    `started_statuses` are counted as started (Jira's "In Progress" category) even if Jira puts
+    them in its To Do category.
     """
     added_keys = set((report.get("issueKeysAddedDuringSprint") or {}).keys())
     statuses = (report.get("entityData") or {}).get("statuses") or {}
@@ -85,6 +90,7 @@ def build_scope_flow(
             status_start = status_at(history, start) if history and start and origin == PLANNED else None
             status_end = (status_at(history, end) if history and end else None) or current
             entered = entered_at(history, origin, sprint_id, start, end) if history and start and end else None
+            created = parse_jira_datetime(history.get("created")) if history else None
             issues.append(
                 {
                     "key": key,
@@ -98,8 +104,16 @@ def build_scope_flow(
                     "status_entry": status_at(history, entered) if entered else None,
                     "moved": status_moved(history, entered, end) if entered else None,
                     "url": issue_url(key),
+                    # Planned for Jira, yet created after the sprint start.
+                    "created_after_start": bool(origin == PLANNED and start and created and created > start),
+                    "created": history.get("created") if history else None,
                 }
             )
+
+    wanted = {name.casefold() for name in started_statuses}
+    for name in {issue[side] for issue in issues for side in ("status_start", "status_end", "status_entry")} | set(categories):
+        if name and name.casefold() in wanted and categories.get(name) != "done":
+            categories[name] = "indeterminate"
 
     counts: dict[tuple[str, str], int] = {}
     for issue in issues:
@@ -148,7 +162,11 @@ def consistency_errors(scope: dict) -> list[str]:
         errors.append(_("Planned and added issues do not add up to the %(count)s issues.") % {"count": len(issues)})
     for group in COMPLETION_GROUPS:
         rate = scope["completion"][group]
-        if rate["total"] != sizes[group] or not 0 <= rate["done"] <= rate["started"] <= rate["total"]:
+        if (
+            rate["total"] != sizes[group]
+            or not 0 <= rate["done"] <= rate["started"] <= rate["total"]
+            or len(rate["not_started"]) != rate["total"] - rate["started"]
+        ):
             errors.append(_("Closed rate (%(group)s) does not add up.") % {"group": group})
         rate = scope["stability"][group]
         expected = sizes[group] if scope["has_history"] else 0
@@ -182,6 +200,7 @@ def completion_rates(issues: list[dict], status_categories: dict[str, str]) -> d
     rates = {}
     for group in COMPLETION_GROUPS:
         done = started = total = 0
+        not_started = []
         for issue in issues:
             if group != "all" and issue["origin"] != group:
                 continue
@@ -190,6 +209,7 @@ def completion_rates(issues: list[dict], status_categories: dict[str, str]) -> d
             if issue["outcome"] == "done" or category == "done":
                 done += 1
             elif category == "new":
+                not_started.append(issue["key"])
                 continue
             started += 1
         rates[group] = {
@@ -198,6 +218,7 @@ def completion_rates(issues: list[dict], status_categories: dict[str, str]) -> d
             "percent": _percent(done, started),
             "total": total,
             "percent_total": _percent(done, total),
+            "not_started": not_started,
         }
     return rates
 
@@ -208,11 +229,14 @@ def _percent(part: int, whole: int) -> int | None:
 
 def entered_at(history: dict, origin: str, sprint_id: int | None, start: datetime, end: datetime) -> datetime:
     """
-    When the issue entered the sprint: its start for a planned issue; for an added one, the last
-    time its Sprint field gained this sprint before the end, else its creation, never before the start.
+    When the issue entered the sprint: its start for a planned issue (or its creation if later:
+    Jira counts as planned an issue created in the sprint before it was started); for an added one,
+    the last time its Sprint field gained this sprint before the end, else its creation, never
+    before the start.
     """
     if origin == PLANNED:
-        return start
+        created = parse_jira_datetime(history.get("created"))
+        return max(start, created) if created else start
     sprint = str(sprint_id)
     additions = [
         at

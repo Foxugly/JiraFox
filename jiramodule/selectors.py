@@ -40,6 +40,10 @@ class JiraContext:
         return self.project.jira_recurrent_epic_key
 
     @property
+    def started_statuses(self) -> list[str]:
+        return self.project.started_status_list()
+
+    @property
     def pk(self) -> str:
         # Cache keys: the same token on two projects must not share cached sprints.
         return f"{self.account.pk}.{self.project.pk}"

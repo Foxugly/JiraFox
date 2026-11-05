@@ -1710,3 +1710,10 @@ button:has(.fa-jira):focus,
         margin-top: 0.75rem;
     }
 }
+
+@media print {
+    /* The sticky navigation bar would be printed over the page content. */
+    .site-nav {
+        display: none !important;
+    }
+}
