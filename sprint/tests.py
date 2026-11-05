@@ -793,13 +793,14 @@ class SprintScopeFlowTests(TestCase):
     def test_completion_rates_count_closed_out_of_started_issues(self):
         scope = build_scope_flow(SCOPE_REPORT, lambda key: key)
 
-        # Removed but in progress at the end: started, not closed. Done in another sprint: left out.
+        # Removed but in progress at the end: started, not closed. Done in another sprint (BKL1-6):
+        # in the total as not closed, left out of the started ones.
         self.assertEqual(
             scope["completion"],
             {
-                "planned": {"done": 2, "started": 3, "percent": 67, "total": 3, "percent_total": 67},
+                "planned": {"done": 2, "started": 3, "percent": 67, "total": 4, "percent_total": 50},
                 "added": {"done": 1, "started": 2, "percent": 50, "total": 2, "percent_total": 50},
-                "all": {"done": 3, "started": 5, "percent": 60, "total": 5, "percent_total": 60},
+                "all": {"done": 3, "started": 5, "percent": 60, "total": 6, "percent_total": 50},
             },
         )
 
@@ -957,7 +958,7 @@ class SprintScopeFlowTests(TestCase):
         self.assertNotContains(response, "Retirés")
         self.assertContains(response, "Tickets prévus clôturés")
         self.assertContains(response, "2 clôturés / 3 commencés")
-        self.assertContains(response, "2 clôturés / 3 au total")
+        self.assertContains(response, "2 clôturés / 4 au total")
         self.assertContains(response, "Évolution des statuts")
         # No history: nothing to compare yet.
         self.assertContains(response, "historique des statuts est nécessaire")

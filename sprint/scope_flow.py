@@ -129,15 +129,18 @@ def completion_rates(issues: list[dict], status_categories: dict[str, str]) -> d
     """
     Per group: issues closed in the sprint out of the issues started by its end (not "To Do"), and
     out of all the group's issues, whatever Jira's bucket: an issue removed from the sprint still
-    counts by its status at the end. Issues completed in another sprint are left out.
+    counts by its status at the end. Issues completed in another sprint count in the total as not
+    closed, and are left out of the started ones.
     """
     rates = {}
     for group in COMPLETION_GROUPS:
         done = started = total = 0
         for issue in issues:
-            if group != "all" and issue["origin"] != group or issue["outcome"] == "done_elsewhere":
+            if group != "all" and issue["origin"] != group:
                 continue
             total += 1
+            if issue["outcome"] == "done_elsewhere":
+                continue
             category = status_categories.get(issue["status_end"])
             if issue["outcome"] == "done" or category == "done":
                 done += 1
