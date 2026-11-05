@@ -135,6 +135,13 @@ class JiraManagerRunJqlTests(SimpleTestCase):
         self.assertEqual(result[0]["remaining_hours"], 1.0)
         self.assertNotIn("kanban_metrics", result[0])
 
+    def test_sprint_issue_keys_use_the_light_search(self):
+        manager = self._manager()
+
+        self.assertEqual(manager.get_sprint_issue_keys(2446), {"ABC-1"})
+        self.assertIsNone(self.search_kwargs[0]["expand"])
+        self.assertNotEqual(self.search_kwargs[0]["fields"], "key")
+
     def test_capacity_sheet_queries_skip_the_changelog(self):
         manager = self._manager()
         builder = SprintWorkbookBuilder.__new__(SprintWorkbookBuilder)

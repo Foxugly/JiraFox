@@ -365,11 +365,10 @@ class JiraManager:
 
     def get_sprint_issue_keys(self, sprint_id: int) -> set[str]:
         """Keys of the standard issues whose Sprint field holds this sprint, whatever the board's filter."""
-        issues = self._with_retries(
-            self.jira.search_issues,
-            f"sprint = {int(sprint_id)} and {self.JIRA_ONLY_STANDARD_TYPES}",
-            maxResults=False,
-            fields="key",
+        # The usual light search: asking for fields="key" alone makes the jira library rename it
+        # "issuekey" and then fail on the answer ("argument of type 'NoneType' is not iterable").
+        issues = self._search_issues(
+            f"sprint = {int(sprint_id)} and {self.JIRA_ONLY_STANDARD_TYPES}", history=False
         )
         return {issue.key for issue in issues}
 

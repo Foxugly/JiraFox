@@ -1025,10 +1025,10 @@ class SprintScopeFlowTests(TestCase):
 
     @patch("sprint.views.get_connected_jira_for_user")
     def test_scope_page_says_when_the_report_coverage_cannot_be_checked(self, mock_get_jira):
-        def timeout(sprint_id):
-            raise Timeout("read timed out")
+        def broken(sprint_id):
+            raise TypeError("argument of type 'NoneType' is not iterable")
 
-        self._login_and_fake_jira(mock_get_jira, get_sprint_issue_keys=timeout)
+        self._login_and_fake_jira(mock_get_jira, get_sprint_issue_keys=broken)
 
         response = self.client.get(reverse("sprint-scope-flow", args=[2446]))
 

@@ -291,7 +291,8 @@ class SprintScopeFlowView(LoginRequiredMixin, TemplateView):
         try:
             # Jira's sprint report only holds the issues of the board's filter.
             context["missing_from_report"] = sorted(jira.get_sprint_issue_keys(sprint_id) - report_keys - elsewhere_keys)
-        except (JIRAError, RequestException, JiraUnavailable) as exc:
+        except Exception as exc:  # noqa: BLE001
+            # An extra check only: whatever goes wrong, the figures are still shown, with a warning.
             context["missing_check_error"] = describe_jira_error(exc)
         stability = context["scope"]["stability"]
         context["stability"] = [
