@@ -971,6 +971,7 @@ class SprintScopeFlowTests(TestCase):
         response = self.client.get(reverse("sprint-scope-flow", args=[2446]))
 
         self.assertContains(response, "stabilityMatrixBody")
+        self.assertContains(response, "const TOTAL = \"Total\"")
         # Planned issues: BKL1-4 only has a history, the 3 others count as changed ("No status").
         self.assertContains(response, "1 inchangés / 4 tickets")
         self.assertContains(response, "dont 1 sans aucun changement de statut")

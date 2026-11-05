@@ -2316,3 +2316,7 @@ msgstr "Vous n'êtes encore membre d'aucun projet : créez-en un, ou demandez à
 #: templates/sprint/sprint_scope_flow.html
 msgid "No status"
 msgstr "Sans statut"
+
+#: templates/sprint/sprint_scope_flow.html
+msgid "Total"
+msgstr "Total"

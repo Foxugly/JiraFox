@@ -6,6 +6,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-sankey@0.12.1/dist/chartjs-chart-sankey.min.js"></script>
     <style>
         .stability-matrix th { white-space: nowrap; font-weight: 500; }
+        .stability-matrix .stability-total { font-weight: 600; background-color: var(--bs-tertiary-bg); cursor: pointer; }
         .stability-matrix .stability-diagonal { box-shadow: inset 0 0 0 2px rgba(200, 71, 90, 0.7); font-weight: 600; }
     </style>
 {% endblock %}
@@ -334,6 +335,7 @@
                 };
                 const isDone = (status) => scope.status_categories[status] === "done";
                 const entryOf = (issue) => issue.status_entry || NO_STATUS;
+                const TOTAL = "{% trans 'Total' %}";
                 // The entry statuses of the issues, in workflow order, "No status" first.
                 function entryStatuses(issues) {
                     const known = scope.status_order.filter((status) => issues.some((issue) => issue.status_entry === status));
@@ -357,6 +359,15 @@
                     return cellEl;
                 }
 
+                // A sum at the end of a row or column: bold, and clickable to list its issues.
+                function totalCell(count, label, test) {
+                    const td = document.createElement("td");
+                    td.classList.add("stability-total");
+                    td.textContent = count;
+                    td.addEventListener("click", () => render({label: `${groupLabels[group]} — ${label}`, test: inGroup(test)}));
+                    return td;
+                }
+
                 function renderMatrix() {
                     const issues = compared();
                     const statuses = scope.status_order.filter((status) =>
@@ -372,7 +383,8 @@
                     });
 
                     const headRow = document.createElement("tr");
-                    headRow.append(th("{% trans 'Entry ↓ / End →' %}"), ...statuses.map((status) => th(status, "col")));
+                    headRow.append(th("{% trans 'Entry ↓ / End →' %}"), ...statuses.map((status) => th(status, "col")),
+                        th(TOTAL, "col"));
                     matrixHead.replaceChildren(headRow);
 
                     matrixBody.replaceChildren(...entries.map((entry) => {
@@ -401,8 +413,18 @@
                             }
                             tr.appendChild(td);
                         });
+                        const rowCount = issues.filter((issue) => entryOf(issue) === entry).length;
+                        tr.appendChild(totalCell(rowCount, `${entry} → ${TOTAL}`, (issue) => entryOf(issue) === entry));
                         return tr;
                     }));
+                    const totalRow = document.createElement("tr");
+                    totalRow.appendChild(th(TOTAL, "row"));
+                    statuses.forEach((end) => {
+                        const columnCount = issues.filter((issue) => issue.status_end === end).length;
+                        totalRow.appendChild(totalCell(columnCount, `${TOTAL} → ${end}`, (issue) => issue.status_end === end));
+                    });
+                    totalRow.appendChild(totalCell(issues.length, TOTAL, () => true));
+                    matrixBody.appendChild(totalRow);
                 }
 
                 const barKinds = [
