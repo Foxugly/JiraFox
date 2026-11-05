@@ -1174,8 +1174,9 @@ class ReportMetricsTests(SimpleTestCase):
 
         metrics = sprint_metrics(scope, histories, end)
 
-        self.assertEqual(metrics["cycle_median"], 1.5)
-        self.assertEqual(metrics["cycle_p85"], 1.85)
+        # 8 h = 1.11 days and 16 h = 2.22 days (7.2 h working day): median 1.665, p85 2.035.
+        self.assertAlmostEqual(metrics["cycle_median"], 1.67, places=1)
+        self.assertAlmostEqual(metrics["cycle_p85"], 2.04, places=1)
 
     def test_cycle_time_starts_at_the_first_started_status(self):
         history = _metric_history(
@@ -1186,7 +1187,7 @@ class ReportMetricsTests(SimpleTestCase):
         )
         end = datetime(2026, 3, 13, tzinfo=dt_timezone.utc)
 
-        self.assertEqual(cycle_time_days(history, METRIC_CATEGORIES, end), 2.0)
+        self.assertAlmostEqual(cycle_time_days(history, METRIC_CATEGORIES, end), 16 / 7.2, places=2)
 
         # "Pending" is To Do-like for Jira, yet listed as started: it starts the clock.
         pending = _metric_history(
@@ -1196,7 +1197,9 @@ class ReportMetricsTests(SimpleTestCase):
             ("2026-03-04T09:00:00.000+0100", "Pending", "Done"),
         )
         self.assertEqual(cycle_time_days(pending, METRIC_CATEGORIES, end), 0.0)  # the clock starts at Done
-        self.assertEqual(cycle_time_days(pending, {**METRIC_CATEGORIES, "Pending": "indeterminate"}, end), 2.0)
+        self.assertAlmostEqual(
+            cycle_time_days(pending, {**METRIC_CATEGORIES, "Pending": "indeterminate"}, end), 16 / 7.2, places=2
+        )
 
     def test_cycle_time_is_none_without_a_done_transition(self):
         history = _metric_history(
@@ -1275,8 +1278,15 @@ class ReportMetricsTests(SimpleTestCase):
             ("2026-03-02T09:00:00.000+0100", "To Do", "In Progress"),
             ("2026-03-03T09:00:00.000+0100", "In Progress", "Done"),
         )
+        reopened = _metric_history(
+            "2026-03-01T08:00:00.000+0100",
+            "In Progress",
+            ("2026-03-02T09:00:00.000+0100", "To Do", "Done"),
+            ("2026-03-03T09:00:00.000+0100", "Done", "In Progress"),
+        )
         end = datetime(2026, 3, 13, tzinfo=dt_timezone.utc)
 
+        self.assertTrue(went_back(reopened, METRIC_CATEGORIES, end))
         self.assertTrue(went_back(back, METRIC_CATEGORIES, end))
         self.assertFalse(went_back(forward, METRIC_CATEGORIES, end))
         self.assertFalse(went_back(back, METRIC_CATEGORIES, datetime(2026, 3, 2, 12, tzinfo=dt_timezone.utc)))
@@ -1289,4 +1299,4 @@ class ReportMetricsTests(SimpleTestCase):
         )
         at = datetime(2026, 3, 4, 9, tzinfo=timezone.get_default_timezone())
 
-        self.assertEqual(age_in_status_days(history, at), 2.0)
+        self.assertAlmostEqual(age_in_status_days(history, at), 16 / 7.2, places=2)

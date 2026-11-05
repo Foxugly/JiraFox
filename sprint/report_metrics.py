@@ -11,7 +11,6 @@ from JiraFox.services.dashboard import AGING_WIP_THRESHOLD_DAYS
 
 from .logged_report import parse_jira_datetime, status_at
 
-DAY_HOURS = 8
 CATEGORY_RANK = {"new": 0, "indeterminate": 1, "done": 2}
 
 
@@ -40,8 +39,8 @@ def _changes(history: dict, end: datetime | None) -> list[tuple[datetime, str | 
 
 
 def _business_days(start: datetime, end: datetime) -> float:
-    # 8 h days as the brief wants, not the 7.2 h average of the Mon-Fri week (Friday is 4 h).
-    return hours_to_business_days(KanbanMetricsService().business_hours_between(start, end), day_hours=DAY_HOURS)
+    # Same scale as the dashboard (kanban_metrics): the default 7.2 h average working day.
+    return hours_to_business_days(KanbanMetricsService().business_hours_between(start, end))
 
 
 def _started_at(history: dict, categories: dict[str, str], end: datetime | None) -> datetime | None:
