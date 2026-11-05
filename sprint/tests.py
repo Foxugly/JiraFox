@@ -777,14 +777,18 @@ class SprintScopeFlowTests(TestCase):
                 ("origin:added", "outcome:done"): 1,
                 ("origin:planned", "outcome:removed"): 1,
                 ("origin:added", "outcome:removed"): 1,
-                ("origin:planned", "outcome:done_elsewhere"): 1,
                 ("outcome:done", "end:Done"): 2,
                 ("outcome:done", "end:Canceled"): 1,
                 ("outcome:removed", "end:In Progress"): 2,
-                ("outcome:done_elsewhere", "end:Done"): 1,
             },
         )
-        self.assertEqual(scope["totals"], {"planned": 4, "added": 2})
+        # BKL1-6 was done in another sprint: left out of every figure, only listed.
+        self.assertEqual(scope["totals"], {"planned": 3, "added": 2})
+        self.assertNotIn("BKL1-6", [issue["key"] for issue in scope["issues"]])
+        self.assertEqual(
+            scope["done_elsewhere"],
+            [{"key": "BKL1-6", "summary": "Done elsewhere", "url": "https://jira.example/browse/BKL1-6"}],
+        )
         self.assertEqual(scope["status_categories"]["In Progress"], "indeterminate")
         self.assertFalse(scope["has_history"])
         first = scope["issues"][0]
@@ -815,14 +819,13 @@ class SprintScopeFlowTests(TestCase):
     def test_completion_rates_count_closed_out_of_started_issues(self):
         scope = build_scope_flow(SCOPE_REPORT, lambda key: key)
 
-        # Removed but in progress at the end: started, not closed. Done in another sprint (BKL1-6):
-        # started, not closed.
+        # Removed but in progress at the end: started, not closed. Done in another sprint: left out.
         self.assertEqual(
             scope["completion"],
             {
-                "planned": {"done": 2, "started": 4, "percent": 50, "total": 4, "percent_total": 50},
+                "planned": {"done": 2, "started": 3, "percent": 67, "total": 3, "percent_total": 67},
                 "added": {"done": 1, "started": 2, "percent": 50, "total": 2, "percent_total": 50},
-                "all": {"done": 3, "started": 6, "percent": 50, "total": 6, "percent_total": 50},
+                "all": {"done": 3, "started": 5, "percent": 60, "total": 5, "percent_total": 60},
             },
         )
 
@@ -871,8 +874,8 @@ class SprintScopeFlowTests(TestCase):
         flows = {(flow["from"], flow["to"]): flow["flow"] for flow in scope["flows"]}
         self.assertEqual(flows[("start:To Do", "origin:planned")], 1)
         self.assertEqual(flows[("start:In Progress", "origin:planned")], 1)
-        # Planned without a known start status (no history for BKL1-3 and BKL1-6): "No status".
-        self.assertEqual(flows[(START_NO_STATUS, "origin:planned")], 2)
+        # Planned without a known start status (no history for BKL1-3): "No status".
+        self.assertEqual(flows[(START_NO_STATUS, "origin:planned")], 1)
         self.assertEqual(scope["columns"][START_NO_STATUS], 0)
         self.assertNotIn((START_NO_STATUS, "origin:added"), flows)
         self.assertEqual(flows[("outcome:removed", "end:In Test")], 1)
@@ -929,16 +932,15 @@ class SprintScopeFlowTests(TestCase):
                 "BKL1-3": (None, "Canceled", None),
                 "BKL1-4": ("In Progress", "In Progress", True),
                 "BKL1-5": ("In Progress", "In Progress", False),
-                "BKL1-6": ("Done", "Done", False),
             },
         )
-        # An unknown entry status (BKL1-3, planned) counts as changed; done on entry counts (BKL1-6, unchanged).
+        # An unknown entry status (BKL1-3, planned) counts as changed.
         self.assertEqual(
             scope["stability"],
             {
-                "planned": {"same": 2, "still": 1, "back": 1, "compared": 4, "percent": 50},
+                "planned": {"same": 1, "still": 0, "back": 1, "compared": 3, "percent": 33},
                 "added": {"same": 1, "still": 1, "back": 0, "compared": 2, "percent": 50},
-                "all": {"same": 3, "still": 2, "back": 1, "compared": 6, "percent": 50},
+                "all": {"same": 2, "still": 1, "back": 1, "compared": 5, "percent": 40},
             },
         )
         self.assertEqual(scope["status_order"], ["To Do", "In Progress", "Done", "Canceled"])
@@ -971,7 +973,7 @@ class SprintScopeFlowTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "chartjs-chart-sankey")
         self.assertContains(response, "BKL1-5")
-        self.assertEqual(requested,["BKL1-1", "BKL1-2", "BKL1-3", "BKL1-4", "BKL1-5", "BKL1-6"])
+        self.assertEqual(requested,["BKL1-1", "BKL1-2", "BKL1-3", "BKL1-4", "BKL1-5"])
 
         user.language = "fr"
         user.save(update_fields=["language"])
@@ -980,8 +982,8 @@ class SprintScopeFlowTests(TestCase):
         self.assertContains(response, "Non terminés")
         self.assertNotContains(response, "Retirés")
         self.assertContains(response, "Tickets prévus clôturés")
-        self.assertContains(response, "2 clôturés / 4 commencés")
-        self.assertContains(response, "2 clôturés / 4 au total")
+        self.assertContains(response, "2 clôturés / 3 commencés")
+        self.assertContains(response, "2 clôturés / 3 au total")
         self.assertContains(response, "Évolution des statuts")
         # No history: nothing to compare yet.
         self.assertContains(response, "historique des statuts est nécessaire")
@@ -995,8 +997,8 @@ class SprintScopeFlowTests(TestCase):
 
         self.assertContains(response, "stabilityMatrixBody")
         self.assertContains(response, "const TOTAL = \"Total\"")
-        # Planned issues: BKL1-4 only has a history, the 3 others count as changed ("No status").
-        self.assertContains(response, "1 au même statut qu'à l'entrée / 4 tickets")
+        # Planned issues: BKL1-4 only has a history, the 2 others count as changed ("No status").
+        self.assertContains(response, "1 au même statut qu'à l'entrée / 3 tickets")
         self.assertContains(response, "1 jamais changés · 0 changés puis revenus")
 
     @patch("sprint.views.get_connected_jira_for_user")
@@ -1018,6 +1020,8 @@ class SprintScopeFlowTests(TestCase):
         self.assertContains(response, 'href="https://jira.example/browse/BKL1-7"')
         self.assertContains(response, "1 ticket n'a pas d'historique de statut")
         self.assertNotContains(response, "alert-danger")
+        self.assertContains(response, "1 ticket du sprint était déjà terminé en dehors de celui-ci")
+        self.assertContains(response, 'href="https://jira.example/browse/BKL1-6"')
 
     @patch("sprint.views.get_connected_jira_for_user")
     def test_scope_page_says_when_the_report_coverage_cannot_be_checked(self, mock_get_jira):

@@ -2353,3 +2353,9 @@ msgid "%(counter)s issue has no status history (counted as \"No status\"):"
 msgid_plural "%(counter)s issues have no status history (counted as \"No status\"):"
 msgstr[0] "%(counter)s ticket n'a pas d'historique de statut (compté en « Sans statut ») :"
 msgstr[1] "%(counter)s tickets n'ont pas d'historique de statut (comptés en « Sans statut ») :"
+
+#, python-format
+msgid "%(counter)s issue of the sprint was already done outside of it, so it is left out of these figures (remove it from the sprint in Jira):"
+msgid_plural "%(counter)s issues of the sprint were already done outside of it, so they are left out of these figures (remove them from the sprint in Jira):"
+msgstr[0] "%(counter)s ticket du sprint était déjà terminé en dehors de celui-ci, il est donc exclu de ces chiffres (retire-le du sprint dans Jira) :"
+msgstr[1] "%(counter)s tickets du sprint étaient déjà terminés en dehors de celui-ci, ils sont donc exclus de ces chiffres (retire-les du sprint dans Jira) :"

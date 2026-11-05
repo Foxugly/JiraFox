@@ -25,8 +25,11 @@ OUTCOMES = (
     ("completedIssues", "done"),
     ("issuesNotCompletedInCurrentSprint", "not_done"),
     ("puntedIssues", "removed"),
-    ("issuesCompletedInAnotherSprint", "done_elsewhere"),
 )
+
+# Issues already done outside the sprint (done before being put in it, or closed in another
+# sprint): no work of this sprint, so left out of every figure and only listed.
+DONE_ELSEWHERE_BUCKET = "issuesCompletedInAnotherSprint"
 
 # Completion rates: planned issues, added issues, all of them.
 COMPLETION_GROUPS = (PLANNED, ADDED, "all")
@@ -111,6 +114,10 @@ def build_scope_flow(
         for step in steps:
             counts[step] = counts.get(step, 0) + 1
 
+    done_elsewhere = [
+        {"key": raw.get("key"), "summary": raw.get("summary") or "", "url": issue_url(raw.get("key"))}
+        for raw in report.get(DONE_ELSEWHERE_BUCKET) or []
+    ]
     completion = completion_rates(issues, categories)
     flows = [{"from": source, "to": target, "flow": count} for (source, target), count in counts.items()]
     nodes = {node for flow in flows for node in (flow["from"], flow["to"])}
@@ -119,6 +126,7 @@ def build_scope_flow(
         "columns": {node: COLUMNS[node.split(":", 1)[0]] for node in nodes},
         "status_categories": categories,
         "issues": issues,
+        "done_elsewhere": done_elsewhere,
         "totals": {origin: sum(1 for issue in issues if issue["origin"] == origin) for origin in ORIGINS},
         "completion": completion,
         "stability": stability_rates(issues, categories) if histories else stability_rates([], categories),
@@ -169,7 +177,7 @@ def completion_rates(issues: list[dict], status_categories: dict[str, str]) -> d
     """
     Per group: issues closed in the sprint out of the issues started by its end (not "To Do"), and
     out of all the group's issues, whatever Jira's bucket: an issue removed from the sprint still
-    counts by its status at the end. Issues completed in another sprint count as started, not closed.
+    counts by its status at the end.
     """
     rates = {}
     for group in COMPLETION_GROUPS:
@@ -178,9 +186,6 @@ def completion_rates(issues: list[dict], status_categories: dict[str, str]) -> d
             if group != "all" and issue["origin"] != group:
                 continue
             total += 1
-            if issue["outcome"] == "done_elsewhere":
-                started += 1
-                continue
             category = status_categories.get(issue["status_end"])
             if issue["outcome"] == "done" or category == "done":
                 done += 1

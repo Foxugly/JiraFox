@@ -285,11 +285,12 @@ class SprintScopeFlowView(LoginRequiredMixin, TemplateView):
         context["scope_errors"] = consistency_errors(context["scope"])
         context["jira_browse_url"] = jira.get_issue_url("")
         report_keys = {issue["key"] for issue in context["scope"]["issues"]}
+        elsewhere_keys = {issue["key"] for issue in context["scope"]["done_elsewhere"]}
         if histories is not None:
             context["without_history"] = sorted(report_keys - set(histories))
         try:
             # Jira's sprint report only holds the issues of the board's filter.
-            context["missing_from_report"] = sorted(jira.get_sprint_issue_keys(sprint_id) - report_keys)
+            context["missing_from_report"] = sorted(jira.get_sprint_issue_keys(sprint_id) - report_keys - elsewhere_keys)
         except (JIRAError, RequestException, JiraUnavailable) as exc:
             context["missing_check_error"] = describe_jira_error(exc)
         stability = context["scope"]["stability"]

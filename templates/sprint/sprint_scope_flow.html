@@ -34,6 +34,12 @@
                             <ul class="mb-0">{% for error in scope_errors %}<li>{{ error }}</li>{% endfor %}</ul>
                         </div>
                     {% endif %}
+                    {% if scope.done_elsewhere %}
+                        <div class="alert alert-warning py-2 mt-2 mb-0">
+                            {% blocktrans count counter=scope.done_elsewhere|length %}{{ counter }} issue of the sprint was already done outside of it, so it is left out of these figures (remove it from the sprint in Jira):{% plural %}{{ counter }} issues of the sprint were already done outside of it, so they are left out of these figures (remove them from the sprint in Jira):{% endblocktrans %}
+                            {% for issue in scope.done_elsewhere %}<a href="{{ issue.url }}" target="_blank" rel="noopener" title="{{ issue.summary }}">{{ issue.key }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}
+                        </div>
+                    {% endif %}
                     {% if missing_from_report %}
                         <div class="alert alert-warning py-2 mt-2 mb-0">
                             {% blocktrans count counter=missing_from_report|length %}{{ counter }} issue of the sprint is missing from Jira's sprint report, so from these figures (left out by the board's filter?):{% plural %}{{ counter }} issues of the sprint are missing from Jira's sprint report, so from these figures (left out by the board's filter?):{% endblocktrans %}
@@ -223,16 +229,14 @@
                     "origin:added": "{% trans 'Added during sprint' %}",
                     "outcome:done": "{% trans 'Completed' %}",
                     "outcome:not_done": "{% trans 'Not completed' %}",
-                    "outcome:removed": "{% trans 'Not completed' %}",
-                    "outcome:done_elsewhere": "{% trans 'Completed in another sprint' %}"
+                    "outcome:removed": "{% trans 'Not completed' %}"
                 };
                 const colors = {
                     "origin:planned": "#2f7de1",
                     "origin:added": "#f0a202",
                     "outcome:done": "#2e9d5b",
                     "outcome:not_done": "#e07a1f",
-                    "outcome:removed": "#c8475a",
-                    "outcome:done_elsewhere": "#3aa6a0"
+                    "outcome:removed": "#c8475a"
                 };
                 const statusColors = {new: "#8a94a6", indeterminate: "#4a8fe0", done: "#2e9d5b"};
                 // Issues whose status is unknown: "start:" in the diagram, null entry status in the tab.
