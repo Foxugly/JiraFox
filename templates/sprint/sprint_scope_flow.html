@@ -11,6 +11,8 @@
         .scope-planned { --scope-color: #2f7de1; }
         .scope-added { --scope-color: #f0a202; }
         .scope-all { --scope-color: #2e9d5b; }
+        /* Unchanged statuses: the red of "Same status, no change" in the status evolution tab. */
+        .scope-metric.scope-unchanged { --scope-color: #c8475a; }
         .badge.scope-planned, .badge.scope-added { background-color: var(--scope-color); color: #fff; }
         .stability-matrix th { white-space: nowrap; font-weight: 500; }
         .stability-matrix .stability-total { font-weight: 600; background-color: var(--bs-tertiary-bg); cursor: pointer; }
@@ -113,7 +115,7 @@
                 <div class="row g-3 mb-3">
                     {% for label, rate, group in stability %}
                         <div class="col-12 col-md-4">
-                            <div class="card p-3 h-100 text-center scope-metric scope-{{ group }}" title="{% trans 'Issues in the same status on entering the sprint and at its end, out of all the issues of the group; an unknown status on entering it counts as changed.' %}">
+                            <div class="card p-3 h-100 text-center scope-metric scope-unchanged" title="{% trans 'Issues in the same status on entering the sprint and at its end, out of all the issues of the group; an unknown status on entering it counts as changed.' %}">
                                 <div class="text-uppercase text-secondary small mb-2">{{ label }}</div>
                                 <div class="metric-value">{% if rate.percent is not None %}{{ rate.percent }} %{% else %}-{% endif %}</div>
                                 <div class="inline-note mt-2">{% blocktrans with same=rate.same compared=rate.compared %}{{ same }} in the same status as on entering / {{ compared }} issues{% endblocktrans %}</div>
