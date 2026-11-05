@@ -144,3 +144,7 @@ LOGGING = {
         "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
     },
 }
+
+# Uploaded files (PowerPoint templates). Never served: they are only read server-side.
+MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_URL = "/media/"

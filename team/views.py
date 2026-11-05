@@ -105,7 +105,7 @@ def project_list(request):
 @login_required
 def project_create(request):
     if request.method == "POST":
-        form = ProjectForm(request.POST)
+        form = ProjectForm(request.POST, request.FILES)
         if form.is_valid():
             project = create_project(user=request.user, form=form)
             messages.success(request, _("Project created."))
@@ -120,7 +120,7 @@ def project_create(request):
 def project_edit(request, project_id: int):
     project = _member_project_or_404(request.user, project_id)
     if request.method == "POST":
-        form = ProjectForm(request.POST, instance=project)
+        form = ProjectForm(request.POST, request.FILES, instance=project)
         if form.is_valid():
             form.save()
             messages.success(request, _("Project saved."))

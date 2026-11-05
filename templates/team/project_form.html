@@ -32,7 +32,7 @@
             <div class="col-12 {% if mode == 'edit' %}col-lg-7{% endif %}">
                 <div class="utility-panel h-100">
                     <h2 class="h5 mb-3">{% trans "Settings" %}</h2>
-                    <form method="post" novalidate>
+                    <form method="post" enctype="multipart/form-data" novalidate>
                         {% csrf_token %}
                         {% if form.non_field_errors %}
                             <div class="alert alert-danger">{{ form.non_field_errors|striptags }}</div>
@@ -66,6 +66,12 @@
                                 <label class="form-label" for="{{ form.started_statuses.id_for_label }}">{% trans "Statuses counted as started" %}</label>
                                 {{ form.started_statuses }}
                                 <div class="form-text">{% trans "Comma-separated. Jira puts some statuses in its To Do category (grey): the sprint scope then counts their issues as not started. List here the ones that mean the work has begun." %}</div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="{{ form.report_template.id_for_label }}">{% trans "PowerPoint template" %}</label>
+                                {{ form.report_template }}
+                                {% if form.report_template.errors %}<div class="invalid-feedback d-block">{{ form.report_template.errors|striptags }}</div>{% endif %}
+                                <div class="form-text">{% trans "The company deck with its 6 example slides. Stays on this PC." %}</div>
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary mt-4">

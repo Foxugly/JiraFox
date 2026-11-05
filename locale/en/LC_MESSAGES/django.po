@@ -1965,3 +1965,15 @@ msgstr "Column order saved."
 #: .\templates\sprint\sprint_xls_report.html:140
 msgid "Unable to save column order."
 msgstr "Unable to save column order."
+
+msgid "PowerPoint template"
+msgstr ""
+
+msgid "The company deck with its 6 example slides. Stays on this PC."
+msgstr ""
+
+msgid "This file is not a readable PowerPoint (.pptx) deck."
+msgstr ""
+
+msgid "The deck must contain the 6 example slides."
+msgstr ""

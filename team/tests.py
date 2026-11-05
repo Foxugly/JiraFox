@@ -1,5 +1,10 @@
+import io
+import shutil
+import tempfile
+
 from django.contrib.auth import get_user_model
-from django.test import SimpleTestCase, TestCase
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 
 from dev.models import Dev
@@ -142,3 +147,58 @@ class ProjectPagesTests(TestCase):
         self.client.post(reverse("update_dev", args=[dev.id]), {"field": "holidays", "value": "4"})
         dev.refresh_from_db()
         self.assertEqual(dev.holidays, 4)
+
+
+def _deck(slide_count: int) -> bytes:
+    from pptx import Presentation
+
+    presentation = Presentation()
+    for _ in range(slide_count):
+        presentation.slides.add_slide(presentation.slide_layouts[6])
+    buffer = io.BytesIO()
+    presentation.save(buffer)
+    return buffer.getvalue()
+
+
+class ReportTemplateUploadTests(TestCase):
+    def setUp(self):
+        self.media = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.media, ignore_errors=True)
+        override = override_settings(MEDIA_ROOT=self.media)
+        override.enable()
+        self.addCleanup(override.disable)
+        self.alice = get_user_model().objects.create_user(username="alice", password="secret")
+        self.project = Team.objects.create(name="Core")
+        self.project.members.add(self.alice)
+        self.client.force_login(self.alice)
+
+    def _upload(self, content: bytes):
+        return self.client.post(
+            reverse("project_edit", args=[self.project.id]),
+            {"name": "Core", "report_template": SimpleUploadedFile("deck.pptx", content)},
+        )
+
+    def test_report_template_accepts_a_six_slide_deck(self):
+        response = self._upload(_deck(6))
+
+        self.assertRedirects(response, reverse("project_edit", args=[self.project.id]))
+        self.project.refresh_from_db()
+        self.assertTrue(self.project.report_template.name.startswith("report_templates/"))
+
+    def test_report_template_refuses_a_deck_without_the_example_slides(self):
+        self.alice.language = "fr"
+        self.alice.save()
+
+        response = self._upload(_deck(2))
+
+        self.assertIn("6 slides d'exemple", " ".join(response.context["form"].errors["report_template"]))
+        self.project.refresh_from_db()
+        self.assertFalse(self.project.report_template)
+
+    def test_report_template_refuses_a_non_pptx_file(self):
+        response = self._upload(b"not a zip")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["form"].errors["report_template"])
+        self.project.refresh_from_db()
+        self.assertFalse(self.project.report_template)

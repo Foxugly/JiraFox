@@ -2377,3 +2377,15 @@ msgid "%(counter)s issue counted as planned by Jira was created after the sprint
 msgid_plural "%(counter)s issues counted as planned by Jira were created after the sprint start date (%(start)s): the sprint was started later than that date, or they were created right in it. Their status on entering the sprint is their status at creation:"
 msgstr[0] "%(counter)s ticket dat Jira als gepland telt, werd na de startdatum van de sprint (%(start)s) aangemaakt: de sprint werd later gestart, of het ticket werd er rechtstreeks in aangemaakt. De status bij het binnenkomen in de sprint is de status bij aanmaak:"
 msgstr[1] "%(counter)s tickets die Jira als gepland telt, werden na de startdatum van de sprint (%(start)s) aangemaakt: de sprint werd later gestart, of de tickets werden er rechtstreeks in aangemaakt. Hun status bij het binnenkomen in de sprint is hun status bij aanmaak:"
+
+msgid "PowerPoint template"
+msgstr "PowerPoint-sjabloon"
+
+msgid "The company deck with its 6 example slides. Stays on this PC."
+msgstr "De PowerPoint van het bedrijf met zijn 6 voorbeeldslides. Blijft op deze pc."
+
+msgid "This file is not a readable PowerPoint (.pptx) deck."
+msgstr "Dit bestand is geen leesbare PowerPoint (.pptx)."
+
+msgid "The deck must contain the 6 example slides."
+msgstr "De PowerPoint moet de 6 voorbeeldslides bevatten."

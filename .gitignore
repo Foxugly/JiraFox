@@ -13,3 +13,6 @@ exports/
 
 # Brainstorming mockups (local).
 .superpowers/
+
+# Uploaded files (PowerPoint templates): never committed.
+media/

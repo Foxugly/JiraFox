@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import models
 
 from dev.models import Dev
+from team.report_template import validate_report_template
 
 
 class Team(models.Model):
@@ -20,6 +21,13 @@ class Team(models.Model):
         max_length=500,
         blank=True,
         help_text="Comma-separated Jira statuses counted as started even if Jira puts them in To Do.",
+    )
+    report_template = models.FileField(
+        "PowerPoint template",
+        upload_to="report_templates/",
+        blank=True,
+        validators=[validate_report_template],
+        help_text="The company deck with its 6 example slides. Stays on this PC.",
     )
     members = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="projects", blank=True)
     devs = models.ManyToManyField(Dev, through="TeamDev", related_name="teams")
