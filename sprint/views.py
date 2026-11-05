@@ -278,9 +278,9 @@ class SprintScopeFlowView(LoginRequiredMixin, TemplateView):
         )
         completion = context["scope"]["completion"]
         context["completion"] = [
-            (_("Planned issues closed"), completion["planned"]),
-            (_("Added issues closed"), completion["added"]),
-            (_("All issues closed"), completion["all"]),
+            (_("Planned issues closed"), completion["planned"], "planned"),
+            (_("Added issues closed"), completion["added"], "added"),
+            (_("All issues closed"), completion["all"], "all"),
         ]
         context["scope_errors"] = consistency_errors(context["scope"])
         context["jira_browse_url"] = jira.get_issue_url("")
@@ -295,9 +295,9 @@ class SprintScopeFlowView(LoginRequiredMixin, TemplateView):
             context["missing_check_error"] = describe_jira_error(exc)
         stability = context["scope"]["stability"]
         context["stability"] = [
-            (_("Planned issues unchanged"), stability["planned"]),
-            (_("Added issues unchanged"), stability["added"]),
-            (_("All issues unchanged"), stability["all"]),
+            (_("Planned issues unchanged"), stability["planned"], "planned"),
+            (_("Added issues unchanged"), stability["added"], "added"),
+            (_("All issues unchanged"), stability["all"], "all"),
         ]
         return context
 

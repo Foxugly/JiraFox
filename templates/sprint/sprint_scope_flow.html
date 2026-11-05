@@ -5,6 +5,13 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-sankey@0.12.1/dist/chartjs-chart-sankey.min.js"></script>
     <style>
+        /* Same colours as the flow diagram: planned blue, added yellow, all (closed) green. */
+        .card.scope-metric { border-top: 4px solid var(--scope-color); }
+        .scope-metric .metric-value { color: var(--scope-color); }
+        .scope-planned { --scope-color: #2f7de1; }
+        .scope-added { --scope-color: #f0a202; }
+        .scope-all { --scope-color: #2e9d5b; }
+        .badge.scope-planned, .badge.scope-added { background-color: var(--scope-color); color: #fff; }
         .stability-matrix th { white-space: nowrap; font-weight: 500; }
         .stability-matrix .stability-total { font-weight: 600; background-color: var(--bs-tertiary-bg); cursor: pointer; }
         .stability-matrix .stability-diagonal { box-shadow: inset 0 0 0 2px rgba(200, 71, 90, 0.7); font-weight: 600; }
@@ -64,16 +71,16 @@
                     {% endif %}
                 </div>
                 <div class="d-flex flex-wrap gap-2 align-items-center">
-                    <span class="badge text-bg-primary">{% trans "Planned" %}: {{ scope.totals.planned }}</span>
-                    <span class="badge text-bg-warning">{% trans "Added during sprint" %}: {{ scope.totals.added }}</span>
+                    <span class="badge scope-planned">{% trans "Planned" %}: {{ scope.totals.planned }}</span>
+                    <span class="badge scope-added">{% trans "Added during sprint" %}: {{ scope.totals.added }}</span>
                 </div>
             </div>
 
             {% if scope.issues %}
                 <div class="row g-3 mb-3">
-                    {% for label, rate in completion %}
+                    {% for label, rate, group in completion %}
                         <div class="col-12 col-md-4">
-                            <div class="card p-3 h-100">
+                            <div class="card p-3 h-100 text-center scope-metric scope-{{ group }}">
                                 <div class="text-uppercase text-secondary small mb-2">{{ label }}</div>
                                 <div class="row g-2">
                                     <div class="col-6" title="{% trans 'Issues closed during the sprint out of the issues started by its end (To Do left out), including the issues removed from the sprint. Issues completed in another sprint are not counted.' %}">
@@ -92,9 +99,9 @@
             {% endif %}
             {% if scope.issues and scope.has_history %}
                 <div class="row g-3 mb-3">
-                    {% for label, rate in stability %}
+                    {% for label, rate, group in stability %}
                         <div class="col-12 col-md-4">
-                            <div class="card p-3 h-100" title="{% trans 'Issues in the same status on entering the sprint and at its end, out of all the issues of the group; an unknown status on entering it counts as changed.' %}">
+                            <div class="card p-3 h-100 text-center scope-metric scope-{{ group }}" title="{% trans 'Issues in the same status on entering the sprint and at its end, out of all the issues of the group; an unknown status on entering it counts as changed.' %}">
                                 <div class="text-uppercase text-secondary small mb-2">{{ label }}</div>
                                 <div class="metric-value">{% if rate.percent is not None %}{{ rate.percent }} %{% else %}-{% endif %}</div>
                                 <div class="inline-note mt-2">{% blocktrans with same=rate.same compared=rate.compared %}{{ same }} in the same status as on entering / {{ compared }} issues{% endblocktrans %}</div>
