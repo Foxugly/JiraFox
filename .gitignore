@@ -10,3 +10,6 @@ JiraFox/.env
 
 # Local exports with Jira data: never committed.
 exports/
+
+# Brainstorming mockups (local).
+.superpowers/
