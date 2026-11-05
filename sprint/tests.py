@@ -936,9 +936,9 @@ class SprintScopeFlowTests(TestCase):
         self.assertEqual(
             scope["stability"],
             {
-                "planned": {"same": 2, "still": 1, "compared": 4, "percent": 50},
-                "added": {"same": 1, "still": 1, "compared": 2, "percent": 50},
-                "all": {"same": 3, "still": 2, "compared": 6, "percent": 50},
+                "planned": {"same": 2, "still": 1, "back": 1, "compared": 4, "percent": 50},
+                "added": {"same": 1, "still": 1, "back": 0, "compared": 2, "percent": 50},
+                "all": {"same": 3, "still": 2, "back": 1, "compared": 6, "percent": 50},
             },
         )
         self.assertEqual(scope["status_order"], ["To Do", "In Progress", "Done", "Canceled"])
@@ -996,8 +996,8 @@ class SprintScopeFlowTests(TestCase):
         self.assertContains(response, "stabilityMatrixBody")
         self.assertContains(response, "const TOTAL = \"Total\"")
         # Planned issues: BKL1-4 only has a history, the 3 others count as changed ("No status").
-        self.assertContains(response, "1 inchangés / 4 tickets")
-        self.assertContains(response, "dont 1 sans aucun changement de statut")
+        self.assertContains(response, "1 au même statut qu'à l'entrée / 4 tickets")
+        self.assertContains(response, "1 jamais changés · 0 changés puis revenus")
 
     @patch("sprint.views.get_connected_jira_for_user")
     def test_scope_page_warns_about_issues_missing_from_the_report_or_without_history(self, mock_get_jira):

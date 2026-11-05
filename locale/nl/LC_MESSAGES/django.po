@@ -1815,18 +1815,18 @@ msgid "%(done)s closed / %(total)s in total"
 msgstr "%(done)s afgesloten / %(total)s in totaal"
 
 #: .\templates\sprint\sprint_scope_flow.html:67
-msgid "Issues in the same status on entering the sprint and at its end, out of the issues whose status on entering it is known."
-msgstr "Tickets met dezelfde status bij het binnenkomen in de sprint en aan het einde, op de tickets waarvan de status bij het binnenkomen bekend is."
+msgid "Issues in the same status on entering the sprint and at its end, out of all the issues of the group; an unknown status on entering it counts as changed."
+msgstr "Tickets met dezelfde status bij het binnenkomen in de sprint en aan het einde, op alle tickets van de groep; een onbekende status bij het binnenkomen telt als gewijzigd."
 
 #: .\templates\sprint\sprint_scope_flow.html:70
 #, python-format
-msgid "%(same)s unchanged / %(compared)s issues"
-msgstr "%(same)s ongewijzigd / %(compared)s tickets"
+msgid "%(same)s in the same status as on entering / %(compared)s issues"
+msgstr "%(same)s met dezelfde status als bij het binnenkomen / %(compared)s tickets"
 
 #: .\templates\sprint\sprint_scope_flow.html:71
 #, python-format
-msgid "including %(still)s without any status change"
-msgstr "waarvan %(still)s zonder enige statuswijziging"
+msgid "%(still)s never changed · %(back)s changed and came back"
+msgstr "%(still)s nooit gewijzigd · %(back)s gewijzigd en teruggekomen"
 
 #: .\templates\sprint\sprint_scope_flow.html:82
 msgid "Flow"

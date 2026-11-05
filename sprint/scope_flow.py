@@ -236,7 +236,7 @@ def stability_rates(issues: list[dict], status_categories: dict[str, str]) -> di
     """
     Per group: issues in the same status on entering the sprint and at its end, out of all the
     group's issues (done ones included); an unknown entry status ("No status") counts as changed.
-    `still` ones never changed status meanwhile.
+    `still` ones never changed status meanwhile, `back` ones changed and came back to it.
     """
     rates = {}
     for group in COMPLETION_GROUPS:
@@ -249,7 +249,13 @@ def stability_rates(issues: list[dict], status_categories: dict[str, str]) -> di
             if entry and entry == issue["status_end"]:
                 same += 1
                 still += not issue["moved"]
-        rates[group] = {"same": same, "still": still, "compared": compared, "percent": _percent(same, compared)}
+        rates[group] = {
+            "same": same,
+            "still": still,
+            "back": same - still,
+            "compared": compared,
+            "percent": _percent(same, compared),
+        }
     return rates
 
 
