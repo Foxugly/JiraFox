@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}JiraFox - {% trans "Management report" %}{% endblock %}
+
+{% block content %}
+    <section class="page-shell glass-panel section-stack">
+        {% include "includes/page_toolbar.html" with toolbar_icon="fa-solid fa-file-powerpoint" toolbar_kicker=_("Management report") toolbar_title=data.title_period %}
+
+        <div class="utility-panel">
+            <div class="inline-note mb-2">
+                {% trans "Sprints in this report:" %}
+                {% for entry in data.sprints %}{{ entry.sprint.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+            </div>
+            <div class="btn-group btn-group-sm mb-3" role="group">
+                {% for p in providers %}
+                    <a class="btn {% if p.key == provider.key %}btn-primary{% else %}btn-outline-secondary{% endif %}"
+                       href="?{% for id in request_ids %}sprint={{ id }}&amp;{% endfor %}{% if focus_id %}focus={{ focus_id }}&amp;{% endif %}provider={{ p.key }}">{{ p.label }}</a>
+                {% endfor %}
+            </div>
+
+            {% if warning %}<div class="alert alert-warning py-2">{{ warning }}</div>{% endif %}
+
+            {% if provider.needs_prompt %}
+                <h2 class="h5">{% trans "1. Copy the prompt and the dossier" %}</h2>
+                <div class="inline-note mb-2">{% trans "The text below holds the instructions and the figures of the report. Paste it into Copilot." %}</div>
+                <textarea id="reportDossier" class="form-control font-monospace mb-2" rows="12" readonly>{{ prompt_text }}</textarea>
+                <button class="btn btn-sm btn-outline-primary mb-4" type="button" id="copyDossier">
+                    <i class="fa-regular fa-copy me-2"></i><span id="copyLabel">{% trans "Copy" %}</span>
+                </button>
+
+                <h2 class="h5">{% trans "2. Paste Copilot answer" %}</h2>
+                {% if parse_error %}<div class="alert alert-danger py-2">{{ parse_error }}</div>{% endif %}
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="parse">
+                    <input type="hidden" name="provider" value="{{ provider.key }}">
+                    {% for id in request_ids %}<input type="hidden" name="sprint" value="{{ id }}">{% endfor %}
+                    {% if focus_id %}<input type="hidden" name="focus" value="{{ focus_id }}">{% endif %}
+                    <textarea class="form-control mb-2" name="answer" rows="8" required>{{ answer }}</textarea>
+                    <button class="btn btn-sm btn-primary" type="submit">{% trans "Read the answer" %}</button>
+                </form>
+
+                {% if analysis_form %}
+                    <hr>
+                    <h2 class="h5">{% trans "3. Review the analysis" %}</h2>
+                    <div class="inline-note mb-2">{% trans "One bullet per line. Figures on the slides always come from JiraFox." %}</div>
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="generate">
+                        <input type="hidden" name="provider" value="{{ provider.key }}">
+                        {% for id in request_ids %}<input type="hidden" name="sprint" value="{{ id }}">{% endfor %}
+                        {% if focus_id %}<input type="hidden" name="focus" value="{{ focus_id }}">{% endif %}
+                        <label class="form-label" for="fieldSituation">{% trans "Where the team stands" %}</label>
+                        <textarea class="form-control mb-3" id="fieldSituation" name="situation" rows="4">{{ analysis_form.situation }}</textarea>
+                        <label class="form-label" for="fieldTrend">{% trans "Trend" %}</label>
+                        <textarea class="form-control mb-3" id="fieldTrend" name="trend" rows="4">{{ analysis_form.trend }}</textarea>
+                        <div class="form-label">{% trans "Risks" %}</div>
+                        {% for risk in analysis_form.risks %}
+                            <div class="row g-2 mb-2">
+                                <div class="col-md-4"><input class="form-control form-control-sm" name="risk_title_{{ forloop.counter0 }}" value="{{ risk.title }}" placeholder="{% trans 'Title' %}"></div>
+                                <div class="col-md-8"><textarea class="form-control form-control-sm" name="risk_text_{{ forloop.counter0 }}" rows="2" placeholder="{% trans 'Explanation' %}">{{ risk.text }}</textarea></div>
+                            </div>
+                        {% endfor %}
+                        <button class="btn btn-primary mt-2" type="submit">
+                            <i class="fa-solid fa-download me-2"></i>{% trans "Download the PowerPoint" %}
+                        </button>
+                    </form>
+                {% endif %}
+            {% else %}
+                <p class="inline-note">{% trans "The report is built from the Jira figures only, without any written analysis." %}</p>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="generate">
+                    <input type="hidden" name="provider" value="{{ provider.key }}">
+                    {% for id in request_ids %}<input type="hidden" name="sprint" value="{{ id }}">{% endfor %}
+                    {% if focus_id %}<input type="hidden" name="focus" value="{{ focus_id }}">{% endif %}
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fa-solid fa-download me-2"></i>{% trans "Download the PowerPoint" %}
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+
+        {% if provider.needs_prompt %}
+            <script>
+                (function () {
+                    const area = document.getElementById("reportDossier");
+                    const label = document.getElementById("copyLabel");
+                    document.getElementById("copyDossier").addEventListener("click", async function () {
+                        const text = area.value;
+                        try {
+                            await navigator.clipboard.writeText(text);
+                        } catch (error) {
+                            area.focus();
+                            area.select();
+                            document.execCommand("copy");
+                        }
+                        label.textContent = "{% trans 'Copied' %}";
+                    });
+                })();
+            </script>
+        {% endif %}
+    </section>
+{% endblock %}

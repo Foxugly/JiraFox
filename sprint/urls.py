@@ -2,9 +2,11 @@ from django.urls import path
 from .views import SprintListView, SprintDetailView, SprintKanbanView, SprintReportView, SprintXLSExportView, \
     get_api_sprint_kanban_issues, SprintWiaView, get_api_sprint_wia_issues, get_api_sprint_issues, \
     SprintDetailXLSExportView, SprintLoggedXLSExportView, SprintPeriodView, SprintWeightedThroughputDistributionView, \
-    SprintScopeFlowView
+    SprintScopeFlowView, SprintTrendsView, ManagementReportView
 
 urlpatterns = [
+    path("trends/", SprintTrendsView.as_view(), name="sprint-trends"),
+    path("management-report/", ManagementReportView.as_view(), name="sprint-management-report"),
     path("list/", SprintListView.as_view(), name="sprint-list"),
     path("<int:sprint_id>/", SprintDetailView.as_view(), name="sprint-detail"),
     path("<int:sprint_id>/api/issues/", get_api_sprint_issues, name="sprint-api-issues"),

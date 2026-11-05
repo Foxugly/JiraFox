@@ -2389,3 +2389,123 @@ msgstr "Dit bestand is geen leesbare PowerPoint (.pptx)."
 
 msgid "The deck must contain the 6 example slides."
 msgstr "De PowerPoint moet de 6 voorbeeldslides bevatten."
+
+msgid "Management report"
+msgstr "Directierapport"
+
+msgid "Sprint list"
+msgstr "Sprintlijst"
+
+msgid "Several sprints"
+msgstr "Meerdere sprints"
+
+msgid "From"
+msgstr "Van"
+
+msgid "To"
+msgstr "Tot"
+
+msgid "Pick sprints in this range"
+msgstr "Sprints van deze periode kiezen"
+
+msgid "Closed sprints, most recent first. Tick the ones to include."
+msgstr "Afgesloten sprints, van recent naar oud. Vink aan wat erbij hoort."
+
+msgid "No closed sprint on this board."
+msgstr "Geen afgesloten sprint op dit bord."
+
+msgid "Show these sprints"
+msgstr "Deze sprints tonen"
+
+msgid "No closed sprint in this range"
+msgstr "Geen afgesloten sprint in deze periode"
+
+msgid "Trends"
+msgstr "Trends"
+
+msgid "Throughput and cycle time (business days)"
+msgstr "Doorvoer en doorlooptijd (werkdagen)"
+
+msgid "Planned issues closed and added issues (%)"
+msgstr "Afgeronde geplande tickets en toegevoegde tickets (%)"
+
+msgid "Kanban snapshot"
+msgstr "Kanban-momentopname"
+
+msgid "No snapshot: the status history of the last sprint could not be loaded."
+msgstr "Geen momentopname: de statusgeschiedenis van de laatste sprint kon niet worden geladen."
+
+msgid "%(wip)s issues in progress at the sprint end, %(aging)s aging (%(percent)s %%)."
+msgstr "%(wip)s tickets in uitvoering aan het einde van de sprint, waarvan %(aging)s verouderd (%(percent)s %%)."
+
+msgid "Added"
+msgstr "Toegevoegd"
+
+msgid "Not started"
+msgstr "Niet gestart"
+
+msgid "Planned closed"
+msgstr "Geplande afgerond"
+
+msgid "Added share"
+msgstr "Aandeel toevoegingen"
+
+msgid "Median cycle"
+msgstr "Mediane doorlooptijd"
+
+msgid "Throughput"
+msgstr "Doorvoer"
+
+msgid "Days"
+msgstr "Dagen"
+
+msgid "Pick at least one sprint to build a report."
+msgstr "Kies minstens één sprint om een rapport te maken."
+
+msgid "The analysis does not match these sprints: paste the answer again."
+msgstr "De analyse past niet bij deze sprints: plak het antwoord opnieuw."
+
+msgid "Sprints in this report:"
+msgstr "Sprints in dit rapport:"
+
+msgid "1. Copy the prompt and the dossier"
+msgstr "1. Kopieer de opdracht en het dossier"
+
+msgid "The text below holds the instructions and the figures of the report. Paste it into Copilot."
+msgstr "De tekst hieronder bevat de instructies en de cijfers van het rapport. Plak hem in Copilot."
+
+msgid "Copy"
+msgstr "Kopiëren"
+
+msgid "Copied"
+msgstr "Gekopieerd"
+
+msgid "2. Paste Copilot answer"
+msgstr "2. Plak het antwoord van Copilot"
+
+msgid "Read the answer"
+msgstr "Antwoord inlezen"
+
+msgid "3. Review the analysis"
+msgstr "3. Analyse nalezen"
+
+msgid "One bullet per line. Figures on the slides always come from JiraFox."
+msgstr "Eén opsommingspunt per regel. De cijfers op de dia's komen altijd van JiraFox."
+
+msgid "Where the team stands"
+msgstr "Waar het team staat"
+
+msgid "Trend"
+msgstr "Trend"
+
+msgid "Risks"
+msgstr "Risico's"
+
+msgid "Explanation"
+msgstr "Uitleg"
+
+msgid "Download the PowerPoint"
+msgstr "PowerPoint downloaden"
+
+msgid "The report is built from the Jira figures only, without any written analysis."
+msgstr "Het rapport wordt enkel op basis van de Jira-cijfers gemaakt, zonder geschreven analyse."

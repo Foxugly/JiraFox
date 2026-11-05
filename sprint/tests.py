@@ -1851,3 +1851,199 @@ class PptxReportTests(SimpleTestCase):
         self.assertIn("Sprint 12 (en cours)", texts)
         self.assertIn("Backlog", texts)
         self.assertIn(f"Direction • {timezone.localdate():%d/%m/%Y}", texts)
+
+
+class ManagementReportViewTests(TestCase):
+    PPTX = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    ANSWER = (
+        "## OÙ EN EST L'ÉQUIPE\n- Le sprint avance bien\n- Deux tickets restent\n"
+        "## TENDANCE\n- Stable\n## RISQUES\n### Export PDF\nLivraison incertaine.\n"
+    )
+
+    def setUp(self):
+        cache.clear()
+        self.addCleanup(cache.clear)
+
+    @staticmethod
+    def _sprint(sprint_id, start, end, state="closed"):
+        return {
+            "id": sprint_id, "name": f"Sprint {sprint_id}", "state": state,
+            "startDate": f"{start}T08:00:00.000+01:00", "endDate": f"{end}T18:00:00.000+01:00",
+            "completeDate": None, "url": "https://jira.example/",
+        }
+
+    def _login(self, mock_get_jira, **overrides):
+        sprints = {
+            1: self._sprint(1, "2026-01-05", "2026-01-16"),
+            2: self._sprint(2, "2026-01-19", "2026-01-30"),
+            3: self._sprint(3, "2026-02-02", "2026-02-13"),
+            4: self._sprint(4, "2026-02-16", "2026-02-27", state="active"),
+        }
+        user = get_user_model().objects.create_user(username="alice", password="secret", language="fr")
+        self.client.force_login(user)
+        fake = dict(
+            cfg=SimpleNamespace(pk=1, jira_board_id=638, project=SimpleNamespace(name="Mon Projet", report_template=None)),
+            list_sprints=lambda board, state=None: [s for s in sprints.values() if s["state"] == (state or s["state"])],
+            get_sprint=lambda sprint_id: sprints[int(sprint_id)],
+            get_sprint_scope_report=lambda sprint_id: SCOPE_REPORT,
+            get_issue_url=lambda key: f"https://jira.example/browse/{key}",
+            get_status_histories=lambda keys: {},
+            status_category_keys=lambda: {},
+            get_sprint_issue_keys=lambda sprint_id: {"BKL1-1", "BKL1-2", "BKL1-4", "BKL1-5", "BKL1-6"},
+            get_descriptions=lambda keys: {key: "Une description" for key in keys},
+        )
+        fake.update(overrides)
+        mock_get_jira.return_value = SimpleNamespace(**fake)
+        return user
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_trends_page_lists_the_sprints_of_the_range(self, mock_get_jira):
+        self._login(mock_get_jira)
+
+        response = self.client.get(reverse("sprint-trends"), {"start": "2026-01-01", "end": "2026-01-31"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Sprint 1")
+        self.assertContains(response, "Sprint 2")
+        self.assertContains(response, 'value="1" checked')
+        self.assertNotContains(response, 'value="3" checked')
+        self.assertContains(response, "Rapport direction")
+        self.assertContains(response, "sprint=1&amp;sprint=2")
+        self.assertContains(response, "trendsChart")
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_trends_page_without_closed_sprint_says_so(self, mock_get_jira):
+        self._login(mock_get_jira)
+
+        response = self.client.get(reverse("sprint-trends"), {"start": "2025-01-01", "end": "2025-01-31"})
+
+        self.assertContains(response, "Aucun sprint clôturé sur cette période")
+        self.assertNotContains(response, "/sprint/management-report/")
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_trends_page_shows_scope_errors_in_red(self, mock_get_jira):
+        self._login(mock_get_jira)
+
+        with patch("sprint.report_data.consistency_errors", return_value=["Les chiffres divergent"]):
+            response = self.client.get(reverse("sprint-trends"), {"sprint": ["1"]})
+
+        self.assertContains(response, '<div class="alert alert-danger')
+        self.assertContains(response, "Les chiffres divergent")
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_report_page_shows_the_full_dossier_before_copying(self, mock_get_jira):
+        requested = []
+        self._login(
+            mock_get_jira,
+            status_category_keys=lambda: {"In Progress": "new", "Done": "done"},  # carried-over issues: not started
+            get_descriptions=lambda keys: requested.extend(keys) or {key: "Une description" for key in keys},
+        )
+
+        response = self.client.get(reverse("sprint-management-report"), {"sprint": ["1", "2"]})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Projet : Mon Projet", response.context["dossier"])
+        self.assertTrue(requested)
+        # One source: the textarea holds the prompt and the whole dossier, which « Copier » copies.
+        self.assertContains(response, "<textarea")
+        self.assertContains(response, "readonly")
+        self.assertContains(response, "DOSSIER")
+        self.assertContains(response, "## Sprint 1")
+        self.assertContains(response, "## Sprint 2")
+        self.assertContains(response, "navigator.clipboard")
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_parse_error_keeps_the_answer_and_explains(self, mock_get_jira):
+        self._login(mock_get_jira)
+
+        response = self.client.post(
+            reverse("sprint-management-report"),
+            {"action": "parse", "provider": "copilot", "sprint": ["1", "2"], "answer": "Du texte sans titres"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Réponse inutilisable")
+        self.assertContains(response, "Du texte sans titres")
+        self.assertContains(response, '<div class="alert alert-danger')
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_generate_returns_a_pptx(self, mock_get_jira):
+        from pptx import Presentation
+
+        self._login(mock_get_jira)
+        url = reverse("sprint-management-report")
+        parsed = self.client.post(
+            url, {"action": "parse", "provider": "copilot", "sprint": ["1", "2"], "answer": self.ANSWER}
+        )
+        self.assertContains(parsed, "Le sprint avance bien")
+
+        response = self.client.post(
+            url,
+            {
+                "action": "generate", "provider": "copilot", "sprint": ["1", "2"],
+                "situation": "Texte édité A\nTexte édité B", "trend": "Stable",
+                "risk_title_0": "Export PDF", "risk_text_0": "Risque édité",
+                "risk_title_1": "", "risk_text_1": "",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], self.PPTX)
+        self.assertRegex(
+            response["Content-Disposition"], r'filename="rapport-direction-mon-projet-\d{4}-\d{2}-\d{2}\.pptx"'
+        )
+        deck = Presentation(BytesIO(response.content))
+        text = " ".join(
+            shape.text_frame.text for slide in deck.slides for shape in slide.shapes if shape.has_text_frame
+        )
+        self.assertIn("Texte édité A", text)
+        self.assertIn("Risque édité", text)
+        self.assertNotIn("Deux tickets restent", text)
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_generate_without_ai_needs_no_answer(self, mock_get_jira):
+        from pptx import Presentation
+
+        self._login(mock_get_jira)
+
+        response = self.client.post(
+            reverse("sprint-management-report"), {"action": "generate", "provider": "none", "sprint": ["1", "2"]}
+        )
+
+        self.assertEqual(response["Content-Type"], self.PPTX)
+        Presentation(BytesIO(response.content))
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_generate_without_a_matching_analysis_asks_again(self, mock_get_jira):
+        self._login(mock_get_jira)
+        url = reverse("sprint-management-report")
+        self.client.post(url, {"action": "parse", "provider": "copilot", "sprint": ["1", "2"], "answer": self.ANSWER})
+
+        response = self.client.post(
+            url, {"action": "generate", "provider": "copilot", "sprint": ["1", "3"], "situation": "x"}
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "alert-warning")
+        self.assertNotEqual(response["Content-Type"], self.PPTX)
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_single_sprint_report_uses_the_focus_and_its_trend(self, mock_get_jira):
+        self._login(mock_get_jira)
+
+        response = self.client.get(reverse("sprint-management-report"), {"sprint": "3", "focus": "3"})
+
+        self.assertEqual(response.status_code, 200)
+        dossier = response.context["dossier"]
+        self.assertIn("Période : Sprint 3", dossier)
+        for name in ("Sprint 1", "Sprint 2", "Sprint 3"):
+            self.assertIn(f"## {name}", dossier)
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_scope_page_links_to_the_report(self, mock_get_jira):
+        self._login(mock_get_jira)
+
+        response = self.client.get(reverse("sprint-scope-flow", args=[3]))
+
+        self.assertContains(response, "Rapport direction")
+        self.assertContains(response, "sprint=3&amp;focus=3")

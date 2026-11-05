@@ -2,9 +2,11 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
+from django.utils.dateparse import parse_date
+from django.utils.text import slugify
 from django.utils.translation import gettext as _
 from django.views import View
 from django.views.decorators.http import require_GET
@@ -17,7 +19,11 @@ from team.models import TeamDev
 from .logged_report import create_logged_xlsx_bytes, sprint_window
 from .models import SprintPeriod
 from .report import create_xlsx_bytes
-from .report_data import load_sprint_scope
+from .analysis import MAX_RISKS, PROVIDERS, Analysis, AnalysisParseError, Risk, build_dossier, risky_keys
+from .pptx_report import build_deck
+from .report_data import (
+    build_report_data, closed_sprints, load_sprint_scope, sprint_warning_lines, sprints_in_range, trend_for,
+)
 
 def _to_float(v, default=0.0) -> float:
     try:
@@ -365,3 +371,159 @@ def get_api_sprint_wia_issues(request, sprint_id: int) -> JsonResponse:
     jira = get_connected_jira_for_user(request.user)
     data = build_wia_data(jira, sprint_id)
     return JsonResponse(data)
+
+
+PPTX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+SESSION_KEY = "management_report"
+
+
+def _ids(values) -> list[int]:
+    ids = []
+    for value in values:
+        if str(value).strip().isdigit() and int(value) not in ids:
+            ids.append(int(value))
+    return ids
+
+
+class SprintTrendsView(LoginRequiredMixin, TemplateView):
+    """Closed sprints side by side: pick a range or sprints, see the trends, start the report."""
+
+    template_name = "sprint/sprint_trends.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        jira = get_connected_jira_for_user(self.request.user)
+        require_config_fields(jira.cfg, ["jira_board_id"])
+        closed = closed_sprints(jira)
+        start = parse_date(self.request.GET.get("start") or "")
+        end = parse_date(self.request.GET.get("end") or "")
+        picked = _ids(self.request.GET.getlist("sprint"))
+        if picked:
+            selected = [sprint for sprint in closed if sprint["id"] in picked]
+        elif start and end:
+            selected = sprints_in_range(closed, start, end)
+        else:
+            selected = []
+        selected_ids = {sprint["id"] for sprint in selected}
+        context.update(
+            closed=[{**sprint, "selected": sprint["id"] in selected_ids} for sprint in reversed(closed)],
+            start=start, end=end,
+            requested=bool(picked or (start and end)),
+        )
+        if selected:
+            data = build_report_data(jira, selected)
+            context["rows"] = [
+                {**entry, "warning_lines": sprint_warning_lines(entry["warnings"]),
+                 "scope_errors": entry["warnings"]["scope_errors"]}
+                for entry in data["sprints"]
+            ]
+            context["snapshot"] = data["snapshot"]
+            context["focus"] = data["focus"]
+            context["report_query"] = "&amp;".join(f"sprint={sprint['id']}" for sprint in selected)
+            metrics = [entry["metrics"] for entry in data["sprints"]]
+            context["chart_data"] = {
+                "labels": [entry["sprint"].get("name") or str(entry["sprint"]["id"]) for entry in data["sprints"]],
+                "throughput": [m["throughput"] for m in metrics],
+                "cycle_median": [m["cycle_median"] for m in metrics],
+                "cycle_p85": [m["cycle_p85"] for m in metrics],
+                "percent_planned_closed": [m["percent_planned_closed"] for m in metrics],
+                "percent_added": [m["percent_added"] for m in metrics],
+            }
+        return context
+
+
+def _report_sprints(jira, source) -> tuple[list[dict], dict | None]:
+    """The sprints of a report: with `focus`, the focus and its trend; else the explicit `sprint` list."""
+    focus_ids = _ids([source.get("focus") or ""])
+    if focus_ids:
+        focus = jira.get_sprint(focus_ids[0])
+        return trend_for(focus, closed_sprints(jira)) + [focus], focus
+    return [jira.get_sprint(sprint_id) for sprint_id in _ids(source.getlist("sprint"))], None
+
+
+def _lines(text: str) -> list[str]:
+    return [line.strip() for line in (text or "").splitlines() if line.strip()]
+
+
+def _edited_analysis(post) -> Analysis:
+    """The analysis as the user edited it: these values, not the raw parse, go in the deck."""
+    risks = []
+    for index in range(MAX_RISKS):
+        title = (post.get(f"risk_title_{index}") or "").strip()
+        text = (post.get(f"risk_text_{index}") or "").strip()
+        if title or text:
+            risks.append(Risk(title, text))
+    return Analysis(_lines(post.get("situation")), _lines(post.get("trend")), risks)
+
+
+class ManagementReportView(LoginRequiredMixin, View):
+    """Analysis (optional, by AI) then download of the management PowerPoint."""
+
+    template_name = "sprint/management_report.html"
+
+    def get(self, request):
+        return self._respond(request, request.GET)
+
+    def post(self, request):
+        return self._respond(request, request.POST)
+
+    def _respond(self, request, source):
+        jira = get_connected_jira_for_user(request.user)
+        require_config_fields(jira.cfg, ["jira_board_id"])
+        sprints, focus = _report_sprints(jira, source)
+        if not sprints:
+            messages.error(request, _("Pick at least one sprint to build a report."))
+            return redirect("sprint-trends")
+        data = build_report_data(jira, sprints, focus=focus)
+        ids = [sprint["id"] for sprint in sprints]
+        focus_id = focus["id"] if focus else None
+        provider = PROVIDERS.get(source.get("provider") or "copilot", PROVIDERS["copilot"])
+        action = request.POST.get("action") if request.method == "POST" else None
+        context = {
+            "ids": ids, "request_ids": _ids(source.getlist("sprint")), "focus_id": focus_id, "data": data,
+            "provider": provider, "providers": list(PROVIDERS.values()),
+        }
+
+        stored = request.session.get(SESSION_KEY) or {}
+        matches = stored.get("sprints") == ids and stored.get("focus") == focus_id
+        stored_analysis = stored.get("analysis") if matches else None
+
+        if action == "generate":
+            if not provider.needs_prompt:
+                return self._deck(jira, data, None)
+            if stored_analysis is None:
+                context["warning"] = _("The analysis does not match these sprints: paste the answer again.")
+            else:
+                return self._deck(jira, data, _edited_analysis(request.POST))
+        elif action == "parse":
+            context["answer"] = request.POST.get("answer", "")
+            try:
+                parsed = provider.parse(context["answer"])
+            except AnalysisParseError as exc:
+                context["parse_error"] = str(exc)
+            else:
+                stored_analysis = parsed.to_session()
+                request.session[SESSION_KEY] = {"sprints": ids, "focus": focus_id, "analysis": stored_analysis}
+
+        if provider.needs_prompt:
+            context["dossier"] = build_dossier(data, jira.get_descriptions(risky_keys(data)))
+            context["prompt_text"] = provider.prompt(context["dossier"])
+        if stored_analysis is not None:
+            analysis = Analysis.from_session(stored_analysis)
+            risks = analysis.risks + [Risk("", "")] * (MAX_RISKS - len(analysis.risks))
+            context["analysis_form"] = {
+                "situation": "\n".join(analysis.situation), "trend": "\n".join(analysis.trend), "risks": risks,
+            }
+        return render(request, self.template_name, context)
+
+    @staticmethod
+    def _deck(jira, data, analysis) -> HttpResponse:
+        project = getattr(jira.cfg, "project", None)
+        template = getattr(project, "report_template", None)
+        template_path = template.path if template else None
+        response = HttpResponse(build_deck(data, analysis, template_path), content_type=PPTX_CONTENT_TYPE)
+        name = slugify(getattr(project, "name", "") or "") or "sprint"
+        response["Content-Disposition"] = (
+            f'attachment; filename="rapport-direction-{name}-{timezone.localdate():%Y-%m-%d}.pptx"'
+        )
+        return response

@@ -2389,3 +2389,123 @@ msgstr "Ce fichier n'est pas un PowerPoint (.pptx) lisible."
 
 msgid "The deck must contain the 6 example slides."
 msgstr "Le PowerPoint doit contenir les 6 slides d'exemple."
+
+msgid "Management report"
+msgstr "Rapport direction"
+
+msgid "Sprint list"
+msgstr "Liste des sprints"
+
+msgid "Several sprints"
+msgstr "Plusieurs sprints"
+
+msgid "From"
+msgstr "Du"
+
+msgid "To"
+msgstr "Au"
+
+msgid "Pick sprints in this range"
+msgstr "Choisir les sprints de cette période"
+
+msgid "Closed sprints, most recent first. Tick the ones to include."
+msgstr "Sprints clôturés, du plus récent au plus ancien. Cochez ceux à inclure."
+
+msgid "No closed sprint on this board."
+msgstr "Aucun sprint clôturé sur ce tableau."
+
+msgid "Show these sprints"
+msgstr "Afficher ces sprints"
+
+msgid "No closed sprint in this range"
+msgstr "Aucun sprint clôturé sur cette période"
+
+msgid "Trends"
+msgstr "Tendances"
+
+msgid "Throughput and cycle time (business days)"
+msgstr "Débit et temps de cycle (jours ouvrés)"
+
+msgid "Planned issues closed and added issues (%)"
+msgstr "Tickets prévus terminés et tickets ajoutés (%)"
+
+msgid "Kanban snapshot"
+msgstr "Instantané Kanban"
+
+msgid "No snapshot: the status history of the last sprint could not be loaded."
+msgstr "Pas d'instantané : l'historique des statuts du dernier sprint n'a pas pu être chargé."
+
+msgid "%(wip)s issues in progress at the sprint end, %(aging)s aging (%(percent)s %%)."
+msgstr "%(wip)s tickets en cours à la fin du sprint, dont %(aging)s vieillissants (%(percent)s %%)."
+
+msgid "Added"
+msgstr "Ajoutés"
+
+msgid "Not started"
+msgstr "Non démarrés"
+
+msgid "Planned closed"
+msgstr "Prévus terminés"
+
+msgid "Added share"
+msgstr "Part d'ajouts"
+
+msgid "Median cycle"
+msgstr "Cycle médian"
+
+msgid "Throughput"
+msgstr "Débit"
+
+msgid "Days"
+msgstr "Jours"
+
+msgid "Pick at least one sprint to build a report."
+msgstr "Choisissez au moins un sprint pour établir un rapport."
+
+msgid "The analysis does not match these sprints: paste the answer again."
+msgstr "L'analyse ne correspond pas à ces sprints : collez à nouveau la réponse."
+
+msgid "Sprints in this report:"
+msgstr "Sprints de ce rapport :"
+
+msgid "1. Copy the prompt and the dossier"
+msgstr "1. Copier la consigne et le dossier"
+
+msgid "The text below holds the instructions and the figures of the report. Paste it into Copilot."
+msgstr "Le texte ci-dessous contient les consignes et les chiffres du rapport. Collez-le dans Copilot."
+
+msgid "Copy"
+msgstr "Copier"
+
+msgid "Copied"
+msgstr "Copié"
+
+msgid "2. Paste Copilot answer"
+msgstr "2. Coller la réponse de Copilot"
+
+msgid "Read the answer"
+msgstr "Lire la réponse"
+
+msgid "3. Review the analysis"
+msgstr "3. Relire l'analyse"
+
+msgid "One bullet per line. Figures on the slides always come from JiraFox."
+msgstr "Une puce par ligne. Les chiffres des diapositives viennent toujours de JiraFox."
+
+msgid "Where the team stands"
+msgstr "Où en est l'équipe"
+
+msgid "Trend"
+msgstr "Tendance"
+
+msgid "Risks"
+msgstr "Risques"
+
+msgid "Explanation"
+msgstr "Explication"
+
+msgid "Download the PowerPoint"
+msgstr "Télécharger le PowerPoint"
+
+msgid "The report is built from the Jira figures only, without any written analysis."
+msgstr "Le rapport est établi à partir des seuls chiffres de Jira, sans analyse rédigée."

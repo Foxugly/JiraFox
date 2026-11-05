@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block header %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block title %}JiraFox - {% trans "Several sprints" %}{% endblock %}
+
+{% block content %}
+    <section class="page-shell glass-panel section-stack">
+        {% include "includes/page_toolbar.html" with toolbar_icon="fa-brands fa-trello" toolbar_kicker=_("Sprint") toolbar_title=_("Several sprints") %}
+
+        <div class="utility-panel">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-auto">
+                    <label class="form-label" for="trendsStart">{% trans "From" %}</label>
+                    <input class="form-control form-control-sm" type="date" id="trendsStart" name="start" value="{{ start|date:'Y-m-d' }}">
+                </div>
+                <div class="col-auto">
+                    <label class="form-label" for="trendsEnd">{% trans "To" %}</label>
+                    <input class="form-control form-control-sm" type="date" id="trendsEnd" name="end" value="{{ end|date:'Y-m-d' }}">
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-sm btn-primary" type="submit" name="mode" value="range">{% trans "Pick sprints in this range" %}</button>
+                </div>
+            </form>
+            <hr>
+            <form method="get">
+                <div class="inline-note mb-2">{% trans "Closed sprints, most recent first. Tick the ones to include." %}</div>
+                <div class="row row-cols-1 row-cols-md-3 g-1 mb-3">
+                    {% for sprint in closed %}
+                        <div class="col">
+                            <label class="form-check">
+                                <input class="form-check-input" type="checkbox" name="sprint" value="{{ sprint.id }}" {% if sprint.selected %}checked{% endif %}>
+                                <span class="form-check-label">{{ sprint.name }}</span>
+                            </label>
+                        </div>
+                    {% empty %}
+                        <div class="col inline-note">{% trans "No closed sprint on this board." %}</div>
+                    {% endfor %}
+                </div>
+                <button class="btn btn-sm btn-outline-primary" type="submit">{% trans "Show these sprints" %}</button>
+            </form>
+        </div>
+
+        {% if requested and not rows %}
+            <div class="alert alert-info">{% trans "No closed sprint in this range" %}</div>
+        {% endif %}
+
+        {% if rows %}
+            <div class="utility-panel">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <h2 class="h4 mb-0">{% trans "Trends" %}</h2>
+                    <a class="btn btn-sm btn-primary" href="{% url 'sprint-management-report' %}?{{ report_query|safe }}">
+                        <i class="fa-solid fa-file-powerpoint me-2"></i>{% trans "Management report" %}
+                    </a>
+                </div>
+                <div class="row g-4">
+                    <div class="col-lg-6">
+                        <h3 class="h6">{% trans "Throughput and cycle time (business days)" %}</h3>
+                        <canvas id="trendsChart"></canvas>
+                    </div>
+                    <div class="col-lg-6">
+                        <h3 class="h6">{% trans "Planned issues closed and added issues (%)" %}</h3>
+                        <canvas id="predictabilityChart"></canvas>
+                    </div>
+                </div>
+                {{ chart_data|json_script:"trends-data" }}
+            </div>
+
+            <div class="utility-panel">
+                <h2 class="h4">{% trans "Kanban snapshot" %}</h2>
+                {% if snapshot %}
+                    <div class="inline-note mb-2">{{ focus.name }}</div>
+                    <p class="mb-0">{% blocktrans with wip=snapshot.wip aging=snapshot.aging percent=snapshot.aging_percent|default_if_none:"-" %}{{ wip }} issues in progress at the sprint end, {{ aging }} aging ({{ percent }} %).{% endblocktrans %}</p>
+                {% else %}
+                    <p class="mb-0 inline-note">{% trans "No snapshot: the status history of the last sprint could not be loaded." %}</p>
+                {% endif %}
+            </div>
+
+            <div class="utility-panel">
+                <h2 class="h4">{% trans "Sprints" %}</h2>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Sprint" %}</th>
+                                <th class="text-end">{% trans "Planned" %}</th>
+                                <th class="text-end">{% trans "Added" %}</th>
+                                <th class="text-end">{% trans "Closed" %}</th>
+                                <th class="text-end">{% trans "Not started" %}</th>
+                                <th class="text-end">{% trans "Planned closed" %}</th>
+                                <th class="text-end">{% trans "Added share" %}</th>
+                                <th class="text-end">{% trans "Median cycle" %}</th>
+                                <th class="text-end">P85</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in rows %}
+                                <tr>
+                                    <td><a href="{% url 'sprint-scope-flow' row.sprint.id %}">{{ row.sprint.name }}</a></td>
+                                    <td class="text-end">{{ row.metrics.planned }}</td>
+                                    <td class="text-end">{{ row.metrics.added }}</td>
+                                    <td class="text-end">{{ row.metrics.closed }}</td>
+                                    <td class="text-end">{{ row.metrics.not_started }}</td>
+                                    <td class="text-end">{% if row.metrics.percent_planned_closed is None %}-{% else %}{{ row.metrics.percent_planned_closed }} %{% endif %}</td>
+                                    <td class="text-end">{% if row.metrics.percent_added is None %}-{% else %}{{ row.metrics.percent_added }} %{% endif %}</td>
+                                    <td class="text-end">{% if row.metrics.cycle_median is None %}-{% else %}{{ row.metrics.cycle_median }}{% endif %}</td>
+                                    <td class="text-end">{% if row.metrics.cycle_p85 is None %}-{% else %}{{ row.metrics.cycle_p85 }}{% endif %}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% for row in rows %}
+                    {% if row.scope_errors %}
+                        <div class="alert alert-danger py-2 mb-2">
+                            <strong>{{ row.sprint.name }}</strong> - {% trans "These figures do not add up, do not trust them:" %}
+                            <ul class="mb-0">{% for error in row.scope_errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                        </div>
+                    {% endif %}
+                    {% if row.warning_lines %}
+                        <div class="alert alert-warning py-2 mb-2">
+                            <strong>{{ row.sprint.name }}</strong>
+                            <ul class="mb-0">{% for line in row.warning_lines %}<li>{{ line }}</li>{% endfor %}</ul>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            <script>
+                (function () {
+                    const d = JSON.parse(document.getElementById("trends-data").textContent);
+                    // None stays null: a gap in the line, not a zero.
+                    new Chart(document.getElementById("trendsChart"), {
+                        data: {
+                            labels: d.labels,
+                            datasets: [
+                                {type: "bar", label: "{% trans 'Throughput' %}", data: d.throughput, backgroundColor: "#2f7de1", yAxisID: "y"},
+                                {type: "line", label: "{% trans 'Median cycle' %}", data: d.cycle_median, borderColor: "#2e9d5b", backgroundColor: "#2e9d5b", yAxisID: "y1", spanGaps: false},
+                                {type: "line", label: "P85", data: d.cycle_p85, borderColor: "#e07a1f", backgroundColor: "#e07a1f", yAxisID: "y1", spanGaps: false}
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                y: {beginAtZero: true, title: {display: true, text: "{% trans 'Issues' %}"}},
+                                y1: {beginAtZero: true, position: "right", grid: {drawOnChartArea: false}, title: {display: true, text: "{% trans 'Days' %}"}}
+                            }
+                        }
+                    });
+                    new Chart(document.getElementById("predictabilityChart"), {
+                        type: "line",
+                        data: {
+                            labels: d.labels,
+                            datasets: [
+                                {label: "{% trans 'Planned closed' %}", data: d.percent_planned_closed, borderColor: "#2f7de1", backgroundColor: "#2f7de1", spanGaps: false},
+                                {label: "{% trans 'Added share' %}", data: d.percent_added, borderColor: "#f0a202", backgroundColor: "#f0a202", spanGaps: false}
+                            ]
+                        },
+                        options: {responsive: true, scales: {y: {beginAtZero: true, suggestedMax: 100, title: {display: true, text: "%"}}}}
+                    });
+                })();
+            </script>
+        {% endif %}
+    </section>
+{% endblock %}
