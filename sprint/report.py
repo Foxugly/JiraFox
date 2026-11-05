@@ -7,8 +7,7 @@ from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 
 from jiramodule.services.jira_client import JiraManager
-from team.models import TeamDev
-
+from .capacity import sprint_capacities
 from .logged_report import DevIdentity, resolve_dev
 
 # Choices of the capacity sheet's Decision column, one per ticket.
@@ -27,11 +26,10 @@ class SprintWorkbookBuilder:
         self.fill_sum = PatternFill(start_color="ff6565", end_color="ff6565", fill_type="solid")
         self.fill_title = PatternFill(start_color="ff8f8f", end_color="ff8f8f", fill_type="solid")
         self.fill = PatternFill(start_color="ffb9b9", end_color="ffb9b9", fill_type="solid")
-        self.teamdevs = list(
-            TeamDev.objects.filter(team=jira.cfg.team).select_related("dev").order_by("order", "id")
-        )
-        self.member_names = [teamdev.dev.name for teamdev in self.teamdevs]
-        self.members = [DevIdentity.from_dev(teamdev.dev) for teamdev in self.teamdevs]
+        # The developers' hours for this sprint, not their templates.
+        self.capacities = sprint_capacities(jira.cfg.team, sprint_id)
+        self.member_names = [capacity.dev.name for capacity in self.capacities]
+        self.members = [DevIdentity.from_dev(capacity.dev) for capacity in self.capacities]
         self.state_col = self.start_col + len(self.member_names)
         self.decision_col = self.state_col + 1
         self.sum_rows: list[int] = []
@@ -100,16 +98,16 @@ class SprintWorkbookBuilder:
         worksheet.freeze_panes = "A2"
         row += 1
 
-        row = self._write_member_metric_row(worksheet, row, "Capacity", lambda teamdev: teamdev.dev.workload)
-        row = self._write_member_metric_row(worksheet, row, "Holidays", lambda teamdev: teamdev.dev.holidays)
-        row = self._write_member_metric_row(worksheet, row, "Fastlane (10%)", lambda teamdev: teamdev.dev.fastlane)
+        row = self._write_member_metric_row(worksheet, row, "Capacity", lambda capacity: capacity.workload)
+        row = self._write_member_metric_row(worksheet, row, "Holidays", lambda capacity: capacity.holidays)
+        row = self._write_member_metric_row(worksheet, row, "Fastlane (10%)", lambda capacity: capacity.fastlane)
         row = self._write_member_metric_row(
             worksheet,
             row,
             "Project meetings",
-            lambda teamdev: teamdev.dev.project_meetings,
+            lambda capacity: capacity.project_meetings,
         )
-        row = self._write_member_metric_row(worksheet, row, "Meetings", lambda teamdev: teamdev.dev.other_meetings)
+        row = self._write_member_metric_row(worksheet, row, "Meetings", lambda capacity: capacity.other_meetings)
         return self._write_available_row(worksheet, row)
 
     def _add_filter(self, worksheet, last_col: int) -> None:
@@ -118,8 +116,8 @@ class SprintWorkbookBuilder:
 
     def _write_member_metric_row(self, worksheet, row: int, label: str, getter) -> int:
         worksheet.cell(row=row, column=self.start_col - 1, value=label)
-        for index, teamdev in enumerate(self.teamdevs):
-            cell = worksheet.cell(row=row, column=self.start_col + index, value=getter(teamdev))
+        for index, capacity in enumerate(self.capacities):
+            cell = worksheet.cell(row=row, column=self.start_col + index, value=getter(capacity))
             cell.fill = self.fill
         return row + 1
 

@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: JiraFox\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-29 17:05+0100\n"
+"POT-Creation-Date: 2026-11-06 00:55+0100\n"
 "PO-Revision-Date: 2026-09-15 00:00+0200\n"
 "Last-Translator: Codex <codex@local>\n"
 "Language-Team: Dutch <nl@local>\n"
@@ -57,7 +57,8 @@ msgstr "Current sprint Done"
 msgid "Current sprint WIP"
 msgstr "Current sprint WIP"
 
-#: .\JiraFox\views.py:276 .\templates\team\_dev_table.html:42
+#: .\JiraFox\views.py:276 .\templates\sprint\_capacity_table.html:29
+#: .\templates\team\_dev_table.html:47
 msgid "Fastlane"
 msgstr "Fastlane"
 
@@ -114,16 +115,16 @@ msgstr "Dit item bestaat niet in Jira."
 msgid "Jira returned an error."
 msgstr "Jira gaf een fout terug."
 
-#: .\jiramodule\selectors.py:75
+#: .\jiramodule\selectors.py:79
 msgid "You have no project. Create one, or ask a member to add you to theirs."
 msgstr "U hebt geen project. Maak er een aan, of vraag een lid om u aan het zijne toe te voegen."
 
-#: .\jiramodule\selectors.py:79
+#: .\jiramodule\selectors.py:83
 #, python-format
 msgid "The project %(project)s has no Jira URL."
 msgstr "Het project %(project)s heeft geen Jira-URL."
 
-#: .\jiramodule\selectors.py:84
+#: .\jiramodule\selectors.py:88
 #, python-format
 msgid "You have no Jira token for %(url)s. Add it to your Jira connections."
 msgstr "U hebt geen Jira-token voor %(url)s. Voeg het toe aan uw Jira-verbindingen."
@@ -132,7 +133,7 @@ msgstr "U hebt geen Jira-token voor %(url)s. Voeg het toe aan uw Jira-verbinding
 msgid "No change"
 msgstr "Geen wijziging"
 
-#: .\jiramodule\services\bulk_operations.py:115 .\jiramodule\tests.py:385
+#: .\jiramodule\services\bulk_operations.py:115 .\jiramodule\tests.py:415
 msgid "Updated"
 msgstr "Bijgewerkt"
 
@@ -150,7 +151,7 @@ msgstr "Kan geen verbinding maken met Jira op %(url)s."
 msgid "Not enough information to compute metrics (missing created/status/changelog)."
 msgstr "Not enough information to compute metrics (missing created/status/changelog)."
 
-#: .\jiramodule\tests.py:348 .\templates\jira\bulk_operations.html:17
+#: .\jiramodule\tests.py:378 .\templates\jira\bulk_operations.html:17
 msgid "Available operations"
 msgstr "Available operations"
 
@@ -181,41 +182,80 @@ msgstr "No bulk labels preview to apply."
 msgid "Bulk labels applied: %(success_count)s updated, %(error_count)s error(s)."
 msgstr "Bulk labels applied: %(success_count)s updated, %(error_count)s error(s)."
 
-#: .\sprint\views.py:174
+#: .\sprint\scope_flow.py:164
+#, python-format
+msgid "Planned and added issues do not add up to the %(count)s issues."
+msgstr "Geplande en toegevoegde tickets komen niet uit op de %(count)s tickets."
+
+#: .\sprint\scope_flow.py:172 .\sprint\tests.py:2212
+#, python-format
+msgid "Closed rate (%(group)s) does not add up."
+msgstr "Het afsluitpercentage (%(group)s) klopt niet."
+
+#: .\sprint\scope_flow.py:176
+#, python-format
+msgid "Unchanged rate (%(group)s) does not add up."
+msgstr "Het percentage ongewijzigd (%(group)s) klopt niet."
+
+#: .\sprint\scope_flow.py:192
+msgid "The flow diagram does not add up."
+msgstr "Het stroomdiagram klopt niet."
+
+#: .\sprint\views.py:170
 msgid "Sprint bounds reset to the Jira dates."
 msgstr "Sprintgrenzen teruggezet naar de Jira-datums."
 
-#: .\sprint\views.py:180
+#: .\sprint\views.py:176
 msgid "Enter a start and an end, the start before the end."
 msgstr "Geef een begin en een einde op, het begin vóór het einde."
 
-#: .\sprint\views.py:185
+#: .\sprint\views.py:181
 msgid "Sprint bounds saved."
 msgstr "Sprintgrenzen opgeslagen."
 
-#: .\sprint\views.py:281
+#: .\sprint\views.py:210
+msgid "Sprint hours reset to the developers' templates."
+msgstr "Sprinturen teruggezet naar de sjablonen van de ontwikkelaars."
+
+#: .\sprint\views.py:293
 msgid "Planned issues closed"
 msgstr "Geplande tickets afgesloten"
 
-#: .\sprint\views.py:282
+#: .\sprint\views.py:294
 msgid "Added issues closed"
 msgstr "Toegevoegde tickets afgesloten"
 
-#: .\sprint\views.py:283
+#: .\sprint\views.py:295
 msgid "All issues closed"
 msgstr "Alle tickets afgesloten"
 
-#: .\sprint\views.py:287
+#: .\sprint\views.py:300
 msgid "Planned issues unchanged"
 msgstr "Geplande tickets ongewijzigd"
 
-#: .\sprint\views.py:288
+#: .\sprint\views.py:301
 msgid "Added issues unchanged"
 msgstr "Toegevoegde tickets ongewijzigd"
 
-#: .\sprint\views.py:289
+#: .\sprint\views.py:302
 msgid "All issues unchanged"
 msgstr "Alle tickets ongewijzigd"
+
+#: .\sprint\views.py:509
+msgid "Pick at least one sprint to build a report."
+msgstr "Kies minstens één sprint om een rapport te maken."
+
+#: .\sprint\views.py:529
+msgid "The analysis does not match these sprints: paste the answer again."
+msgstr "De analyse past niet bij deze sprints: plak het antwoord opnieuw."
+
+#: .\team\report_template.py:20
+msgid "This file is not a readable PowerPoint (.pptx) deck."
+msgstr "Dit bestand is geen leesbare PowerPoint (.pptx)."
+
+#: .\team\report_template.py:22
+msgid "The deck must contain the 6 example slides."
+msgstr "De PowerPoint moet de 6 voorbeeldslides bevatten."
 
 #: .\team\views.py:111
 msgid "Project created."
@@ -254,7 +294,7 @@ msgid "%(user)s removed from the project."
 msgstr "%(user)s verwijderd uit het project."
 
 #: .\templates\about.html:4 .\templates\about.html:8
-#: .\templates\includes\header.html:37
+#: .\templates\includes\header.html:41
 msgid "About"
 msgstr "Over"
 
@@ -699,7 +739,7 @@ msgstr "Herladen"
 #: .\templates\dashboard\_toolbar_actions.html:6
 #: .\templates\issue\issue_header.html:19 .\templates\query.html:36
 #: .\templates\query_toolbar_actions.html:4
-#: .\templates\sprint\sprint_toolbar_actions.html:24
+#: .\templates\sprint\sprint_toolbar_actions.html:27
 #: .\templates\sprint\sprint_wia.html:41
 msgid "Open in Jira"
 msgstr "Openen in Jira"
@@ -750,12 +790,13 @@ msgstr "Max. leeftijd"
 #: .\templates\dashboard.html:33 .\templates\dashboard\_aging_table.html:18
 #: .\templates\jira\bulk_labels.html:80 .\templates\jira\bulk_labels.html:136
 #: .\templates\query.html:65 .\templates\sprint\sprint_detail.html:29
-#: .\templates\sprint\sprint_scope_flow.html:171
+#: .\templates\sprint\sprint_scope_flow.html:222
 #: .\templates\sprint\sprint_wia.html:56
 msgid "Key"
 msgstr "Sleutel"
 
 #: .\templates\dashboard.html:34 .\templates\dashboard\_aging_table.html:19
+#: .\templates\sprint\management_report.html:62
 #: .\templates\sprint\sprint_wia.html:57
 msgid "Title"
 msgstr "Titel"
@@ -767,7 +808,7 @@ msgstr "Leeftijd"
 #: .\templates\dashboard.html:36 .\templates\dashboard\_aging_table.html:22
 #: .\templates\issue\issue_detail.html:37 .\templates\query.html:70
 #: .\templates\sprint\sprint_detail.html:33
-#: .\templates\sprint\sprint_scope_flow.html:179
+#: .\templates\sprint\sprint_scope_flow.html:230
 msgid "Assignee"
 msgstr "Toegewezen aan"
 
@@ -994,6 +1035,7 @@ msgid "Ouvrir"
 msgstr "Openen"
 
 #: .\templates\home.html:84 .\templates\sprint\sprint_list.html:11
+#: .\templates\sprint\sprint_trends.html:83
 msgid "Sprints"
 msgstr "Sprints"
 
@@ -1013,14 +1055,14 @@ msgstr "Projecten"
 msgid "Share a board and its developers with your colleagues, each with their own Jira token."
 msgstr "Deel een board en zijn ontwikkelaars met uw collega's, elk met zijn eigen Jira-token."
 
-#: .\templates\home.html:98 .\templates\includes\header.html:105
+#: .\templates\home.html:98 .\templates\includes\header.html:109
 #: .\templates\jira\jira_unavailable.html:41
 #: .\templates\team\project_form.html:20 .\templates\team\project_list.html:4
 #: .\templates\team\project_list.html:7
 msgid "My projects"
 msgstr "Mijn projecten"
 
-#: .\templates\home.html:99 .\templates\includes\header.html:110
+#: .\templates\home.html:99 .\templates\includes\header.html:114
 #: .\templates\jira\jira_config_list.html:5
 #: .\templates\jira\jira_unavailable.html:44
 msgid "My Jira connections"
@@ -1031,53 +1073,63 @@ msgstr "Mijn Jira-verbindingen"
 msgid "Home"
 msgstr "Home"
 
-#: .\templates\includes\header.html:26
+#: .\templates\includes\header.html:26 .\templates\sprint\sprint_trends.html:12
+#: .\templates\sprint\sprint_trends.html:88
 msgid "Sprint"
 msgstr "Sprint"
 
-#: .\templates\includes\header.html:29 .\templates\query.html:8
+#: .\templates\includes\header.html:28
+msgid "Sprint list"
+msgstr "Sprintlijst"
+
+#: .\templates\includes\header.html:29 .\templates\sprint\sprint_trends.html:8
+#: .\templates\sprint\sprint_trends.html:12
+msgid "Several sprints"
+msgstr "Meerdere sprints"
+
+#: .\templates\includes\header.html:33 .\templates\query.html:8
 msgid "Query"
 msgstr "Query"
 
-#: .\templates\includes\header.html:33 .\templates\includes\header.html:115
+#: .\templates\includes\header.html:37 .\templates\includes\header.html:119
 #: .\templates\jira\bulk_labels.html:8 .\templates\jira\bulk_operations.html:4
 #: .\templates\jira\bulk_operations.html:9
 msgid "Bulk operations"
 msgstr "Bulkbewerkingen"
 
-#: .\templates\includes\header.html:49 .\templates\query.html:141
+#: .\templates\includes\header.html:53 .\templates\query.html:141
 #: .\templates\settings.html:97 .\templates\team\project_list.html:45
 msgid "Current project"
 msgstr "Huidig project"
 
-#: .\templates\includes\header.html:58 .\templates\settings.html:116
+#: .\templates\includes\header.html:62 .\templates\settings.html:116
 #: .\templates\team\project_form.html:4 .\templates\team\project_form.html:15
 #: .\templates\team\project_list.html:20
 msgid "New project"
 msgstr "Nieuw project"
 
-#: .\templates\includes\header.html:65 .\templates\includes\header.html:66
+#: .\templates\includes\header.html:69 .\templates\includes\header.html:70
 msgid "Toggle dark mode"
 msgstr "Donkere modus wisselen"
 
-#: .\templates\includes\header.html:74
+#: .\templates\includes\header.html:78
 msgid "Language switch"
 msgstr "Language switch"
 
-#: .\templates\includes\header.html:100 .\templates\settings.html:4
+#: .\templates\includes\header.html:104 .\templates\settings.html:4
 #: .\templates\settings.html:14 .\templates\team\project_form.html:34
 msgid "Settings"
 msgstr "Instellingen"
 
-#: .\templates\includes\header.html:120 .\templates\settings.html:91
+#: .\templates\includes\header.html:124 .\templates\settings.html:91
 msgid "Change password"
 msgstr "Wachtwoord wijzigen"
 
-#: .\templates\includes\header.html:128
+#: .\templates\includes\header.html:132
 msgid "Log out"
 msgstr "Afmelden"
 
-#: .\templates\includes\header.html:137
+#: .\templates\includes\header.html:141
 msgid "Log in"
 msgstr "Aanmelden"
 
@@ -1231,7 +1283,7 @@ msgstr "Wijzigingen toepassen"
 
 #: .\templates\jira\bulk_labels.html:81 .\templates\jira\bulk_labels.html:137
 #: .\templates\query.html:66 .\templates\sprint\sprint_detail.html:30
-#: .\templates\sprint\sprint_scope_flow.html:172
+#: .\templates\sprint\sprint_scope_flow.html:223
 msgid "Summary"
 msgstr "Samenvatting"
 
@@ -1537,7 +1589,7 @@ msgstr "Bewerken"
 
 #: .\templates\jira\partials\jira_config_modal_form.html:4
 #: .\templates\jira\partials\jira_config_modal_form.html:68
-#: .\templates\team\project_form.html:100
+#: .\templates\team\project_form.html:111
 msgid "Add"
 msgstr "Toevoegen"
 
@@ -1575,7 +1627,7 @@ msgid "Test connection"
 msgstr "Verbinding testen"
 
 #: .\templates\jira\partials\jira_config_modal_form.html:68
-#: .\templates\team\project_form.html:67
+#: .\templates\team\project_form.html:78
 msgid "Save"
 msgstr "Opslaan"
 
@@ -1603,7 +1655,7 @@ msgstr "Query failed"
 msgid "Results"
 msgstr "Resultaten"
 
-#: .\templates\query.html:58 .\templates\sprint\sprint_scope_flow.html:305
+#: .\templates\query.html:58 .\templates\sprint\sprint_scope_flow.html:366
 msgid "issue(s)"
 msgstr "issue(s)"
 
@@ -1634,7 +1686,7 @@ msgstr "Board"
 
 #: .\templates\query.html:157 .\templates\settings.html:103
 #: .\templates\sprint\sprint_list.html:41
-#: .\templates\sprint\sprint_report.html:22
+#: .\templates\sprint\sprint_report.html:22 .\templates\team\_dev_table.html:31
 #: .\templates\team\project_form.html:42 .\templates\team\project_list.html:30
 msgid "Name"
 msgstr "Naam"
@@ -1691,6 +1743,94 @@ msgstr "Project beheren"
 msgid "Manage Jira connections"
 msgstr "Jira-verbindingen beheren"
 
+#: .\templates\sprint\_capacity_table.html:21
+#: .\templates\team\_dev_table.html:39
+msgid "Workload"
+msgstr "Werklast"
+
+#: .\templates\sprint\_capacity_table.html:25
+#: .\templates\team\_dev_table.html:43
+msgid "Holidays"
+msgstr "Verlof"
+
+#: .\templates\sprint\_capacity_table.html:33
+#: .\templates\team\_dev_table.html:51
+msgid "Project meetings"
+msgstr "Projectmeetings"
+
+#: .\templates\sprint\_capacity_table.html:37
+#: .\templates\team\_dev_table.html:55
+msgid "Other meetings"
+msgstr "Andere meetings"
+
+#: .\templates\sprint\management_report.html:4
+#: .\templates\sprint\management_report.html:8
+#: .\templates\sprint\sprint_toolbar_actions.html:21
+#: .\templates\sprint\sprint_trends.html:56
+msgid "Management report"
+msgstr "Directierapport"
+
+#: .\templates\sprint\management_report.html:12
+msgid "Sprints in this report:"
+msgstr "Sprints in dit rapport:"
+
+#: .\templates\sprint\management_report.html:26
+msgid "1. Copy the prompt and the dossier"
+msgstr "1. Kopieer de opdracht en het dossier"
+
+#: .\templates\sprint\management_report.html:27
+msgid "The text below holds the instructions and the figures of the report. Paste it into Copilot."
+msgstr "De tekst hieronder bevat de instructies en de cijfers van het rapport. Plak hem in Copilot."
+
+#: .\templates\sprint\management_report.html:30
+msgid "Copy"
+msgstr "Kopiëren"
+
+#: .\templates\sprint\management_report.html:33
+msgid "2. Paste Copilot answer"
+msgstr "2. Plak het antwoord van Copilot"
+
+#: .\templates\sprint\management_report.html:42
+msgid "Read the answer"
+msgstr "Antwoord inlezen"
+
+#: .\templates\sprint\management_report.html:47
+msgid "3. Review the analysis"
+msgstr "3. Analyse nalezen"
+
+#: .\templates\sprint\management_report.html:48
+msgid "One bullet per line. Figures on the slides always come from JiraFox."
+msgstr "Eén opsommingspunt per regel. De cijfers op de dia's komen altijd van JiraFox."
+
+#: .\templates\sprint\management_report.html:55
+msgid "Where the team stands"
+msgstr "Waar het team staat"
+
+#: .\templates\sprint\management_report.html:57
+msgid "Trend"
+msgstr "Trend"
+
+#: .\templates\sprint\management_report.html:59
+msgid "Risks"
+msgstr "Risico's"
+
+#: .\templates\sprint\management_report.html:63
+msgid "Explanation"
+msgstr "Uitleg"
+
+#: .\templates\sprint\management_report.html:67
+#: .\templates\sprint\management_report.html:80
+msgid "Download the PowerPoint"
+msgstr "PowerPoint downloaden"
+
+#: .\templates\sprint\management_report.html:72
+msgid "The report is built from the Jira figures only, without any written analysis."
+msgstr "Het rapport wordt enkel op basis van de Jira-cijfers gemaakt, zonder geschreven analyse."
+
+#: .\templates\sprint\management_report.html:100
+msgid "Copied"
+msgstr "Gekopieerd"
+
 #: .\templates\sprint\sprint_detail.html:17
 msgid "Sprint backlog"
 msgstr "Sprint backlog"
@@ -1738,6 +1878,7 @@ msgid "Future"
 msgstr "Toekomstig"
 
 #: .\templates\sprint\sprint_list.html:30
+#: .\templates\sprint\sprint_trends.html:91
 msgid "Closed"
 msgstr "Gesloten"
 
@@ -1746,12 +1887,12 @@ msgid "Filter"
 msgstr "Filteren"
 
 #: .\templates\sprint\sprint_list.html:43
-#: .\templates\sprint\sprint_xls_report.html:44
+#: .\templates\sprint\sprint_xls_report.html:52
 msgid "Start"
 msgstr "Start"
 
 #: .\templates\sprint\sprint_list.html:44
-#: .\templates\sprint\sprint_xls_report.html:48
+#: .\templates\sprint\sprint_xls_report.html:56
 msgid "End"
 msgstr "Einde"
 
@@ -1767,185 +1908,324 @@ msgstr "Sprintrapport"
 msgid "Ready-to-open JQL queries by sprint segment."
 msgstr "Ready-to-open JQL queries by sprint segment."
 
-#: .\templates\sprint\sprint_scope_flow.html:13
-#: .\templates\sprint\sprint_scope_flow.html:22
+#: .\templates\sprint\sprint_scope_flow.html:23
+#: .\templates\sprint\sprint_scope_flow.html:32
 #: .\templates\sprint\sprint_toolbar_actions.html:18
 msgid "Sprint scope"
 msgstr "Sprintscope"
 
-#: .\templates\sprint\sprint_scope_flow.html:25
+#: .\templates\sprint\sprint_scope_flow.html:35
 msgid "Status of the planned issues at the sprint start, planned or added during the sprint, how the issues ended (Jira sprint report) and their status at the sprint end. Sub-tasks are not counted."
 msgstr "Status van de geplande issues bij de start van de sprint, gepland of tijdens de sprint toegevoegd, hoe de issues eindigden (Jira-sprintrapport) en hun status aan het einde van de sprint. Subtaken worden niet meegeteld."
 
-#: .\templates\sprint\sprint_scope_flow.html:27
+#: .\templates\sprint\sprint_scope_flow.html:37
 msgid "Planned at the sprint start or added during the sprint, how the issues ended (Jira sprint report) and their current status. Sub-tasks are not counted."
 msgstr "Gepland bij de start van de sprint of tijdens de sprint toegevoegd, hoe de issues eindigden (Jira-sprintrapport) en hun huidige status. Subtaken worden niet meegeteld."
 
-#: .\templates\sprint\sprint_scope_flow.html:32
+#: .\templates\sprint\sprint_scope_flow.html:42
+#: .\templates\sprint\sprint_warnings.html:5
+msgid "These figures do not add up, do not trust them:"
+msgstr "Deze cijfers kloppen niet, vertrouw ze niet:"
+
+#: .\templates\sprint\sprint_scope_flow.html:48
+#, python-format
+msgid "%(counter)s issue counted as planned by Jira was created after the sprint start date (%(start)s): the sprint was started later than that date, or the issue was created right in it. Its status on entering the sprint is its status at creation:"
+msgid_plural "%(counter)s issues counted as planned by Jira were created after the sprint start date (%(start)s): the sprint was started later than that date, or they were created right in it. Their status on entering the sprint is their status at creation:"
+msgstr[0] "%(counter)s ticket dat Jira als gepland telt, werd na de startdatum van de sprint (%(start)s) aangemaakt: de sprint werd later gestart, of het ticket werd er rechtstreeks in aangemaakt. De status bij het binnenkomen in de sprint is de status bij aanmaak:"
+msgstr[1] "%(counter)s tickets die Jira als gepland telt, werden na de startdatum van de sprint (%(start)s) aangemaakt: de sprint werd later gestart, of de tickets werden er rechtstreeks in aangemaakt. Hun status bij het binnenkomen in de sprint is hun status bij aanmaak:"
+
+#: .\templates\sprint\sprint_scope_flow.html:54
+#, python-format
+msgid "%(counter)s issue of the sprint was already done outside of it, so it is left out of these figures (remove it from the sprint in Jira):"
+msgid_plural "%(counter)s issues of the sprint were already done outside of it, so they are left out of these figures (remove them from the sprint in Jira):"
+msgstr[0] "%(counter)s ticket van de sprint was al buiten de sprint afgerond en telt dus niet mee in deze cijfers (haal het uit de sprint in Jira):"
+msgstr[1] "%(counter)s tickets van de sprint waren al buiten de sprint afgerond en tellen dus niet mee in deze cijfers (haal ze uit de sprint in Jira):"
+
+#: .\templates\sprint\sprint_scope_flow.html:60
+#, python-format
+msgid "%(counter)s issue of the sprint is missing from Jira's sprint report, so from these figures (left out by the board's filter?):"
+msgid_plural "%(counter)s issues of the sprint are missing from Jira's sprint report, so from these figures (left out by the board's filter?):"
+msgstr[0] "%(counter)s ticket van de sprint ontbreekt in het sprintrapport van Jira, dus in deze cijfers (uitgesloten door de filter van het board?):"
+msgstr[1] "%(counter)s tickets van de sprint ontbreken in het sprintrapport van Jira, dus in deze cijfers (uitgesloten door de filter van het board?):"
+
+#: .\templates\sprint\sprint_scope_flow.html:66
+msgid "Could not check that Jira's sprint report holds every issue of the sprint:"
+msgstr "Kon niet nagaan of het sprintrapport van Jira alle tickets van de sprint bevat:"
+
+#: .\templates\sprint\sprint_scope_flow.html:71
+#, python-format
+msgid "%(counter)s issue has no status history (counted as \"No status\"):"
+msgid_plural "%(counter)s issues have no status history (counted as \"No status\"):"
+msgstr[0] "%(counter)s ticket heeft geen statusgeschiedenis (geteld als \"Geen status\"):"
+msgstr[1] "%(counter)s tickets hebben geen statusgeschiedenis (geteld als \"Geen status\"):"
+
+#: .\templates\sprint\sprint_scope_flow.html:77
 msgid "Status history could not be loaded, current statuses are shown:"
 msgstr "De statusgeschiedenis kon niet worden geladen, de huidige statussen worden getoond:"
 
-#: .\templates\sprint\sprint_scope_flow.html:37
+#: .\templates\sprint\sprint_scope_flow.html:82
+#: .\templates\sprint\sprint_trends.html:89
 msgid "Planned"
 msgstr "Gepland"
 
-#: .\templates\sprint\sprint_scope_flow.html:38
-#: .\templates\sprint\sprint_scope_flow.html:119
-#: .\templates\sprint\sprint_scope_flow.html:199
-#: .\templates\sprint\sprint_scope_flow.html:329
+#: .\templates\sprint\sprint_scope_flow.html:83
+#: .\templates\sprint\sprint_scope_flow.html:170
+#: .\templates\sprint\sprint_scope_flow.html:250
+#: .\templates\sprint\sprint_scope_flow.html:391
 msgid "Added during sprint"
 msgstr "Toegevoegd tijdens de sprint"
 
-#: .\templates\sprint\sprint_scope_flow.html:49
+#: .\templates\sprint\sprint_scope_flow.html:94
 msgid "Issues closed during the sprint out of the issues started by its end (To Do left out), including the issues removed from the sprint. Issues completed in another sprint are not counted."
 msgstr "Tickets afgesloten tijdens de sprint op de tickets die aan het einde gestart waren (zonder To Do), inclusief de tickets die uit de sprint zijn gehaald. Tickets afgerond in een andere sprint tellen niet mee."
 
-#: .\templates\sprint\sprint_scope_flow.html:51
+#: .\templates\sprint\sprint_scope_flow.html:96
 #, python-format
 msgid "%(done)s closed / %(started)s started"
 msgstr "%(done)s afgesloten / %(started)s gestart"
 
-#: .\templates\sprint\sprint_scope_flow.html:53
+#: .\templates\sprint\sprint_scope_flow.html:98
 msgid "Issues closed during the sprint out of all the issues, To Do included, including the issues removed from the sprint. Issues completed in another sprint are not counted."
 msgstr "Tickets afgesloten tijdens de sprint op alle tickets, To Do inbegrepen, inclusief de tickets die uit de sprint zijn gehaald. Tickets afgerond in een andere sprint tellen niet mee."
 
-#: .\templates\sprint\sprint_scope_flow.html:55
+#: .\templates\sprint\sprint_scope_flow.html:100
 #, python-format
 msgid "%(done)s closed / %(total)s in total"
 msgstr "%(done)s afgesloten / %(total)s in totaal"
 
-#: .\templates\sprint\sprint_scope_flow.html:67
+#: .\templates\sprint\sprint_scope_flow.html:106
+#, python-format
+msgid "%(counter)s not started"
+msgid_plural "%(counter)s not started"
+msgstr[0] "%(counter)s niet gestart"
+msgstr[1] "%(counter)s niet gestart"
+
+#: .\templates\sprint\sprint_scope_flow.html:118
 msgid "Issues in the same status on entering the sprint and at its end, out of all the issues of the group; an unknown status on entering it counts as changed."
 msgstr "Tickets met dezelfde status bij het binnenkomen in de sprint en aan het einde, op alle tickets van de groep; een onbekende status bij het binnenkomen telt als gewijzigd."
 
-#: .\templates\sprint\sprint_scope_flow.html:70
+#: .\templates\sprint\sprint_scope_flow.html:121
 #, python-format
 msgid "%(same)s in the same status as on entering / %(compared)s issues"
 msgstr "%(same)s met dezelfde status als bij het binnenkomen / %(compared)s tickets"
 
-#: .\templates\sprint\sprint_scope_flow.html:71
+#: .\templates\sprint\sprint_scope_flow.html:122
 #, python-format
 msgid "%(still)s never changed · %(back)s changed and came back"
 msgstr "%(still)s nooit gewijzigd · %(back)s gewijzigd en teruggekomen"
 
-#: .\templates\sprint\sprint_scope_flow.html:82
+#: .\templates\sprint\sprint_scope_flow.html:133
 msgid "Flow"
 msgstr "Stroom"
 
-#: .\templates\sprint\sprint_scope_flow.html:88
+#: .\templates\sprint\sprint_scope_flow.html:139
 msgid "Status evolution"
 msgstr "Statusverloop"
 
-#: .\templates\sprint\sprint_scope_flow.html:102
-#: .\templates\sprint\sprint_scope_flow.html:148
+#: .\templates\sprint\sprint_scope_flow.html:153
+#: .\templates\sprint\sprint_scope_flow.html:199
 #: .\templates\sprint\sprint_weighted_throughput_distribution.html:34
 msgid "Aucune donnée à afficher"
 msgstr "Aucune donnée à afficher"
 
-#: .\templates\sprint\sprint_scope_flow.html:110
+#: .\templates\sprint\sprint_scope_flow.html:161
 msgid "Status of each issue when it entered the sprint (the sprint start for planned issues, the moment it was added otherwise) compared with its status at the sprint end."
 msgstr "Status van elk ticket bij het binnenkomen in de sprint (het begin van de sprint voor geplande tickets, anders het moment waarop het werd toegevoegd) vergeleken met de status aan het einde van de sprint."
 
-#: .\templates\sprint\sprint_scope_flow.html:113
-#: .\templates\sprint\sprint_scope_flow.html:159
+#: .\templates\sprint\sprint_scope_flow.html:164
+#: .\templates\sprint\sprint_scope_flow.html:210
+#: .\templates\sprint\sprint_trends.html:136
 msgid "Issues"
 msgstr "Issues"
 
-#: .\templates\sprint\sprint_scope_flow.html:115
-#: .\templates\sprint\sprint_scope_flow.html:327
+#: .\templates\sprint\sprint_scope_flow.html:166
+#: .\templates\sprint\sprint_scope_flow.html:389
 msgid "All issues"
 msgstr "Alle tickets"
 
-#: .\templates\sprint\sprint_scope_flow.html:117
-#: .\templates\sprint\sprint_scope_flow.html:198
-#: .\templates\sprint\sprint_scope_flow.html:328
+#: .\templates\sprint\sprint_scope_flow.html:168
+#: .\templates\sprint\sprint_scope_flow.html:249
+#: .\templates\sprint\sprint_scope_flow.html:390
 msgid "Planned at start"
 msgstr "Gepland bij de start"
 
-#: .\templates\sprint\sprint_scope_flow.html:125
+#: .\templates\sprint\sprint_scope_flow.html:176
 msgid "Status on entering the sprint → status at the sprint end"
 msgstr "Status bij binnenkomst in de sprint → status aan het einde van de sprint"
 
-#: .\templates\sprint\sprint_scope_flow.html:126
+#: .\templates\sprint\sprint_scope_flow.html:177
 msgid "The diagonal holds the issues in the same status; ↺ marks those that changed status and came back. Click a cell to list its issues."
 msgstr "De diagonaal bevat de tickets met dezelfde status; ↺ markeert de tickets die van status veranderden en terugkwamen. Klik op een vak om de tickets te tonen."
 
-#: .\templates\sprint\sprint_scope_flow.html:137
+#: .\templates\sprint\sprint_scope_flow.html:188
 msgid "Same status or not, by status on entering the sprint"
 msgstr "Zelfde status of niet, per status bij binnenkomst in de sprint"
 
-#: .\templates\sprint\sprint_scope_flow.html:138
+#: .\templates\sprint\sprint_scope_flow.html:189
 msgid "Click a bar to list its issues."
 msgstr "Klik op een balk om de tickets te tonen."
 
-#: .\templates\sprint\sprint_scope_flow.html:148
+#: .\templates\sprint\sprint_scope_flow.html:199
 msgid "The status history is needed to compare the statuses."
 msgstr "De statusgeschiedenis is nodig om de statussen te vergelijken."
 
-#: .\templates\sprint\sprint_scope_flow.html:163
+#: .\templates\sprint\sprint_scope_flow.html:214
 msgid "Show all"
 msgstr "Alles tonen"
 
-#: .\templates\sprint\sprint_scope_flow.html:166
+#: .\templates\sprint\sprint_scope_flow.html:217
 msgid "Click a flow of the diagram to list its issues."
 msgstr "Klik op een stroom in het diagram om de issues ervan te tonen."
 
-#: .\templates\sprint\sprint_scope_flow.html:173
+#: .\templates\sprint\sprint_scope_flow.html:224
 msgid "Origin"
 msgstr "Herkomst"
 
-#: .\templates\sprint\sprint_scope_flow.html:174
+#: .\templates\sprint\sprint_scope_flow.html:225
 msgid "Status at sprint start"
 msgstr "Status bij de start van de sprint"
 
-#: .\templates\sprint\sprint_scope_flow.html:175
+#: .\templates\sprint\sprint_scope_flow.html:226
 msgid "Status on entering the sprint"
 msgstr "Status bij binnenkomst in de sprint"
 
-#: .\templates\sprint\sprint_scope_flow.html:176
+#: .\templates\sprint\sprint_scope_flow.html:227
 msgid "Outcome"
 msgstr "Uitkomst"
 
-#: .\templates\sprint\sprint_scope_flow.html:177
+#: .\templates\sprint\sprint_scope_flow.html:228
 msgid "Status at sprint end"
 msgstr "Status aan het einde van de sprint"
 
-#: .\templates\sprint\sprint_scope_flow.html:178
+#: .\templates\sprint\sprint_scope_flow.html:229
 msgid "Current status"
 msgstr "Huidige status"
 
-#: .\templates\sprint\sprint_scope_flow.html:200
+#: .\templates\sprint\sprint_scope_flow.html:251
 msgid "Completed"
 msgstr "Afgerond"
 
-#: .\templates\sprint\sprint_scope_flow.html:201
-#: .\templates\sprint\sprint_scope_flow.html:202
+#: .\templates\sprint\sprint_scope_flow.html:252
+#: .\templates\sprint\sprint_scope_flow.html:253
 msgid "Not completed"
 msgstr "Niet afgerond"
 
-#: .\templates\sprint\sprint_scope_flow.html:203
-msgid "Completed in another sprint"
-msgstr "Afgerond in een andere sprint"
+#: .\templates\sprint\sprint_scope_flow.html:264
+msgid "No status"
+msgstr "Geen status"
 
-#: .\templates\sprint\sprint_scope_flow.html:363
+#: .\templates\sprint\sprint_scope_flow.html:395
+msgid "Total"
+msgstr "Total"
+
+#: .\templates\sprint\sprint_scope_flow.html:443
 msgid "Entry ↓ / End →"
 msgstr "Binnenkomst ↓ / Einde →"
 
-#: .\templates\sprint\sprint_scope_flow.html:397
+#: .\templates\sprint\sprint_scope_flow.html:488
 msgid "Same status, no change"
 msgstr "Zelfde status, geen wijziging"
 
-#: .\templates\sprint\sprint_scope_flow.html:399
+#: .\templates\sprint\sprint_scope_flow.html:490
 msgid "Same status, changed and came back"
 msgstr "Zelfde status, gewijzigd en teruggekomen"
 
-#: .\templates\sprint\sprint_scope_flow.html:401
+#: .\templates\sprint\sprint_scope_flow.html:492
 msgid "Changed status"
 msgstr "Status gewijzigd"
 
 #: .\templates\sprint\sprint_toolbar_actions.html:9
 msgid "Report"
 msgstr "Rapport"
+
+#: .\templates\sprint\sprint_trends.html:17
+msgid "From"
+msgstr "Van"
+
+#: .\templates\sprint\sprint_trends.html:21
+msgid "To"
+msgstr "Tot"
+
+#: .\templates\sprint\sprint_trends.html:25
+msgid "Pick sprints in this range"
+msgstr "Sprints van deze periode kiezen"
+
+#: .\templates\sprint\sprint_trends.html:30
+msgid "Closed sprints, most recent first. Tick the ones to include."
+msgstr "Afgesloten sprints, van recent naar oud. Vink aan wat erbij hoort."
+
+#: .\templates\sprint\sprint_trends.html:40
+msgid "No closed sprint on this board."
+msgstr "Geen afgesloten sprint op dit bord."
+
+#: .\templates\sprint\sprint_trends.html:43
+msgid "Show these sprints"
+msgstr "Deze sprints tonen"
+
+#: .\templates\sprint\sprint_trends.html:48
+msgid "No closed sprint in this range"
+msgstr "Geen afgesloten sprint in deze periode"
+
+#: .\templates\sprint\sprint_trends.html:54
+msgid "Trends"
+msgstr "Trends"
+
+#: .\templates\sprint\sprint_trends.html:61
+msgid "Throughput, WIP at sprint end and cycle time (business days)"
+msgstr "Doorvoer, WIP aan het einde van de sprint en doorlooptijd (werkdagen)"
+
+#: .\templates\sprint\sprint_trends.html:65
+#, python-format
+msgid "Planned issues closed and added issues (%%)"
+msgstr "Afgeronde geplande tickets en toegevoegde tickets (%%)"
+
+#: .\templates\sprint\sprint_trends.html:73
+msgid "Kanban snapshot"
+msgstr "Kanban-momentopname"
+
+#: .\templates\sprint\sprint_trends.html:76
+#, python-format
+msgid "%(wip)s issues in progress at the sprint end, %(aging)s aging (%(percent)s %%)."
+msgstr "%(wip)s tickets in uitvoering aan het einde van de sprint, waarvan %(aging)s verouderd (%(percent)s %%)."
+
+#: .\templates\sprint\sprint_trends.html:78
+msgid "No snapshot: the status history of the last sprint could not be loaded."
+msgstr "Geen momentopname: de statusgeschiedenis van de laatste sprint kon niet worden geladen."
+
+#: .\templates\sprint\sprint_trends.html:90
+msgid "Added"
+msgstr "Toegevoegd"
+
+#: .\templates\sprint\sprint_trends.html:92
+msgid "Not started"
+msgstr "Niet gestart"
+
+#: .\templates\sprint\sprint_trends.html:93
+#: .\templates\sprint\sprint_trends.html:146
+msgid "Planned closed"
+msgstr "Geplande afgerond"
+
+#: .\templates\sprint\sprint_trends.html:94
+#: .\templates\sprint\sprint_trends.html:147
+msgid "Added share"
+msgstr "Aandeel toevoegingen"
+
+#: .\templates\sprint\sprint_trends.html:95
+#: .\templates\sprint\sprint_trends.html:129
+msgid "Median cycle"
+msgstr "Mediane doorlooptijd"
+
+#: .\templates\sprint\sprint_trends.html:127
+msgid "Throughput"
+msgstr "Doorvoer"
+
+#: .\templates\sprint\sprint_trends.html:128
+msgid "WIP at sprint end"
+msgstr "WIP aan het einde van de sprint"
+
+#: .\templates\sprint\sprint_trends.html:137
+msgid "Days"
+msgstr "Dagen"
 
 #: .\templates\sprint\sprint_weighted_throughput_distribution.html:8
 #: .\templates\sprint\sprint_weighted_throughput_distribution.html:17
@@ -2038,85 +2318,79 @@ msgid "Team"
 msgstr "Team"
 
 #: .\templates\sprint\sprint_xls_report.html:22
-msgid "Ajuster la capacite, les conges et les temps recurrents avant generation du fichier."
-msgstr "Ajuster la capacite, les conges et les temps recurrents avant generation du fichier."
+msgid "Hours of this sprint only, copied from the developers' templates: adjust the holidays and recurring time before generating the file."
+msgstr "Uren van alleen deze sprint, gekopieerd uit de sjablonen van de ontwikkelaars: pas verlof en terugkerende tijd aan voordat je het bestand genereert."
 
 #: .\templates\sprint\sprint_xls_report.html:26
-#: .\templates\team\project_devs.html:23
-msgid "Ajouter un dev"
-msgstr "Ontwikkelaar toevoegen"
+#: .\templates\team\project_devs.html:4 .\templates\team\project_devs.html:13
+#: .\templates\team\project_form.html:24 .\templates\team\project_list.html:35
+#: .\templates\team\project_list.html:55
+msgid "Developers"
+msgstr "Ontwikkelaars"
 
-#: .\templates\sprint\sprint_xls_report.html:37
+#: .\templates\sprint\sprint_xls_report.html:28
+msgid "Replace this sprint's hours with the developers' templates?"
+msgstr "De uren van deze sprint vervangen door de sjablonen van de ontwikkelaars?"
+
+#: .\templates\sprint\sprint_xls_report.html:33
+msgid "Start again from the template"
+msgstr "Opnieuw vanaf het sjabloon"
+
+#: .\templates\sprint\sprint_xls_report.html:45
 msgid "Logged sheet period"
 msgstr "Periode van het urenrapport"
 
-#: .\templates\sprint\sprint_xls_report.html:39
+#: .\templates\sprint\sprint_xls_report.html:47
 msgid "Set by hand."
 msgstr "Handmatig ingesteld."
 
-#: .\templates\sprint\sprint_xls_report.html:39
+#: .\templates\sprint\sprint_xls_report.html:47
 msgid "Jira sprint dates."
 msgstr "Sprintdatums uit Jira."
 
-#: .\templates\sprint\sprint_xls_report.html:40
+#: .\templates\sprint\sprint_xls_report.html:48
 msgid "Jira:"
 msgstr "Jira:"
 
-#: .\templates\sprint\sprint_xls_report.html:52
+#: .\templates\sprint\sprint_xls_report.html:60
 msgid "Save bounds"
 msgstr "Grenzen opslaan"
 
-#: .\templates\sprint\sprint_xls_report.html:54
+#: .\templates\sprint\sprint_xls_report.html:62
 msgid "Reset to Jira dates"
 msgstr "Terug naar de Jira-datums"
 
-#: .\templates\sprint\sprint_xls_report.html:60
+#: .\templates\sprint\sprint_xls_report.html:68
 msgid "Generer le Capacity Sheet"
 msgstr "Capacity Sheet genereren"
 
-#: .\templates\sprint\sprint_xls_report.html:63
+#: .\templates\sprint\sprint_xls_report.html:71
 msgid "One tab per developer: planned vs logged hours and ticket status at sprint start and end."
 msgstr "Eén tabblad per ontwikkelaar: geplande en gelogde uren, ticketstatus bij begin en einde van de sprint."
 
-#: .\templates\sprint\sprint_xls_report.html:64
+#: .\templates\sprint\sprint_xls_report.html:72
 msgid "Generate logged sheet"
 msgstr "Urenrapport genereren"
 
-#: .\templates\team\_dev_table.html:13
+#: .\templates\team\_dev_table.html:14
 msgid "Reordonner le dev"
 msgstr "Reordonner le dev"
 
-#: .\templates\team\_dev_table.html:19
+#: .\templates\team\_dev_table.html:20
 msgid "Retirer de la team"
 msgstr "Retirer de la team"
 
-#: .\templates\team\_dev_table.html:30
+#: .\templates\team\_dev_table.html:35
 msgid "Jira username: matches worklogs and assignees exactly. Without it, the developer is matched by name."
 msgstr "Jira-gebruikersnaam: koppelt worklogs en toegewezen personen exact. Zonder deze wordt de ontwikkelaar op naam herkend."
 
-#: .\templates\team\_dev_table.html:30
+#: .\templates\team\_dev_table.html:35
 msgid "Jira ID"
 msgstr "Jira-ID"
 
-#: .\templates\team\_dev_table.html:31
+#: .\templates\team\_dev_table.html:36
 msgid "Ex: TDPTAV"
 msgstr "Bv.: TDPTAV"
-
-#: .\templates\team\_dev_table.html:34
-msgid "Workload"
-msgstr "Werklast"
-
-#: .\templates\team\_dev_table.html:38
-msgid "Holidays"
-msgstr "Verlof"
-
-#: .\templates\team\_dev_table.html:46
-msgid "Project meetings"
-msgstr "Projectmeetings"
-
-#: .\templates\team\_dev_table.html:50
-msgid "Other meetings"
-msgstr "Andere meetings"
 
 #: .\templates\team\_dev_table_js.html:5
 msgid "Value saved."
@@ -2138,7 +2412,7 @@ msgstr "Naam ontwikkelaar"
 msgid "Ex: Jane Doe"
 msgstr "Ex: Jane Doe"
 
-#: .\templates\team\_dev_table_js.html:10 .\templates\team\project_form.html:67
+#: .\templates\team\_dev_table_js.html:10 .\templates\team\project_form.html:78
 msgid "Create"
 msgstr "Aanmaken"
 
@@ -2178,15 +2452,13 @@ msgstr "Column order saved."
 msgid "Unable to save column order."
 msgstr "Unable to save column order."
 
-#: .\templates\team\project_devs.html:4 .\templates\team\project_devs.html:13
-#: .\templates\team\project_form.html:24 .\templates\team\project_list.html:35
-#: .\templates\team\project_list.html:55
-msgid "Developers"
-msgstr "Ontwikkelaars"
-
 #: .\templates\team\project_devs.html:16
-msgid "The project's developers, shared by its members: capacity used by the capacity sheet, Jira ID used to match worklogs and assignees. Drag the columns to reorder them."
-msgstr "De ontwikkelaars van het project, gedeeld door zijn leden: capaciteit gebruikt door de Capacity Sheet, Jira-ID om worklogs en toegewezen personen te herkennen. Sleep de kolommen om ze te herschikken."
+msgid "The project's developers, shared by its members. Their hours are the template of a sprint: each sprint's capacity sheet starts from a copy of them, then is adjusted for that sprint only. The Jira ID matches worklogs and assignees. Drag the columns to reorder them."
+msgstr "De ontwikkelaars van het project, gedeeld door zijn leden. Hun uren zijn het sjabloon van een sprint: de Capacity Sheet van elke sprint vertrekt van een kopie ervan, die daarna alleen voor die sprint wordt aangepast. De Jira-ID herkent worklogs en toegewezen personen. Sleep de kolommen om ze te herschikken."
+
+#: .\templates\team\project_devs.html:23
+msgid "Ajouter un dev"
+msgstr "Ontwikkelaar toevoegen"
 
 #: .\templates\team\project_form.html:16
 msgid "Every member reads this board with their own Jira token: each needs a Jira connection for this URL."
@@ -2204,35 +2476,51 @@ msgstr "Project-ID"
 msgid "Recurrent Epic Key"
 msgstr "Recurrent Epic Key"
 
-#: .\templates\team\project_form.html:76 .\templates\team\project_list.html:34
+#: .\templates\team\project_form.html:66
+msgid "Statuses counted as started"
+msgstr "Statussen die als gestart tellen"
+
+#: .\templates\team\project_form.html:68
+msgid "Comma-separated. Jira puts some statuses in its To Do category (grey): the sprint scope then counts their issues as not started. List here the ones that mean the work has begun."
+msgstr "Gescheiden door komma's. Jira plaatst sommige statussen in de categorie To Do (grijs): de sprintscope telt hun tickets dan als niet gestart. Som hier de statussen op die betekenen dat het werk begonnen is."
+
+#: .\templates\team\project_form.html:71
+msgid "PowerPoint template"
+msgstr "PowerPoint-sjabloon"
+
+#: .\templates\team\project_form.html:74
+msgid "The company deck with its 6 example slides. Stays on this PC."
+msgstr "De PowerPoint van het bedrijf met zijn 6 voorbeeldslides. Blijft op deze pc."
+
+#: .\templates\team\project_form.html:87 .\templates\team\project_list.html:34
 msgid "Members"
 msgstr "Leden"
 
-#: .\templates\team\project_form.html:80
+#: .\templates\team\project_form.html:91
 msgid "you"
 msgstr "u"
 
-#: .\templates\team\project_form.html:84
+#: .\templates\team\project_form.html:95
 msgid "Leave the project"
 msgstr "Project verlaten"
 
-#: .\templates\team\project_form.html:84
+#: .\templates\team\project_form.html:95
 msgid "Remove from the project"
 msgstr "Uit het project verwijderen"
 
-#: .\templates\team\project_form.html:94
+#: .\templates\team\project_form.html:105
 msgid "User"
 msgstr "Gebruiker"
 
-#: .\templates\team\project_form.html:104
+#: .\templates\team\project_form.html:115
 msgid "Every user is already a member."
 msgstr "Alle gebruikers zijn al lid."
 
-#: .\templates\team\project_form.html:109
+#: .\templates\team\project_form.html:120
 msgid "Delete this project, its developers and its sprint bounds for every member?"
 msgstr "Dit project, zijn ontwikkelaars en zijn sprintgrenzen voor alle leden verwijderen?"
 
-#: .\templates\team\project_form.html:112
+#: .\templates\team\project_form.html:123
 msgid "Delete the project"
 msgstr "Project verwijderen"
 
@@ -2243,6 +2531,12 @@ msgstr "Een project is een Jira-board gedeeld door zijn leden, elk met zijn eige
 #: .\templates\team\project_list.html:67
 msgid "You are a member of no project yet: create one, or ask a member to add you."
 msgstr "U bent nog geen lid van een project: maak er een aan, of vraag een lid om u toe te voegen."
+
+#~ msgid "Completed in another sprint"
+#~ msgstr "Afgerond in een andere sprint"
+
+#~ msgid "Ajuster la capacite, les conges et les temps recurrents avant generation du fichier."
+#~ msgstr "Ajuster la capacite, les conges et les temps recurrents avant generation du fichier."
 
 #~ msgid "Unchanged status"
 #~ msgstr "Ongewijzigde status"
@@ -2312,203 +2606,3 @@ msgstr "U bent nog geen lid van een project: maak er een aan, of vraag een lid o
 
 #~ msgid "Removed / carried over"
 #~ msgstr "Verwijderd / doorgeschoven"
-
-#: templates/sprint/sprint_scope_flow.html
-msgid "No status"
-msgstr "Geen status"
-
-#: templates/sprint/sprint_scope_flow.html
-msgid "Total"
-msgstr "Total"
-
-#, python-format
-msgid "Planned and added issues do not add up to the %(count)s issues."
-msgstr "Geplande en toegevoegde tickets komen niet uit op de %(count)s tickets."
-
-#, python-format
-msgid "Closed rate (%(group)s) does not add up."
-msgstr "Het afsluitpercentage (%(group)s) klopt niet."
-
-#, python-format
-msgid "Unchanged rate (%(group)s) does not add up."
-msgstr "Het percentage ongewijzigd (%(group)s) klopt niet."
-
-msgid "The flow diagram does not add up."
-msgstr "Het stroomdiagram klopt niet."
-
-msgid "These figures do not add up, do not trust them:"
-msgstr "Deze cijfers kloppen niet, vertrouw ze niet:"
-
-msgid "Could not check that Jira's sprint report holds every issue of the sprint:"
-msgstr "Kon niet nagaan of het sprintrapport van Jira alle tickets van de sprint bevat:"
-
-#, python-format
-msgid "%(counter)s issue of the sprint is missing from Jira's sprint report, so from these figures (left out by the board's filter?):"
-msgid_plural "%(counter)s issues of the sprint are missing from Jira's sprint report, so from these figures (left out by the board's filter?):"
-msgstr[0] "%(counter)s ticket van de sprint ontbreekt in het sprintrapport van Jira, dus in deze cijfers (uitgesloten door de filter van het board?):"
-msgstr[1] "%(counter)s tickets van de sprint ontbreken in het sprintrapport van Jira, dus in deze cijfers (uitgesloten door de filter van het board?):"
-
-#, python-format
-msgid "%(counter)s issue has no status history (counted as \"No status\"):"
-msgid_plural "%(counter)s issues have no status history (counted as \"No status\"):"
-msgstr[0] "%(counter)s ticket heeft geen statusgeschiedenis (geteld als \"Geen status\"):"
-msgstr[1] "%(counter)s tickets hebben geen statusgeschiedenis (geteld als \"Geen status\"):"
-
-#, python-format
-msgid "%(counter)s issue of the sprint was already done outside of it, so it is left out of these figures (remove it from the sprint in Jira):"
-msgid_plural "%(counter)s issues of the sprint were already done outside of it, so they are left out of these figures (remove them from the sprint in Jira):"
-msgstr[0] "%(counter)s ticket van de sprint was al buiten de sprint afgerond en telt dus niet mee in deze cijfers (haal het uit de sprint in Jira):"
-msgstr[1] "%(counter)s tickets van de sprint waren al buiten de sprint afgerond en tellen dus niet mee in deze cijfers (haal ze uit de sprint in Jira):"
-
-msgid "Statuses counted as started"
-msgstr "Statussen die als gestart tellen"
-
-msgid "Comma-separated. Jira puts some statuses in its To Do category (grey): the sprint scope then counts their issues as not started. List here the ones that mean the work has begun."
-msgstr "Gescheiden door komma's. Jira plaatst sommige statussen in de categorie To Do (grijs): de sprintscope telt hun tickets dan als niet gestart. Som hier de statussen op die betekenen dat het werk begonnen is."
-
-#, python-format
-msgid "%(counter)s not started"
-msgid_plural "%(counter)s not started"
-msgstr[0] "%(counter)s niet gestart"
-msgstr[1] "%(counter)s niet gestart"
-
-#, python-format
-msgid "%(counter)s issue counted as planned by Jira was created after the sprint start date (%(start)s): the sprint was started later than that date, or the issue was created right in it. Its status on entering the sprint is its status at creation:"
-msgid_plural "%(counter)s issues counted as planned by Jira were created after the sprint start date (%(start)s): the sprint was started later than that date, or they were created right in it. Their status on entering the sprint is their status at creation:"
-msgstr[0] "%(counter)s ticket dat Jira als gepland telt, werd na de startdatum van de sprint (%(start)s) aangemaakt: de sprint werd later gestart, of het ticket werd er rechtstreeks in aangemaakt. De status bij het binnenkomen in de sprint is de status bij aanmaak:"
-msgstr[1] "%(counter)s tickets die Jira als gepland telt, werden na de startdatum van de sprint (%(start)s) aangemaakt: de sprint werd later gestart, of de tickets werden er rechtstreeks in aangemaakt. Hun status bij het binnenkomen in de sprint is hun status bij aanmaak:"
-
-msgid "PowerPoint template"
-msgstr "PowerPoint-sjabloon"
-
-msgid "The company deck with its 6 example slides. Stays on this PC."
-msgstr "De PowerPoint van het bedrijf met zijn 6 voorbeeldslides. Blijft op deze pc."
-
-msgid "This file is not a readable PowerPoint (.pptx) deck."
-msgstr "Dit bestand is geen leesbare PowerPoint (.pptx)."
-
-msgid "The deck must contain the 6 example slides."
-msgstr "De PowerPoint moet de 6 voorbeeldslides bevatten."
-
-msgid "Management report"
-msgstr "Directierapport"
-
-msgid "Sprint list"
-msgstr "Sprintlijst"
-
-msgid "Several sprints"
-msgstr "Meerdere sprints"
-
-msgid "From"
-msgstr "Van"
-
-msgid "To"
-msgstr "Tot"
-
-msgid "Pick sprints in this range"
-msgstr "Sprints van deze periode kiezen"
-
-msgid "Closed sprints, most recent first. Tick the ones to include."
-msgstr "Afgesloten sprints, van recent naar oud. Vink aan wat erbij hoort."
-
-msgid "No closed sprint on this board."
-msgstr "Geen afgesloten sprint op dit bord."
-
-msgid "Show these sprints"
-msgstr "Deze sprints tonen"
-
-msgid "No closed sprint in this range"
-msgstr "Geen afgesloten sprint in deze periode"
-
-msgid "Trends"
-msgstr "Trends"
-
-msgid "Throughput, WIP at sprint end and cycle time (business days)"
-msgstr "Doorvoer, WIP aan het einde van de sprint en doorlooptijd (werkdagen)"
-
-msgid "Planned issues closed and added issues (%)"
-msgstr "Afgeronde geplande tickets en toegevoegde tickets (%)"
-
-msgid "Kanban snapshot"
-msgstr "Kanban-momentopname"
-
-msgid "No snapshot: the status history of the last sprint could not be loaded."
-msgstr "Geen momentopname: de statusgeschiedenis van de laatste sprint kon niet worden geladen."
-
-msgid "%(wip)s issues in progress at the sprint end, %(aging)s aging (%(percent)s %%)."
-msgstr "%(wip)s tickets in uitvoering aan het einde van de sprint, waarvan %(aging)s verouderd (%(percent)s %%)."
-
-msgid "Added"
-msgstr "Toegevoegd"
-
-msgid "Not started"
-msgstr "Niet gestart"
-
-msgid "Planned closed"
-msgstr "Geplande afgerond"
-
-msgid "Added share"
-msgstr "Aandeel toevoegingen"
-
-msgid "Median cycle"
-msgstr "Mediane doorlooptijd"
-
-msgid "Throughput"
-msgstr "Doorvoer"
-
-msgid "WIP at sprint end"
-msgstr "WIP aan het einde van de sprint"
-
-msgid "Days"
-msgstr "Dagen"
-
-msgid "Pick at least one sprint to build a report."
-msgstr "Kies minstens één sprint om een rapport te maken."
-
-msgid "The analysis does not match these sprints: paste the answer again."
-msgstr "De analyse past niet bij deze sprints: plak het antwoord opnieuw."
-
-msgid "Sprints in this report:"
-msgstr "Sprints in dit rapport:"
-
-msgid "1. Copy the prompt and the dossier"
-msgstr "1. Kopieer de opdracht en het dossier"
-
-msgid "The text below holds the instructions and the figures of the report. Paste it into Copilot."
-msgstr "De tekst hieronder bevat de instructies en de cijfers van het rapport. Plak hem in Copilot."
-
-msgid "Copy"
-msgstr "Kopiëren"
-
-msgid "Copied"
-msgstr "Gekopieerd"
-
-msgid "2. Paste Copilot answer"
-msgstr "2. Plak het antwoord van Copilot"
-
-msgid "Read the answer"
-msgstr "Antwoord inlezen"
-
-msgid "3. Review the analysis"
-msgstr "3. Analyse nalezen"
-
-msgid "One bullet per line. Figures on the slides always come from JiraFox."
-msgstr "Eén opsommingspunt per regel. De cijfers op de dia's komen altijd van JiraFox."
-
-msgid "Where the team stands"
-msgstr "Waar het team staat"
-
-msgid "Trend"
-msgstr "Trend"
-
-msgid "Risks"
-msgstr "Risico's"
-
-msgid "Explanation"
-msgstr "Uitleg"
-
-msgid "Download the PowerPoint"
-msgstr "PowerPoint downloaden"
-
-msgid "The report is built from the Jira figures only, without any written analysis."
-msgstr "Het rapport wordt enkel op basis van de Jira-cijfers gemaakt, zonder geschreven analyse."

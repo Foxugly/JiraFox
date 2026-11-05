@@ -19,3 +19,31 @@ class SprintPeriod(models.Model):
 
     def __str__(self):
         return f"{self.team} - sprint {self.sprint_id}: {self.start:%Y-%m-%d %H:%M} -> {self.end:%Y-%m-%d %H:%M}"
+
+
+# A developer's hours for a sprint; the Dev holds the same fields as the template each sprint starts from.
+CAPACITY_FIELDS = ("workload", "holidays", "fastlane", "project_meetings", "other_meetings")
+
+
+class SprintCapacity(models.Model):
+    """
+    A developer's hours for one sprint of the capacity sheet. Copied from the developer's template (the
+    Dev's own values) the first time the sprint needs them, then edited for this sprint only.
+    """
+
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="sprint_capacities")
+    sprint_id = models.PositiveIntegerField()
+    dev = models.ForeignKey("dev.Dev", on_delete=models.CASCADE, related_name="sprint_capacities")
+    workload = models.IntegerField()
+    holidays = models.IntegerField()
+    fastlane = models.IntegerField()
+    project_meetings = models.IntegerField()
+    other_meetings = models.IntegerField()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=("team", "sprint_id", "dev"), name="one_capacity_per_team_sprint_dev")
+        ]
+
+    def __str__(self):
+        return f"{self.team} - sprint {self.sprint_id}: {self.dev}"

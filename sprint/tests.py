@@ -50,7 +50,8 @@ from sprint.logged_report import (
     sprint_window,
     status_at,
 )
-from sprint.models import SprintPeriod
+from sprint.capacity import reset_sprint_capacities, sprint_capacities
+from sprint.models import SprintCapacity, SprintPeriod
 from sprint.report import SprintWorkbookBuilder
 from team.models import Team, TeamDev
 
@@ -645,15 +646,16 @@ class LoggedSheetViewTests(TestCase):
 
         self.assertContains(response, reverse("sprint-logged-xls-export", args=[2446]))
         self.assertContains(response, "Generate logged sheet")
-        self.assertContains(response, 'data-field="jira_username"')
+        self.assertContains(response, reverse("sprint-capacity-update", args=[SprintCapacity.objects.get().pk]))
+        self.assertNotContains(response, 'data-field="jira_username"')
         self.assertContains(response, reverse("sprint-period", args=[2446]))
 
     @patch("sprint.views.get_connected_jira_for_user")
     def test_capacity_page_is_translated(self, mock_get_jira):
         mock_get_jira.return_value = self._fake_jira(self.team)
         expected = {
-            "fr": ("Générer le rapport des temps prestés", "Enregistrer les bornes", "ID Jira"),
-            "nl": ("Urenrapport genereren", "Grenzen opslaan", "Jira-ID"),
+            "fr": ("Générer le rapport des temps prestés", "Enregistrer les bornes", "Repartir du template"),
+            "nl": ("Urenrapport genereren", "Grenzen opslaan", "Opnieuw vanaf het sjabloon"),
         }
         for language, texts in expected.items():
             with self.subTest(language=language):
@@ -784,6 +786,104 @@ class CapacitySheetTests(TestCase):
         self.assertEqual(sorted(str(validation.sqref).split()), sorted(f"F{row}" for row in ticket_rows))
         self.assertEqual(workbook["Estimation VS Reality"].data_validations.dataValidation, [])
         self.assertIsNone(workbook["Estimation VS Reality"]["F1"].value)
+
+
+class SprintCapacityTests(TestCase):
+    def setUp(self):
+        self.team = Team.objects.create(name="Core")
+        self.alice = Dev.objects.create(name="Alice", workload=36, holidays=0, fastlane=7)
+        self.bob = Dev.objects.create(name="Bob", workload=18)
+        TeamDev.objects.create(team=self.team, dev=self.bob, order=1)
+        TeamDev.objects.create(team=self.team, dev=self.alice, order=0)
+
+    def test_a_sprint_starts_from_a_copy_of_the_templates_in_column_order(self):
+        capacities = sprint_capacities(self.team, 41)
+
+        self.assertEqual([capacity.dev for capacity in capacities], [self.alice, self.bob])
+        self.assertEqual([capacity.workload for capacity in capacities], [36, 18])
+        self.assertEqual(SprintCapacity.objects.count(), 2)
+        sprint_capacities(self.team, 41)
+        self.assertEqual(SprintCapacity.objects.count(), 2)
+
+    def test_each_sprint_keeps_its_own_hours_and_the_template_is_untouched(self):
+        sprint_41 = sprint_capacities(self.team, 41)[0]
+        sprint_41.holidays = 24
+        sprint_41.save()
+
+        self.assertEqual(sprint_capacities(self.team, 42)[0].holidays, 0)
+        self.assertEqual(sprint_capacities(self.team, 41)[0].holidays, 24)
+        self.alice.refresh_from_db()
+        self.assertEqual(self.alice.holidays, 0)
+
+    def test_a_template_change_reaches_new_sprints_and_reset_sprints_only(self):
+        sprint_capacities(self.team, 41)
+        self.alice.fastlane = 3
+        self.alice.save()
+
+        self.assertEqual(sprint_capacities(self.team, 41)[0].fastlane, 7)
+        self.assertEqual(sprint_capacities(self.team, 42)[0].fastlane, 3)
+        reset_sprint_capacities(self.team, 41)
+        self.assertEqual(sprint_capacities(self.team, 41)[0].fastlane, 3)
+
+    def test_a_developer_added_later_gets_the_template_and_a_removed_one_leaves_the_sheet(self):
+        sprint_capacities(self.team, 41)
+        carl = Dev.objects.create(name="Carl", holidays=8)
+        TeamDev.objects.create(team=self.team, dev=carl, order=2)
+        TeamDev.objects.filter(dev=self.bob).delete()
+
+        capacities = sprint_capacities(self.team, 41)
+
+        self.assertEqual([capacity.dev for capacity in capacities], [self.alice, carl])
+        self.assertEqual(capacities[1].holidays, 8)
+
+    def test_capacity_sheet_writes_the_sprint_hours(self):
+        capacity = sprint_capacities(self.team, 2446)[0]
+        capacity.holidays = 16
+        capacity.save()
+        jira = SimpleNamespace(
+            cfg=SimpleNamespace(team=self.team, jira_board_id=1, jira_project_id=7, jira_recurrent_epic_key="ABC-0"),
+            JIRA_ONLY_STANDARD_TYPES="issuetype in standardIssueTypes()",
+            get_next_sprint=lambda board_id: {"id": 2447},
+            run_jql=lambda jql, history=False: [],
+        )
+
+        sheet = load_workbook(BytesIO(SprintWorkbookBuilder(jira, 2446).build()))["Capacity sheet"]
+
+        rows = {row[1]: row[2:4] for row in sheet.iter_rows(values_only=True) if row[1]}
+        self.assertEqual(rows["Holidays"], (16, 0))
+        self.assertEqual(rows["Capacity"], (36, 18))
+
+    def test_only_a_project_member_edits_a_sprint_hour(self):
+        member = get_user_model().objects.create_user(username="member", password="secret")
+        intruder = get_user_model().objects.create_user(username="intruder", password="secret")
+        self.team.members.add(member)
+        capacity = sprint_capacities(self.team, 41)[0]
+        url = reverse("sprint-capacity-update", args=[capacity.pk])
+
+        self.client.force_login(intruder)
+        self.assertEqual(self.client.post(url, {"field": "holidays", "value": "8"}).status_code, 404)
+        self.client.force_login(member)
+        self.assertEqual(self.client.post(url, {"field": "name", "value": "Mallory"}).status_code, 400)
+        self.assertEqual(self.client.post(url, {"field": "holidays", "value": "8"}).status_code, 200)
+
+        capacity.refresh_from_db()
+        self.assertEqual(capacity.holidays, 8)
+        self.alice.refresh_from_db()
+        self.assertEqual((self.alice.holidays, self.alice.name), (0, "Alice"))
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_reset_button_copies_the_templates_again(self, mock_get_jira):
+        user = get_user_model().objects.create_user(username="member", password="secret")
+        self.client.force_login(user)
+        mock_get_jira.return_value = SimpleNamespace(cfg=SimpleNamespace(team=self.team))
+        capacity = sprint_capacities(self.team, 41)[0]
+        capacity.holidays = 24
+        capacity.save()
+
+        response = self.client.post(reverse("sprint-capacity-reset", args=[41]))
+
+        self.assertRedirects(response, reverse("sprint_xls_report", args=[41]), fetch_redirect_response=False)
+        self.assertEqual(sprint_capacities(self.team, 41)[0].holidays, 0)
 
 
 class SprintScopeFlowTests(TestCase):

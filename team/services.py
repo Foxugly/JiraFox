@@ -4,7 +4,7 @@ from dev.models import Dev
 from team.models import Team, TeamDev
 
 ALLOWED_INT_FIELDS = {"workload", "holidays", "fastlane", "project_meetings", "other_meetings"}
-ALLOWED_TEXT_FIELDS = {"jira_username"}
+ALLOWED_TEXT_FIELDS = {"name", "jira_username"}
 
 
 # A user may only touch the projects they are a member of.
@@ -25,6 +25,8 @@ def parse_dev_update(field: str | None, value: str | None) -> tuple[str, int | s
         text = (value or "").strip()
         if len(text) > Dev._meta.get_field(field).max_length:
             raise ValueError("Value too long")
+        if field == "name" and not text:
+            raise ValueError("Name required")
         return field, text
     if field not in ALLOWED_INT_FIELDS:
         raise ValueError("Invalid field")

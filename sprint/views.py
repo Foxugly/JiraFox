@@ -1,8 +1,8 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponse, JsonResponse
-from django.shortcuts import redirect, render
+from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.utils.dateparse import parse_date
@@ -16,9 +16,10 @@ from JiraFox.services.issue_data import build_sprint_issue_item, get_issue_statu
 from jiramodule.services.jira_config_service import get_connected_jira_for_user, require_config_fields
 from jiramodule.status import CANONICAL_ORDER, STATUS_EXCLUDED
 from jiramodule.utils.datetime_utils import hours_to_business_days
-from team.models import TeamDev
+from team.services import parse_dev_update, teams_for_user
+from .capacity import reset_sprint_capacities, sprint_capacities
 from .logged_report import create_logged_xlsx_bytes, sprint_window
-from .models import SprintPeriod
+from .models import CAPACITY_FIELDS, SprintCapacity, SprintPeriod
 from .report import create_xlsx_bytes
 from .analysis import MAX_RISKS, PROVIDERS, Analysis, AnalysisParseError, Risk, build_dossier, risky_keys
 from .pptx_report import build_deck
@@ -134,22 +135,13 @@ class SprintDetailXLSExportView(LoginRequiredMixin, TemplateView):
         team = jira.cfg.team
         context["team"] = team
         context["sprint"] = jira.get_sprint(sprint_id)
-        context["teamdevs"] = TeamDev.objects.filter(team=team).select_related("dev").order_by("order", "id")
+        context["capacities"] = sprint_capacities(team, sprint_id)
         period = SprintPeriod.objects.filter(team=team, sprint_id=sprint_id).first()
         jira_start, jira_end = sprint_window(context["sprint"], timezone.now())
         context["period"] = period
         context["period_jira"] = {"start": jira_start, "end": jira_end}
         context["period_start"] = _datetime_local(period.start if period else jira_start)
         context["period_end"] = _datetime_local(period.end if period else jira_end)
-        # Champs affichés en lignes
-        context["dev_fields"] = [
-            ("workload", "Workload"),
-            ("holidays", "Holidays"),
-            ("fastlane", "Fastlane"),
-            ("project_meetings", "Project meetings"),
-            ("other_meetings", "Other meetings"),
-        ]
-
         return context
 
 
@@ -187,6 +179,35 @@ class SprintPeriodView(LoginRequiredMixin, View):
                 team=team, sprint_id=sprint_id, defaults={"start": start, "end": end}
             )
             messages.success(request, _("Sprint bounds saved."))
+        return redirect("sprint_xls_report", sprint_id=sprint_id)
+
+
+class SprintCapacityUpdateView(LoginRequiredMixin, View):
+    """Saves one of a developer's hours for one sprint, leaving their template alone."""
+
+    def post(self, request, capacity_id):
+        capacity = get_object_or_404(SprintCapacity, pk=capacity_id, team__in=teams_for_user(request.user))
+        field = request.POST.get("field")
+        if field not in CAPACITY_FIELDS:
+            return HttpResponseBadRequest("Invalid field")
+        try:
+            field, value = parse_dev_update(field, request.POST.get("value"))
+        except ValueError as exc:
+            return HttpResponseBadRequest(str(exc))
+
+        setattr(capacity, field, value)
+        capacity.save(update_fields=[field])
+        return JsonResponse({"status": "ok", "capacity_id": capacity.id, "field": field, "value": value})
+
+
+class SprintCapacityResetView(LoginRequiredMixin, View):
+    """Copies the developers' templates into this sprint again, over the hours set for it."""
+
+    def post(self, request, sprint_id):
+        jira = get_connected_jira_for_user(request.user)
+        require_config_fields(jira.cfg, ["team"])
+        reset_sprint_capacities(jira.cfg.team, sprint_id)
+        messages.success(request, _("Sprint hours reset to the developers' templates."))
         return redirect("sprint_xls_report", sprint_id=sprint_id)
 
 

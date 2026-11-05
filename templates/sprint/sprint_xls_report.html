@@ -19,18 +19,26 @@
                         {% trans "Capacity sheet" %}
                     </span>
                     <h1 class="hero-title fs-1 mt-3 mb-2">{% trans "Team" %} {{ team.name }}</h1>
-                    <p class="text-secondary mb-0">{% trans "Ajuster la capacite, les conges et les temps recurrents avant generation du fichier." %}</p>
+                    <p class="text-secondary mb-0">{% trans "Hours of this sprint only, copied from the developers' templates: adjust the holidays and recurring time before generating the file." %}</p>
                 </div>
-                <div>
-                    <button id="add-dev-btn" class="btn btn-primary btn-sm" data-create-url="{% url 'create_dev' team.id %}">
-                        <i class="fa-solid fa-plus me-2"></i>{% trans "Ajouter un dev" %}
-                    </button>
+                <div class="d-flex flex-wrap gap-2">
+                    <a class="btn btn-outline-primary btn-sm" href="{% url 'project_devs' team.id %}">
+                        <i class="fa-solid fa-users me-2"></i>{% trans "Developers" %}
+                    </a>
+                    {% trans "Replace this sprint's hours with the developers' templates?" as reset_question %}
+                    <form method="post" action="{% url 'sprint-capacity-reset' sprint_id %}"
+                          onsubmit="return confirm('{{ reset_question|escapejs }}');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">
+                            <i class="fa-solid fa-rotate-left me-2"></i>{% trans "Start again from the template" %}
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
 
         <div class="utility-panel">
-            {% include "team/_dev_table.html" %}
+            {% include "sprint/_capacity_table.html" %}
             <form method="post" action="{% url 'sprint-period' sprint_id %}" class="row g-2 align-items-end mt-3">
                 {% csrf_token %}
                 <div class="col-12">

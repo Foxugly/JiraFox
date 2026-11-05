@@ -32,6 +32,10 @@
 
                 input.classList.remove("is-invalid");
                 input.classList.add("is-valid");
+                if (input.dataset.field === "name") {
+                    const title = headerRow.querySelector(`th[data-dev-id="${input.dataset.devId}"] .dev-col-name`);
+                    if (title) title.textContent = input.value.trim();
+                }
                 notify(i18n.value_saved || "Value saved.", "success", 1200);
                 window.setTimeout(() => input.classList.remove("is-valid"), 600);
             } catch (error) {

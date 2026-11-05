@@ -1,0 +1,44 @@
+{% load i18n %}
+{# The developers' hours for this sprint, as columns, edited in place by js/sprint-xls.js (see team/_dev_table_js.html). #}
+<div class="table-responsive">
+    <table id="dev-table" class="table align-middle">
+        <thead>
+        <tr id="dev-header">
+            <th class="text-muted dev-col-spacer">&nbsp;</th>
+            {% for capacity in capacities %}
+                <th class="dev-col" data-dev-id="{{ capacity.dev.id }}">
+                    <div class="dev-col-card">
+                        <div class="dev-col-title">
+                            <span class="fw-semibold dev-col-name">{{ capacity.dev.name }}</span>
+                        </div>
+                    </div>
+                </th>
+            {% endfor %}
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td class="fw-bold">{% trans "Workload" %}</td>
+            {% for capacity in capacities %}<td><input type="number" class="form-control form-control-sm dev-input" data-update-url="{% url 'sprint-capacity-update' capacity.id %}" data-field="workload" value="{{ capacity.workload }}"></td>{% endfor %}
+        </tr>
+        <tr>
+            <td class="fw-bold">{% trans "Holidays" %}</td>
+            {% for capacity in capacities %}<td><input type="number" class="form-control form-control-sm dev-input" data-update-url="{% url 'sprint-capacity-update' capacity.id %}" data-field="holidays" value="{{ capacity.holidays }}"></td>{% endfor %}
+        </tr>
+        <tr>
+            <td class="fw-bold">{% trans "Fastlane" %}</td>
+            {% for capacity in capacities %}<td><input type="number" class="form-control form-control-sm dev-input" data-update-url="{% url 'sprint-capacity-update' capacity.id %}" data-field="fastlane" value="{{ capacity.fastlane }}"></td>{% endfor %}
+        </tr>
+        <tr>
+            <td class="fw-bold">{% trans "Project meetings" %}</td>
+            {% for capacity in capacities %}<td><input type="number" class="form-control form-control-sm dev-input" data-update-url="{% url 'sprint-capacity-update' capacity.id %}" data-field="project_meetings" value="{{ capacity.project_meetings }}"></td>{% endfor %}
+        </tr>
+        <tr>
+            <td class="fw-bold">{% trans "Other meetings" %}</td>
+            {% for capacity in capacities %}<td><input type="number" class="form-control form-control-sm dev-input" data-update-url="{% url 'sprint-capacity-update' capacity.id %}" data-field="other_meetings" value="{{ capacity.other_meetings }}"></td>{% endfor %}
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<form id="csrf-form" class="d-none">{% csrf_token %}</form>

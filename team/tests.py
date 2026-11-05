@@ -25,6 +25,11 @@ class TeamServicesTests(SimpleTestCase):
     def test_parse_dev_update_accepts_the_jira_username(self):
         self.assertEqual(parse_dev_update("jira_username", " TDPTAV "), ("jira_username", "TDPTAV"))
 
+    def test_parse_dev_update_renames_but_never_to_blank(self):
+        self.assertEqual(parse_dev_update("name", " Jane Roe "), ("name", "Jane Roe"))
+        with self.assertRaisesMessage(ValueError, "Name required"):
+            parse_dev_update("name", "  ")
+
     def test_parse_teamdev_order_rejects_invalid_ids(self):
         with self.assertRaisesMessage(ValueError, "Invalid ids"):
             parse_teamdev_order(["1", "oops"])
