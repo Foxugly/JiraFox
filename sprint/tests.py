@@ -10,6 +10,7 @@ from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 from django.utils import timezone
 from openpyxl import load_workbook
+from pptx.enum.shapes import MSO_SHAPE_TYPE
 from jira.exceptions import JIRAError
 from requests.exceptions import Timeout
 
@@ -1391,8 +1392,34 @@ class ReportDataTests(TestCase):
         self.assertFalse(data["in_progress"])
         self.assertEqual(data["title_period"], "du 05/01/2026 au 30/01/2026")
         self.assertEqual(data["focus"]["id"], 2)
+        self.assertFalse(data["single"])
         self.assertEqual(data["totals"]["planned"], 6)
         self.assertEqual(data["totals"]["closed"], 6)
+        planned_closed = sum(entry["scope"]["completion"]["planned"]["done"] for entry in data["sprints"])
+        self.assertEqual(data["totals"]["planned_closed"], planned_closed)
+        self.assertEqual(data["totals"]["percent_planned_closed"], round(100 * planned_closed / 6))
+
+    def test_build_report_data_with_a_focus_is_a_single_sprint_report(self):
+        trend = self._sprint(1, "2026-01-05", "2026-01-16")
+        focus = self._sprint(2, "2026-01-19", "2026-01-30", state="active")
+
+        data = build_report_data(self._jira(), [trend, focus], focus=focus)
+
+        self.assertTrue(data["single"])
+        self.assertTrue(data["in_progress"])
+        self.assertEqual(data["title_period"], "Sprint 2 (en cours)")
+        self.assertEqual(len(data["sprints"]), 2)  # the trend sprints stay for slides 4 and 5
+        focus_metrics = data["sprints"][1]["metrics"]
+        self.assertEqual(data["totals"]["planned"], focus_metrics["planned"])
+        self.assertEqual(data["totals"]["closed"], focus_metrics["closed"])
+        self.assertEqual(data["totals"]["percent_planned_closed"], focus_metrics["percent_planned_closed"])
+
+    def test_build_report_data_single_closed_focus_has_no_en_cours(self):
+        focus = self._sprint(2, "2026-01-19", "2026-01-30")
+
+        data = build_report_data(self._jira(), [self._sprint(1, "2026-01-05", "2026-01-16"), focus], focus=focus)
+
+        self.assertEqual((data["title_period"], data["in_progress"]), ("Sprint 2", False))
 
     def test_build_report_data_survives_a_history_error(self):
         def failing(keys):
@@ -1576,8 +1603,8 @@ TINY_PNG = base64.b64decode(
 SUBSTITUTE = "texte de substitution"
 
 
-def _fixture_template(path):
-    """A 6-slide template whose shapes are named like the Solidaris ones."""
+def _fixture_template(path, skip=()):
+    """A 6-slide template whose shapes are named like the Solidaris ones, but those in `skip`."""
     from pptx import Presentation
     from pptx.util import Emu
 
@@ -1587,6 +1614,8 @@ def _fixture_template(path):
     row = [0]
 
     def box(shapes, name, text=SUBSTITUTE):
+        if name in skip:
+            return None
         row[0] += 1
         shape = shapes.add_textbox(Emu(400000), Emu(300000 * row[0]), Emu(4000000), Emu(300000))
         shape.name, shape.text_frame.text = name, text
@@ -1668,7 +1697,11 @@ class PptxReportTests(SimpleTestCase):
                 "wip": 3, "aging": 1, "aging_percent": 33,
                 "oldest": [{"key": "BKL1-2", "summary": "Export PDF", "status": "En cours", "age_days": 12.5, "url": ""}],
             },
-            "totals": {"planned": 20, "added": 2, "closed": 14, "not_started": 2},
+            "single": False,
+            "totals": {
+                "planned": 20, "added": 2, "closed": 14, "not_started": 2, "planned_closed": 12,
+                "percent_planned_closed": 60,
+            },
         }
 
     @staticmethod
@@ -1679,7 +1712,7 @@ class PptxReportTests(SimpleTestCase):
     def _texts(slide):
         def walk(shapes):
             for shape in shapes:
-                if shape.shape_type == 6:
+                if shape.shape_type == MSO_SHAPE_TYPE.GROUP:
                     yield from walk(shape.shapes)
                 elif shape.has_text_frame:
                     yield shape.text_frame.text
@@ -1707,7 +1740,8 @@ class PptxReportTests(SimpleTestCase):
 
         self.assertTrue(all(charts.values()))
         progress = {series.name: series.values for series in charts[3][0].plots[0].series}
-        self.assertEqual(progress, {"Prévus": (10.0,), "Ajoutés": (2.0,), "Clôturés": (7.0,), "Non commencés": (1.0,)})
+        # Several sprints: slide 3 shows the sums over the period.
+        self.assertEqual(progress, {"Prévus": (20.0,), "Ajoutés": (2.0,), "Clôturés": (14.0,), "Non commencés": (2.0,)})
         flow = {series.name: series.values for chart in charts[4] for plot in chart.plots for series in plot.series}
         self.assertEqual(flow["Débit"], (7.0, 7.0))
         self.assertEqual(flow["Temps de cycle médian"], (None, 2.5))
@@ -1751,6 +1785,46 @@ class PptxReportTests(SimpleTestCase):
         self.assertTrue(any(shape.name == "Graphique 8" for shape in deck.slides[0].shapes))
         self.assertTrue(any(shape.name == "Graphique 4" for shape in deck.slides[2].shapes))
         self.assertIn("Merci.", self._texts(deck.slides[-1]))
+
+    def test_missing_template_shape_is_named_in_the_notes(self):
+        import tempfile
+        from pathlib import Path
+
+        with tempfile.TemporaryDirectory() as folder:
+            path = str(Path(folder) / "modele.pptx")
+            _fixture_template(path, skip={"ZoneTexte 19"})
+            deck = self._build(template=path)
+
+        self.assertIn("« ZoneTexte 19 » absente", deck.slides[0].notes_slide.notes_text_frame.text)
+
+    def test_neutral_deck_has_no_missing_shape(self):
+        self.assertFalse(self._build().slides[0].has_notes_slide)
+
+    def test_several_sprints_progress_shows_the_period_sums(self):
+        texts = self._texts(self._build().slides[1])
+
+        self.assertIn("- 2 sprints, Sprint 12 -", texts)
+        self.assertIn("60\u00a0%", texts)
+
+    def test_single_report_covers_the_focus_sprint_only(self):
+        data = self._data()
+        data.update(single=True, totals={**data["sprints"][1]["metrics"], "planned_closed": 6})
+        slides = self._build(data).slides
+
+        self.assertIn("- Sprint 12 -", self._texts(slides[1]))
+        annex = "\n".join(self._texts(slides[5]))
+        self.assertIn("BKL1-1", annex)
+        self.assertFalse(annex.startswith("Sprint"))  # no sprint column
+        self.assertNotIn("Sprint 11", annex)
+        self.assertEqual(len(next(shape for shape in slides[5].shapes if shape.has_table).table.columns), 3)
+
+    def test_kanban_slide_without_history_shows_dashes_and_says_why(self):
+        data = self._data()
+        data["snapshot"] = None
+        slide = self._build(data).slides[4]
+
+        self.assertIn("WIP : -\nVieillissants : -", self._texts(slide))
+        self.assertIn("Instantané indisponible", slide.notes_slide.notes_text_frame.text)
 
     def test_missing_template_falls_back_to_neutral_and_says_so(self):
         deck = self._build(template="introuvable/modele.pptx")

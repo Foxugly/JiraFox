@@ -4,6 +4,7 @@ slides are cloned, filled by shape name, then removed. Without a usable template
 built in code with the same shape names, so both paths share the filling code.
 """
 
+from collections import Counter
 from copy import deepcopy
 from io import BytesIO
 from pathlib import Path
@@ -13,7 +14,7 @@ from pptx import Presentation
 from pptx.chart.data import CategoryChartData
 from pptx.dml.color import RGBColor
 from pptx.enum.chart import XL_CHART_TYPE, XL_LEGEND_POSITION
-from pptx.enum.shapes import MSO_SHAPE
+from pptx.enum.shapes import MSO_SHAPE, MSO_SHAPE_TYPE
 from pptx.enum.text import PP_ALIGN
 from pptx.oxml.ns import qn
 from pptx.util import Emu, Pt
@@ -29,6 +30,14 @@ BLUE, YELLOW, GREEN, GREY, ORANGE, DARK = "0d6efd", "ffc107", "198754", "6c757d"
 TITLE_EXAMPLE, COLUMNS_EXAMPLE, STACKED_EXAMPLE, PANEL_EXAMPLE, ROWS_EXAMPLE, END_EXAMPLE = range(6)
 TITLE = "Titre 1"
 RISK_ROWS = (("Rectangle 4", "Rectangle 6"), ("Rectangle 18", "Rectangle 20"), ("Rectangle 22", "Rectangle 24"))
+# The named shapes each example slide must hold (a name listed twice is needed twice).
+EXPECTED_SHAPES = {
+    TITLE_EXAMPLE: ("Rectangle 4", "Rectangle 5", "Rectangle 3", "Espace réservé de la date 3"),
+    COLUMNS_EXAMPLE: (TITLE, TITLE, "Rectangle 31", "ZoneTexte 29", "Rectangle 58", "ZoneTexte 55"),
+    STACKED_EXAMPLE: (TITLE, TITLE, "Rectangle 24", "ZoneTexte 58", "Rectangle 16", "ZoneTexte 58"),
+    PANEL_EXAMPLE: (TITLE, TITLE, "Rectangle 14", "ZoneTexte 58", "Rectangle 21", "Rectangle 18", "ZoneTexte 19"),
+    ROWS_EXAMPLE: (TITLE, TITLE) + tuple(name for row in RISK_ROWS for name in row),
+}
 ANNEX_ROWS = 12
 R_NS = "{http://schemas.openxmlformats.org/officeDocument/2006/relationships}"
 # Boxes as fractions of the slide (left, top, width, height), measured on the company template.
@@ -66,7 +75,7 @@ def _find(shapes, name: str) -> list:
     """Shapes called `name`, inside groups too, top first."""
     found = []
     for shape in shapes:
-        if shape.shape_type == 6:  # group
+        if shape.shape_type == MSO_SHAPE_TYPE.GROUP:
             found.extend(_find(shape.shapes, name))
         elif shape.name == name:
             found.append(shape)
@@ -290,6 +299,16 @@ def _open_template(path: str | None):
     return prs, None
 
 
+def _missing_shapes(examples) -> list[str]:
+    """One line per named shape the template lacks: its text cannot be filled."""
+    lines = []
+    for number, names in EXPECTED_SHAPES.items():
+        for name, needed in Counter(names).items():
+            if len(_find(examples[number].shapes, name)) < needed:
+                lines.append(f"Slide d'exemple {number + 1} du modèle : forme « {name} » absente, texte non rempli.")
+    return lines
+
+
 # --- Slides -------------------------------------------------------------------------------------
 
 
@@ -301,13 +320,13 @@ def _titled(prs, examples, number, title, subtitle, *, titles_only=False):
     return slide
 
 
-def _title_slide(prs, examples, data, notice):
+def _title_slide(prs, examples, data, notices):
     slide = _clone(prs, examples[TITLE_EXAMPLE])
     _fill(slide, "Rectangle 4", ["Rapport d'équipe"])
     _fill(slide, "Rectangle 5", [data.get("project_name") or "-"])
     _fill(slide, "Rectangle 3", [data["title_period"]])
     _fill(slide, "Espace réservé de la date 3", [f"Direction • {timezone.localdate():%d/%m/%Y}"])
-    _notes(slide, [notice] if notice else [])
+    _notes(slide, notices)
 
 
 def _ai_slide_end(prs, slide):
@@ -323,17 +342,27 @@ def _synthesis_slide(prs, examples, data, analysis):
     _ai_slide_end(prs, slide)
 
 
+def _single(data) -> bool:
+    return bool(data.get("single")) or len(data["sprints"]) == 1
+
+
 def _progress_slide(prs, examples, data):
-    entry = _focus(data)
-    metrics = entry["metrics"]
-    slide = _titled(prs, examples, PANEL_EXAMPLE, "Avancement", _name(entry))
-    _fill(slide, "Rectangle 14", ["TICKETS DU SPRINT"])
+    """The focus sprint of a single report, else the sums over the period's sprints."""
+    metrics = data["totals"]
+    if _single(data):
+        label = _name(_focus(data))
+        heading, notes = "TICKETS DU SPRINT", sprint_warning_lines(_focus(data)["warnings"])
+    else:
+        label = f"{len(data['sprints'])} sprints, {data['title_period']}"
+        heading, notes = "TICKETS DE LA PÉRIODE", _all_warnings(data)
+    slide = _titled(prs, examples, PANEL_EXAMPLE, "Avancement", label)
+    _fill(slide, "Rectangle 14", [heading])
     _remove(slide, "ZoneTexte 58")
     series = [
         ("Prévus", [metrics["planned"]], BLUE), ("Ajoutés", [metrics["added"]], YELLOW),
         ("Clôturés", [metrics["closed"]], GREEN), ("Non commencés", [metrics["not_started"]], GREY),
     ]
-    _chart(prs, slide, XL_CHART_TYPE.COLUMN_CLUSTERED, [_name(entry)], series, PANEL_CHART)
+    _chart(prs, slide, XL_CHART_TYPE.COLUMN_CLUSTERED, [label], series, PANEL_CHART)
     percent = metrics["percent_planned_closed"]
     _fill(slide, "Rectangle 21", [f"{percent}\u00a0%" if percent is not None else "-"], wrap=False)
     _fill(slide, "Rectangle 18", ["des prévus clôturés"], wrap=False)
@@ -341,7 +370,6 @@ def _progress_slide(prs, examples, data):
         f"{metrics['planned']} prévus", f"{metrics['added']} ajoutés", f"{metrics['closed']} clôturés",
         f"{metrics['not_started']} non commencés",
     ])
-    notes = sprint_warning_lines(entry["warnings"])
     if percent is None:
         notes.append("Aucun ticket prévu : le pourcentage des prévus clôturés n'est pas calculable.")
     _notes(slide, notes)
@@ -426,7 +454,7 @@ def _risks_slide(prs, examples, data, analysis):
 
 
 def _annex_slides(prs, examples, data):
-    entries = data["sprints"] if len(data["sprints"]) > 1 else [_focus(data)]
+    entries = [_focus(data)] if _single(data) else data["sprints"]
     several = len(entries) > 1
     rows = []
     for entry in entries:
@@ -450,7 +478,7 @@ def _annex_slides(prs, examples, data):
         for row, values in enumerate([header] + chunk):
             for column, value in enumerate(values):
                 cell = table.cell(row, column)
-                cell.text = str(value or "")
+                cell.text = str(value or "-")
                 for run in cell.text_frame.paragraphs[0].runs:
                     run.font.size = Pt(11)
 
@@ -460,7 +488,7 @@ def build_deck(data: dict, analysis, template_path: str | None) -> bytes:
     prs, notice = _open_template(template_path)
     originals = list(prs.slides)
     examples = originals[:6]
-    _title_slide(prs, examples, data, notice)
+    _title_slide(prs, examples, data, [notice] if notice else _missing_shapes(examples))
     if analysis is not None:
         _synthesis_slide(prs, examples, data, analysis)
     _progress_slide(prs, examples, data)

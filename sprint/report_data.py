@@ -122,7 +122,23 @@ def _title_period(loaded: list[dict], in_progress: bool) -> str:
     return f"du {first:%d/%m/%Y} au {last:%d/%m/%Y}" if first else f"jusqu'au {last:%d/%m/%Y}"
 
 
+def _totals(entries: list[dict]) -> dict:
+    """Sums over `entries`; the key figure is recomputed from the sums, not averaged."""
+    totals = {
+        key: sum(entry["metrics"][key] for entry in entries) for key in ("planned", "added", "closed", "not_started")
+    }
+    totals["planned_closed"] = sum(entry["scope"]["completion"]["planned"]["done"] for entry in entries)
+    planned = totals["planned"]
+    totals["percent_planned_closed"] = round(100 * totals["planned_closed"] / planned) if planned else None
+    return totals
+
+
 def build_report_data(jira, sprints: list[dict], *, focus: dict | None = None) -> dict:
+    """
+    An explicit `focus` makes a single-sprint report: the other sprints only give the trend, the
+    title and the totals are the focus sprint's. Without it, every sprint counts.
+    """
+    single = focus is not None
     loaded = [_loaded_sprint(jira, sprint) for sprint in sprints]
     entries = [
         {
@@ -137,7 +153,14 @@ def build_report_data(jira, sprints: list[dict], *, focus: dict | None = None) -
     ]
     focus = focus or sprints[-1]
     focus_item = next(item for item in loaded if item["sprint"]["id"] == focus["id"])
-    in_progress = len(sprints) == 1 and sprints[0].get("state") == "active"
+    if single:
+        in_progress = focus.get("state") == "active"
+        name = focus.get("name") or f"Sprint {focus['id']}"
+        title_period = f"{name} (en cours)" if in_progress else name
+    else:
+        in_progress = len(sprints) == 1 and sprints[0].get("state") == "active"
+        title_period = _title_period(loaded, in_progress)
+    focus_entry = next(entry for entry in entries if entry["sprint"]["id"] == focus["id"])
     # Without histories there is nothing to rebuild: no snapshot rather than a misleading empty one.
     snapshot = (
         kanban_snapshot(focus_item["scope"], focus_item["histories"], focus_item["end"])
@@ -146,15 +169,14 @@ def build_report_data(jira, sprints: list[dict], *, focus: dict | None = None) -
     )
     project = getattr(jira.cfg, "project", None)
     return {
-        "title_period": _title_period(loaded, in_progress),
+        "title_period": title_period,
         "in_progress": in_progress,
+        "single": single,
         "project_name": getattr(project, "name", "") or "",
         "sprints": entries,
         "focus": focus,
         "snapshot": snapshot,
-        "totals": {
-            key: sum(entry["metrics"][key] for entry in entries) for key in ("planned", "added", "closed", "not_started")
-        },
+        "totals": _totals([focus_entry] if single else entries),
     }
 
 
