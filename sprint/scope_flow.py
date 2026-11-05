@@ -119,7 +119,7 @@ def build_scope_flow(
         "issues": issues,
         "totals": {origin: sum(1 for issue in issues if issue["origin"] == origin) for origin in ORIGINS},
         "completion": completion,
-        "stability": stability_rates(issues, categories),
+        "stability": stability_rates(issues, categories) if histories else stability_rates([], categories),
         "status_order": status_order(issues, categories),
         "has_history": bool(histories),
     }
@@ -191,18 +191,19 @@ def status_moved(history: dict, since: datetime, end: datetime) -> bool:
 
 def stability_rates(issues: list[dict], status_categories: dict[str, str]) -> dict[str, dict]:
     """
-    Per group: issues in the same status on entering the sprint and at its end, out of the issues
-    whose entry status is known (done ones included); `still` ones never changed status meanwhile.
+    Per group: issues in the same status on entering the sprint and at its end, out of all the
+    group's issues (done ones included); an unknown entry status ("No status") counts as changed.
+    `still` ones never changed status meanwhile.
     """
     rates = {}
     for group in COMPLETION_GROUPS:
         same = still = compared = 0
         for issue in issues:
             entry = issue["status_entry"]
-            if group != "all" and issue["origin"] != group or not entry:
+            if group != "all" and issue["origin"] != group:
                 continue
             compared += 1
-            if entry == issue["status_end"]:
+            if entry and entry == issue["status_end"]:
                 same += 1
                 still += not issue["moved"]
         rates[group] = {"same": same, "still": still, "compared": compared, "percent": _percent(same, compared)}

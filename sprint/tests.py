@@ -909,13 +909,13 @@ class SprintScopeFlowTests(TestCase):
                 "BKL1-6": ("Done", "Done", False),
             },
         )
-        # Unknown entry statuses are left out; done on entry counts (BKL1-6, planned, unchanged).
+        # An unknown entry status (BKL1-3, planned) counts as changed; done on entry counts (BKL1-6, unchanged).
         self.assertEqual(
             scope["stability"],
             {
-                "planned": {"same": 2, "still": 1, "compared": 3, "percent": 67},
+                "planned": {"same": 2, "still": 1, "compared": 4, "percent": 50},
                 "added": {"same": 1, "still": 1, "compared": 2, "percent": 50},
-                "all": {"same": 3, "still": 2, "compared": 5, "percent": 60},
+                "all": {"same": 3, "still": 2, "compared": 6, "percent": 50},
             },
         )
         self.assertEqual(scope["status_order"], ["To Do", "In Progress", "Done", "Canceled"])
@@ -970,7 +970,8 @@ class SprintScopeFlowTests(TestCase):
         response = self.client.get(reverse("sprint-scope-flow", args=[2446]))
 
         self.assertContains(response, "stabilityMatrixBody")
-        self.assertContains(response, "1 inchangés / 1 tickets")
+        # Planned issues: BKL1-4 only has a history, the 3 others count as changed ("No status").
+        self.assertContains(response, "1 inchangés / 4 tickets")
         self.assertContains(response, "dont 1 sans aucun changement de statut")
 
     @patch("sprint.views.get_connected_jira_for_user")
