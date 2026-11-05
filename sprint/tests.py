@@ -1,3 +1,4 @@
+import base64
 from datetime import date, datetime, timezone as dt_timezone
 from io import BytesIO
 from types import SimpleNamespace
@@ -1567,3 +1568,212 @@ class AnalysisTests(SimpleTestCase):
         self.assertEqual((analysis.situation, analysis.trend), (["Un"], ["Deux"]))
         self.assertEqual(analysis.risks, [Risk("Risque A", "Detail A"), Risk("Risque B", "Texte B.")])
         self.assertEqual(PROVIDERS["copilot"].parse("TENDANCE\n- a\nOu en est l'equipe\n- b\nRISQUES").trend, ["a"])
+
+
+TINY_PNG = base64.b64decode(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+)
+SUBSTITUTE = "texte de substitution"
+
+
+def _fixture_template(path):
+    """A 6-slide template whose shapes are named like the Solidaris ones."""
+    from pptx import Presentation
+    from pptx.util import Emu
+
+    prs = Presentation()
+    prs.slide_width, prs.slide_height = Emu(12192000), Emu(6858000)
+    blank = prs.slide_layouts[6]
+    row = [0]
+
+    def box(shapes, name, text=SUBSTITUTE):
+        row[0] += 1
+        shape = shapes.add_textbox(Emu(400000), Emu(300000 * row[0]), Emu(4000000), Emu(300000))
+        shape.name, shape.text_frame.text = name, text
+        return shape
+
+    def picture(slide, name):
+        slide.shapes.add_picture(BytesIO(TINY_PNG), Emu(0), Emu(0), Emu(100000), Emu(100000)).name = name
+
+    def titled(names, groups=()):
+        row[0] = 0
+        slide = prs.slides.add_slide(blank)
+        box(slide.shapes, "Titre 1", "Titre layout")
+        box(slide.shapes, "Titre 1", "- Sous-titre -")
+        for name in names:
+            box(slide.shapes, name)
+        for group_names in groups:
+            group = slide.shapes.add_group_shape()
+            for name in group_names:
+                box(group.shapes, name)
+        return slide
+
+    title = prs.slides.add_slide(blank)
+    for name in ("Rectangle 4", "Rectangle 5", "Rectangle 3", "Espace réservé de la date 3"):
+        box(title.shapes, name)
+    picture(title, "Graphique 8")
+    columns = titled(["ZoneTexte 29", "ZoneTexte 55"], [["Rectangle 31"], ["Rectangle 58"]])
+    for name in ("Rectangle 51", "Rectangle 54"):  # the empty column backgrounds of the real template
+        box(columns.shapes, name, "")
+    titled(["Rectangle 16", "ZoneTexte 58"], [["Rectangle 24", "ZoneTexte 58"]])
+    picture(titled(["Rectangle 14", "Rectangle 18", "ZoneTexte 19", "ZoneTexte 58"], [["Rectangle 21"]]), "Graphique 4")
+    titled([], [["Rectangle 4", "Rectangle 6"], ["Rectangle 18", "Rectangle 20"], ["Rectangle 22", "Rectangle 24"]])
+    box(prs.slides.add_slide(blank).shapes, "Rectangle 3", "Merci.")
+    prs.save(path)
+
+
+class PptxReportTests(SimpleTestCase):
+    DISCLAIMER = "Texte généré par IA à partir des métriques JiraFox — à relire avant diffusion"
+
+    @staticmethod
+    def _entry(sprint_id, name, metrics, issues=(), warnings=None):
+        sprint = {
+            "id": sprint_id, "name": name, "state": "closed",
+            "startDate": "2026-10-01T08:00:00.000+01:00", "endDate": "2026-10-14T18:00:00.000+01:00",
+            "completeDate": None,
+        }
+        categories = {"A faire": "new", "En cours": "indeterminate", "Termine": "done"}
+        return {
+            "sprint": sprint, "metrics": metrics, "warnings": warnings or {}, "histories": {}, "categories": categories,
+            "scope": {"issues": list(issues), "status_categories": categories},
+        }
+
+    @staticmethod
+    def _metrics(**overrides):
+        metrics = {
+            "planned": 10, "added": 2, "closed": 7, "not_started": 1, "throughput": 7, "cycle_median": 2.5,
+            "cycle_p85": 4.0, "wip_end": 4, "percent_planned_closed": 60, "percent_added": 17,
+        }
+        return {**metrics, **overrides}
+
+    @staticmethod
+    def _issue(key, summary, outcome, status, assignee="Alice Martin"):
+        return {
+            "key": key, "summary": summary, "assignee": assignee, "origin": "planned", "outcome": outcome,
+            "status_end": status, "status_start": "A faire",
+        }
+
+    def _data(self, *, warnings=None):
+        first = self._entry(1, "Sprint 11", self._metrics(cycle_median=None, cycle_p85=None, percent_added=None, added=0))
+        issues = [
+            self._issue("BKL1-1", "Page de login", "done", "Termine"),
+            self._issue("BKL1-2", "Export PDF", "not_done", "En cours", assignee="Bob Dupont"),
+            self._issue("BKL1-3", "", "not_done", "A faire"),  # an empty cell must not break the table
+        ]
+        focus = self._entry(2, "Sprint 12", self._metrics(), issues, warnings)
+        return {
+            "title_period": "Sprint 12", "in_progress": False, "project_name": "Backlog", "sprints": [first, focus],
+            "focus": focus["sprint"],
+            "snapshot": {
+                "wip": 3, "aging": 1, "aging_percent": 33,
+                "oldest": [{"key": "BKL1-2", "summary": "Export PDF", "status": "En cours", "age_days": 12.5, "url": ""}],
+            },
+            "totals": {"planned": 20, "added": 2, "closed": 14, "not_started": 2},
+        }
+
+    @staticmethod
+    def _analysis():
+        return Analysis(["Situation un", "Situation deux"], ["Tendance un"], [Risk("Risque A", "Explication A")])
+
+    @staticmethod
+    def _texts(slide):
+        def walk(shapes):
+            for shape in shapes:
+                if shape.shape_type == 6:
+                    yield from walk(shape.shapes)
+                elif shape.has_text_frame:
+                    yield shape.text_frame.text
+                elif getattr(shape, "has_table", False):
+                    yield "\n".join(cell.text for row in shape.table.rows for cell in row.cells)
+
+        return list(walk(slide.shapes))
+
+    def _build(self, data=None, analysis=None, template=None):
+        from pptx import Presentation
+
+        from sprint.pptx_report import build_deck
+
+        return Presentation(BytesIO(build_deck(data or self._data(), analysis, template)))
+
+    def test_neutral_deck_has_nine_slides_with_ai_and_seven_without(self):
+        self.assertEqual(len(self._build(analysis=self._analysis()).slides), 9)
+        self.assertEqual(len(self._build().slides), 7)
+
+    def test_charts_are_native(self):
+        slides = self._build(analysis=self._analysis()).slides
+        charts = {
+            number: [shape.chart for shape in slides[number - 1].shapes if shape.has_chart] for number in (3, 4, 5)
+        }
+
+        self.assertTrue(all(charts.values()))
+        progress = {series.name: series.values for series in charts[3][0].plots[0].series}
+        self.assertEqual(progress, {"Prévus": (10.0,), "Ajoutés": (2.0,), "Clôturés": (7.0,), "Non commencés": (1.0,)})
+        flow = {series.name: series.values for chart in charts[4] for plot in chart.plots for series in plot.series}
+        self.assertEqual(flow["Débit"], (7.0, 7.0))
+        self.assertEqual(flow["Temps de cycle médian"], (None, 2.5))
+        predictability = {series.name: series.values for series in charts[5][0].plots[0].series}
+        self.assertEqual(predictability["% des prévus clôturés"], (60.0, 60.0))
+        self.assertEqual(predictability["% ajoutés"], (None, 17.0))
+
+    def test_ai_text_and_disclaimer_on_slides_2_and_7(self):
+        slides = self._build(analysis=self._analysis()).slides
+
+        synthesis, risks = "\n".join(self._texts(slides[1])), "\n".join(self._texts(slides[6]))
+        self.assertIn("Situation deux", synthesis)
+        self.assertIn("Tendance un", synthesis)
+        self.assertIn("Risque A", risks)
+        self.assertIn("Explication A", risks)
+        for slide in (slides[1], slides[6]):
+            self.assertEqual(self._texts(slide)[-1], self.DISCLAIMER)
+
+    def test_warnings_go_to_the_speaker_notes_not_the_slide(self):
+        deck = self._build(self._data(warnings={"without_history": ["BKL1-9"]}), self._analysis())
+
+        warning = "1 ticket sans historique de statut : BKL1-9"
+        self.assertIn(warning, deck.slides[2].notes_slide.notes_text_frame.text)
+        for slide in deck.slides:
+            self.assertFalse(any(warning in text for text in self._texts(slide)))
+
+    def test_template_deck_reuses_the_example_slides(self):
+        import tempfile
+        from pathlib import Path
+
+        with tempfile.TemporaryDirectory() as folder:
+            path = str(Path(folder) / "modele.pptx")
+            _fixture_template(path)
+            deck = self._build(analysis=self._analysis(), template=path)
+
+        self.assertEqual(len(deck.slides), 9)
+        everything = "\n".join(text for slide in deck.slides for text in self._texts(slide))
+        self.assertNotIn(SUBSTITUTE, everything.lower())
+        self.assertNotIn("Titre layout", everything)
+        self.assertIn("Rapport d'équipe", self._texts(deck.slides[0]))
+        self.assertTrue(any(shape.name == "Graphique 8" for shape in deck.slides[0].shapes))
+        self.assertTrue(any(shape.name == "Graphique 4" for shape in deck.slides[2].shapes))
+        self.assertIn("Merci.", self._texts(deck.slides[-1]))
+
+    def test_missing_template_falls_back_to_neutral_and_says_so(self):
+        deck = self._build(template="introuvable/modele.pptx")
+
+        self.assertEqual(len(deck.slides), 7)
+        self.assertIn("mise en page neutre", deck.slides[0].notes_slide.notes_text_frame.text)
+
+    def test_annex_has_no_assignee(self):
+        annex = "\n".join(self._texts(self._build().slides[5]))
+
+        self.assertIn("BKL1-1", annex)
+        self.assertIn("Export PDF", annex)
+        self.assertIn("En cours", annex)
+        self.assertIn("Sprint 12", annex)  # several sprints: a sprint column
+        self.assertNotIn("Alice", annex)
+        self.assertNotIn("Bob", annex)
+
+    def test_active_sprint_title_says_en_cours(self):
+        data = self._data()
+        data.update(title_period="Sprint 12 (en cours)", in_progress=True)
+
+        texts = self._texts(self._build(data).slides[0])
+
+        self.assertIn("Sprint 12 (en cours)", texts)
+        self.assertIn("Backlog", texts)
+        self.assertIn(f"Direction • {timezone.localdate():%d/%m/%Y}", texts)
