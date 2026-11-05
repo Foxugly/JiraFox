@@ -363,6 +363,16 @@ class JiraManager:
         )
         return data.get("contents") or {}
 
+    def get_sprint_issue_keys(self, sprint_id: int) -> set[str]:
+        """Keys of the standard issues whose Sprint field holds this sprint, whatever the board's filter."""
+        issues = self._with_retries(
+            self.jira.search_issues,
+            f"sprint = {int(sprint_id)} and {self.JIRA_ONLY_STANDARD_TYPES}",
+            maxResults=False,
+            fields="key",
+        )
+        return {issue.key for issue in issues}
+
     def get_status_histories(self, keys: List[str]) -> Dict[str, Dict[str, Any]]:
         """
         {key: {"state", "created", "status_changes", "estimate_changes", "assignee_changes",

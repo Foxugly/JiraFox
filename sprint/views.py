@@ -20,7 +20,7 @@ from team.models import TeamDev
 from .logged_report import create_logged_xlsx_bytes, sprint_window
 from .models import SprintPeriod
 from .report import create_xlsx_bytes
-from .scope_flow import OUTCOMES as SCOPE_OUTCOMES, build_scope_flow
+from .scope_flow import OUTCOMES as SCOPE_OUTCOMES, build_scope_flow, consistency_errors
 
 def _to_float(v, default=0.0) -> float:
     try:
@@ -282,6 +282,16 @@ class SprintScopeFlowView(LoginRequiredMixin, TemplateView):
             (_("Added issues closed"), completion["added"]),
             (_("All issues closed"), completion["all"]),
         ]
+        context["scope_errors"] = consistency_errors(context["scope"])
+        context["jira_browse_url"] = jira.get_issue_url("")
+        report_keys = {issue["key"] for issue in context["scope"]["issues"]}
+        if histories is not None:
+            context["without_history"] = sorted(report_keys - set(histories))
+        try:
+            # Jira's sprint report only holds the issues of the board's filter.
+            context["missing_from_report"] = sorted(jira.get_sprint_issue_keys(sprint_id) - report_keys)
+        except (JIRAError, RequestException, JiraUnavailable) as exc:
+            context["missing_check_error"] = describe_jira_error(exc)
         stability = context["scope"]["stability"]
         context["stability"] = [
             (_("Planned issues unchanged"), stability["planned"]),

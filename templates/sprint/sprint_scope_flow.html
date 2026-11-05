@@ -28,6 +28,29 @@
                             {% trans "Planned at the sprint start or added during the sprint, how the issues ended (Jira sprint report) and their current status. Sub-tasks are not counted." %}
                         {% endif %}
                     </div>
+                    {% if scope_errors %}
+                        <div class="alert alert-danger py-2 mt-2 mb-0">
+                            {% trans "These figures do not add up, do not trust them:" %}
+                            <ul class="mb-0">{% for error in scope_errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                        </div>
+                    {% endif %}
+                    {% if missing_from_report %}
+                        <div class="alert alert-warning py-2 mt-2 mb-0">
+                            {% blocktrans count counter=missing_from_report|length %}{{ counter }} issue of the sprint is missing from Jira's sprint report, so from these figures (left out by the board's filter?):{% plural %}{{ counter }} issues of the sprint are missing from Jira's sprint report, so from these figures (left out by the board's filter?):{% endblocktrans %}
+                            {% for key in missing_from_report %}<a href="{{ jira_browse_url }}{{ key }}" target="_blank" rel="noopener">{{ key }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}
+                        </div>
+                    {% endif %}
+                    {% if missing_check_error %}
+                        <div class="alert alert-warning py-2 mt-2 mb-0">
+                            {% trans "Could not check that Jira's sprint report holds every issue of the sprint:" %} {{ missing_check_error }}
+                        </div>
+                    {% endif %}
+                    {% if without_history %}
+                        <div class="alert alert-warning py-2 mt-2 mb-0">
+                            {% blocktrans count counter=without_history|length %}{{ counter }} issue has no status history (counted as "No status"):{% plural %}{{ counter }} issues have no status history (counted as "No status"):{% endblocktrans %}
+                            {% for key in without_history %}<a href="{{ jira_browse_url }}{{ key }}" target="_blank" rel="noopener">{{ key }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}
+                        </div>
+                    {% endif %}
                     {% if history_error %}
                         <div class="alert alert-warning py-2 mt-2 mb-0">
                             {% trans "Status history could not be loaded, current statuses are shown:" %} {{ history_error }}

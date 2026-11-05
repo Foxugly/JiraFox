@@ -10,6 +10,8 @@ statuses at the start and end are rebuilt from each issue's changelog.
 import re
 from datetime import datetime
 
+from django.utils.translation import gettext as _
+
 from jiramodule.status import CANONICAL_ORDER
 
 from .logged_report import parse_jira_datetime, status_at
@@ -123,6 +125,44 @@ def build_scope_flow(
         "status_order": status_order(issues, categories),
         "has_history": bool(histories),
     }
+
+
+def consistency_errors(scope: dict) -> list[str]:
+    """
+    The figures of `scope` that do not add up: every rate must count the issues of its badge and
+    every diagram node must pass on all the issues it receives. Empty when all is well.
+    """
+    issues = scope["issues"]
+    sizes = {group: scope["totals"].get(group, 0) for group in ORIGINS}
+    sizes["all"] = len(issues)
+    errors = []
+    if sum(scope["totals"].values()) != len(issues):
+        errors.append(_("Planned and added issues do not add up to the %(count)s issues.") % {"count": len(issues)})
+    for group in COMPLETION_GROUPS:
+        rate = scope["completion"][group]
+        if rate["total"] != sizes[group] or not 0 <= rate["done"] <= rate["started"] <= rate["total"]:
+            errors.append(_("Closed rate (%(group)s) does not add up.") % {"group": group})
+        rate = scope["stability"][group]
+        expected = sizes[group] if scope["has_history"] else 0
+        if rate["compared"] != expected or not 0 <= rate["still"] <= rate["same"] <= rate["compared"]:
+            errors.append(_("Unchanged rate (%(group)s) does not add up.") % {"group": group})
+
+    inflow: dict[str, int] = {}
+    outflow: dict[str, int] = {}
+    for flow in scope["flows"]:
+        outflow[flow["from"]] = outflow.get(flow["from"], 0) + flow["flow"]
+        inflow[flow["to"]] = inflow.get(flow["to"], 0) + flow["flow"]
+    origins = sum(count for node, count in outflow.items() if node.startswith("origin:"))
+    ends = sum(count for node, count in inflow.items() if node.startswith("end:"))
+    outcomes_balanced = all(
+        inflow.get(node, 0) == count for node, count in outflow.items() if node.startswith("outcome:")
+    )
+    starts = sum(count for node, count in outflow.items() if node.startswith("start:"))
+    if origins != len(issues) or ends != len(issues) or not outcomes_balanced or (
+        scope["has_history"] and starts != sizes[PLANNED]
+    ):
+        errors.append(_("The flow diagram does not add up."))
+    return errors
 
 
 def completion_rates(issues: list[dict], status_categories: dict[str, str]) -> dict[str, dict]:

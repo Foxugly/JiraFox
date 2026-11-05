@@ -11,7 +11,7 @@ from openpyxl import load_workbook
 from requests.exceptions import Timeout
 
 from dev.models import Dev
-from sprint.scope_flow import START_NO_STATUS, build_scope_flow
+from sprint.scope_flow import START_NO_STATUS, build_scope_flow, consistency_errors
 from sprint.logged_report import (
     HEADERS,
     UNASSIGNED_HEADERS,
@@ -790,6 +790,28 @@ class SprintScopeFlowTests(TestCase):
         first = scope["issues"][0]
         self.assertEqual((first["key"], first["origin"], first["assignee"]), ("BKL1-1", "planned", "Martin, Alice"))
 
+    def test_consistency_errors_find_nothing_in_figures_that_add_up(self):
+        start = datetime(2026, 3, 2, tzinfo=dt_timezone.utc)
+        end = datetime(2026, 3, 13, tzinfo=dt_timezone.utc)
+        history = {"state": "In Progress", "created": "2026-02-01T10:00:00.000+0000", "status_changes": []}
+        for histories in (None, {"BKL1-1": history, "BKL1-4": history}):
+            with self.subTest(histories=bool(histories)):
+                scope = build_scope_flow(
+                    SCOPE_REPORT, lambda key: key, histories=histories, start=start, end=end, sprint_id=2446
+                )
+                self.assertEqual(consistency_errors(scope), [])
+
+    def test_consistency_errors_flag_figures_that_do_not_add_up(self):
+        scope = build_scope_flow(SCOPE_REPORT, lambda key: key)
+        scope["completion"]["planned"]["total"] -= 1
+        scope["flows"][0]["flow"] += 1
+
+        errors = consistency_errors(scope)
+
+        self.assertEqual(len(errors), 2)
+        self.assertIn("planned", errors[0])
+        self.assertEqual(errors[1], "Le diagramme de flux ne tombe pas juste.")
+
     def test_completion_rates_count_closed_out_of_started_issues(self):
         scope = build_scope_flow(SCOPE_REPORT, lambda key: key)
 
@@ -931,6 +953,7 @@ class SprintScopeFlowTests(TestCase):
             get_issue_url=lambda key: f"https://jira.example/browse/{key}",
             get_status_histories=lambda keys: {},
             status_category_keys=lambda: {},
+            get_sprint_issue_keys=lambda sprint_id: {"BKL1-1", "BKL1-2", "BKL1-4", "BKL1-5", "BKL1-6"},
         )
         fake.update(overrides)
         mock_get_jira.return_value = SimpleNamespace(**fake)
@@ -975,6 +998,38 @@ class SprintScopeFlowTests(TestCase):
         # Planned issues: BKL1-4 only has a history, the 3 others count as changed ("No status").
         self.assertContains(response, "1 inchangés / 4 tickets")
         self.assertContains(response, "dont 1 sans aucun changement de statut")
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_scope_page_warns_about_issues_missing_from_the_report_or_without_history(self, mock_get_jira):
+        history = {"state": "In Progress", "created": "2026-02-01T10:00:00.000+0000", "status_changes": []}
+        self._login_and_fake_jira(
+            mock_get_jira,
+            get_status_histories=lambda keys: {key: history for key in keys if key != "BKL1-3"},
+            # BKL1-7 is in the sprint but left out of the report by the board's filter.
+            get_sprint_issue_keys=lambda sprint_id: {"BKL1-1", "BKL1-7"},
+        )
+
+        response = self.client.get(reverse("sprint-scope-flow", args=[2446]))
+
+        self.assertEqual(response.context["missing_from_report"], ["BKL1-7"])
+        self.assertEqual(response.context["without_history"], ["BKL1-3"])
+        self.assertEqual(response.context["scope_errors"], [])
+        self.assertContains(response, "1 ticket du sprint manque dans le rapport de sprint de Jira")
+        self.assertContains(response, 'href="https://jira.example/browse/BKL1-7"')
+        self.assertContains(response, "1 ticket n'a pas d'historique de statut")
+        self.assertNotContains(response, "alert-danger")
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_scope_page_says_when_the_report_coverage_cannot_be_checked(self, mock_get_jira):
+        def timeout(sprint_id):
+            raise Timeout("read timed out")
+
+        self._login_and_fake_jira(mock_get_jira, get_sprint_issue_keys=timeout)
+
+        response = self.client.get(reverse("sprint-scope-flow", args=[2446]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Impossible de vérifier que le rapport de sprint de Jira contient tous les tickets du sprint")
 
     @patch("sprint.views.get_connected_jira_for_user")
     def test_scope_page_falls_back_to_current_statuses_when_history_times_out(self, mock_get_jira):

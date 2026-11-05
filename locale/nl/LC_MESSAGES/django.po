@@ -2320,3 +2320,36 @@ msgstr "Geen status"
 #: templates/sprint/sprint_scope_flow.html
 msgid "Total"
 msgstr "Total"
+
+#, python-format
+msgid "Planned and added issues do not add up to the %(count)s issues."
+msgstr "Geplande en toegevoegde tickets komen niet uit op de %(count)s tickets."
+
+#, python-format
+msgid "Closed rate (%(group)s) does not add up."
+msgstr "Het afsluitpercentage (%(group)s) klopt niet."
+
+#, python-format
+msgid "Unchanged rate (%(group)s) does not add up."
+msgstr "Het percentage ongewijzigd (%(group)s) klopt niet."
+
+msgid "The flow diagram does not add up."
+msgstr "Het stroomdiagram klopt niet."
+
+msgid "These figures do not add up, do not trust them:"
+msgstr "Deze cijfers kloppen niet, vertrouw ze niet:"
+
+msgid "Could not check that Jira's sprint report holds every issue of the sprint:"
+msgstr "Kon niet nagaan of het sprintrapport van Jira alle tickets van de sprint bevat:"
+
+#, python-format
+msgid "%(counter)s issue of the sprint is missing from Jira's sprint report, so from these figures (left out by the board's filter?):"
+msgid_plural "%(counter)s issues of the sprint are missing from Jira's sprint report, so from these figures (left out by the board's filter?):"
+msgstr[0] "%(counter)s ticket van de sprint ontbreekt in het sprintrapport van Jira, dus in deze cijfers (uitgesloten door de filter van het board?):"
+msgstr[1] "%(counter)s tickets van de sprint ontbreken in het sprintrapport van Jira, dus in deze cijfers (uitgesloten door de filter van het board?):"
+
+#, python-format
+msgid "%(counter)s issue has no status history (counted as \"No status\"):"
+msgid_plural "%(counter)s issues have no status history (counted as \"No status\"):"
+msgstr[0] "%(counter)s ticket heeft geen statusgeschiedenis (geteld als \"Geen status\"):"
+msgstr[1] "%(counter)s tickets hebben geen statusgeschiedenis (geteld als \"Geen status\"):"
