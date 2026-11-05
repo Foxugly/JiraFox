@@ -9,18 +9,15 @@ from django.utils.translation import gettext as _
 from django.views import View
 from django.views.decorators.http import require_GET
 from django.views.generic import ListView, TemplateView
-from jira.exceptions import JIRAError
-from requests import RequestException
 from JiraFox.services.issue_data import build_sprint_issue_item, get_issue_status, is_issue_done
-from jiramodule.exceptions import JiraUnavailable, describe_jira_error
 from jiramodule.services.jira_config_service import get_connected_jira_for_user, require_config_fields
 from jiramodule.status import CANONICAL_ORDER, STATUS_EXCLUDED
 from jiramodule.utils.datetime_utils import hours_to_business_days
 from team.models import TeamDev
-from .logged_report import create_logged_xlsx_bytes, parse_jira_datetime, sprint_window
+from .logged_report import create_logged_xlsx_bytes, sprint_window
 from .models import SprintPeriod
 from .report import create_xlsx_bytes
-from .scope_flow import OUTCOMES as SCOPE_OUTCOMES, build_scope_flow, consistency_errors
+from .report_data import load_sprint_scope
 
 def _to_float(v, default=0.0) -> float:
     try:
@@ -257,49 +254,19 @@ class SprintScopeFlowView(LoginRequiredMixin, TemplateView):
         sprint_id = kwargs["sprint_id"]
         jira = get_connected_jira_for_user(self.request.user)
         require_config_fields(jira.cfg, ["jira_board_id"])
-        sprint = jira.get_sprint(sprint_id)
-        report = jira.get_sprint_scope_report(sprint_id)
-        # Jira's own dates: the hand-set period only bounds the logged sheet.
-        start, end = sprint_window(sprint, timezone.now())
-        histories, categories = None, None
-        if start:
-            keys = [issue.get("key") for bucket, _ in SCOPE_OUTCOMES for issue in report.get(bucket) or []]
-            try:
-                histories = jira.get_status_histories(keys)
-                categories = jira.status_category_keys()
-            except (JIRAError, RequestException, JiraUnavailable) as exc:
-                # The diagram still works with current statuses: say what is missing.
-                context["history_error"] = describe_jira_error(exc)
-                histories = None
-        context["sprint"] = sprint
-        context["scope"] = build_scope_flow(
-            report, jira.get_issue_url, histories=histories, start=start, end=end, status_categories=categories,
-            sprint_id=sprint_id, started_statuses=getattr(jira.cfg, "started_statuses", ()),
-        )
-        completion = context["scope"]["completion"]
+        loaded = load_sprint_scope(jira, jira.get_sprint(sprint_id))
+        scope = loaded["scope"]
+        context.update(loaded["warnings"])
+        context["sprint"] = loaded["sprint"]
+        context["scope"] = scope
+        context["sprint_start"] = loaded["start"]
+        completion = scope["completion"]
         context["completion"] = [
             (_("Planned issues closed"), completion["planned"], "planned"),
             (_("Added issues closed"), completion["added"], "added"),
             (_("All issues closed"), completion["all"], "all"),
         ]
-        context["scope_errors"] = consistency_errors(context["scope"])
-        context["sprint_start"] = start
-        context["planned_created_late"] = [
-            {**issue, "created_at": parse_jira_datetime(issue["created"])}
-            for issue in context["scope"]["issues"]
-            if issue["created_after_start"]
-        ]
         context["jira_browse_url"] = jira.get_issue_url("")
-        report_keys = {issue["key"] for issue in context["scope"]["issues"]}
-        elsewhere_keys = {issue["key"] for issue in context["scope"]["done_elsewhere"]}
-        if histories is not None:
-            context["without_history"] = sorted(report_keys - set(histories))
-        try:
-            # Jira's sprint report only holds the issues of the board's filter.
-            context["missing_from_report"] = sorted(jira.get_sprint_issue_keys(sprint_id) - report_keys - elsewhere_keys)
-        except Exception as exc:  # noqa: BLE001
-            # An extra check only: whatever goes wrong, the figures are still shown, with a warning.
-            context["missing_check_error"] = describe_jira_error(exc)
         stability = context["scope"]["stability"]
         context["stability"] = [
             (_("Planned issues unchanged"), stability["planned"], "planned"),

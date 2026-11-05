@@ -153,6 +153,29 @@ class JiraManagerRunJqlTests(SimpleTestCase):
         self.assertIsNone(self.search_kwargs[0]["expand"])
 
 
+class JiraManagerDescriptionsTests(SimpleTestCase):
+    def test_get_descriptions_truncates_and_chunks(self):
+        queries = []
+
+        def search_issues(jql, **kwargs):
+            queries.append((jql, kwargs))
+            return [
+                SimpleNamespace(key=key, fields=SimpleNamespace(description=None if key == "ABC-1" else "x" * 600))
+                for key in re.findall(r'"([^"]+)"', jql)
+            ]
+
+        manager = JiraManager(SimpleNamespace(jira_url="https://jira.example/"))
+        manager._jira = SimpleNamespace(search_issues=search_issues)
+
+        result = manager.get_descriptions([f"ABC-{i}" for i in range(45)], limit=500)
+
+        self.assertEqual(len(queries), 3)
+        self.assertEqual(queries[0][1]["fields"], "description")
+        self.assertEqual(len(result), 45)
+        self.assertEqual(result["ABC-1"], "")
+        self.assertEqual(len(result["ABC-2"]), 500)
+
+
 class JiraManagerStatusHistoryTests(SimpleTestCase):
     def test_status_histories_are_fetched_by_chunks_of_keys(self):
         queries = []

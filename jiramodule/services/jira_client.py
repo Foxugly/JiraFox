@@ -431,6 +431,22 @@ class JiraManager:
                 }
         return out
 
+    def get_descriptions(self, keys: List[str], limit: int = 500) -> Dict[str, str]:
+        """{key: description cut to `limit` characters ("" if none)} for the given issues."""
+        out: Dict[str, str] = {}
+        page_size = self.STATUS_HISTORY_CHUNK_SIZE
+        for index in range(0, len(keys), page_size):
+            chunk = keys[index:index + page_size]
+            issues = self._with_retries(
+                self.jira.search_issues,
+                f"key in ({', '.join(quote_value(key) for key in chunk)})",
+                maxResults=len(chunk),
+                fields="description",
+            )
+            for issue in issues:
+                out[issue.key] = (getattr(issue.fields, "description", None) or "")[:limit]
+        return out
+
     def get_sprint_report(self, sprint_id: int, jql_extra: str = "", max_results: int = 1000) -> Dict[str, Any]:
         sprint = self.get_sprint(sprint_id)
         tickets = self.get_cached_sprint_issues(

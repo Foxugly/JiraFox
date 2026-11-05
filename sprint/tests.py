@@ -4,13 +4,21 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 from django.utils import timezone
 from openpyxl import load_workbook
+from jira.exceptions import JIRAError
 from requests.exceptions import Timeout
 
 from dev.models import Dev
+from sprint.report_data import (
+    build_report_data,
+    sprint_warning_lines,
+    sprints_in_range,
+    trend_for,
+)
 from sprint.scope_flow import START_NO_STATUS, build_scope_flow, consistency_errors
 from sprint.report_metrics import (
     age_in_status_days,
@@ -1300,3 +1308,124 @@ class ReportMetricsTests(SimpleTestCase):
         at = datetime(2026, 3, 4, 9, tzinfo=timezone.get_default_timezone())
 
         self.assertAlmostEqual(age_in_status_days(history, at), 16 / 7.2, places=2)
+
+
+class ReportDataTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        self.addCleanup(cache.clear)
+
+    @staticmethod
+    def _sprint(sprint_id, start, end, state="closed"):
+        return {
+            "id": sprint_id, "name": f"Sprint {sprint_id}", "state": state,
+            "startDate": f"{start}T08:00:00.000+01:00", "endDate": f"{end}T18:00:00.000+01:00",
+            "completeDate": None,
+        }
+
+    @staticmethod
+    def _jira(calls=None, **overrides):
+        calls = calls if calls is not None else []
+
+        def scope_report(sprint_id):
+            calls.append(("scope", sprint_id))
+            return SCOPE_REPORT
+
+        fake = dict(
+            cfg=SimpleNamespace(pk=1),
+            get_sprint_scope_report=scope_report,
+            get_issue_url=lambda key: f"https://jira.example/browse/{key}",
+            get_status_histories=lambda keys: {},
+            status_category_keys=lambda: {},
+            get_sprint_issue_keys=lambda sprint_id: {"BKL1-1", "BKL1-2", "BKL1-4", "BKL1-5", "BKL1-6"},
+        )
+        fake.update(overrides)
+        return SimpleNamespace(**fake)
+
+    def test_sprints_in_range_keeps_overlapping_closed_sprints(self):
+        sprints = [
+            self._sprint(1, "2026-01-05", "2026-01-16"),
+            self._sprint(2, "2026-01-19", "2026-01-30"),
+            self._sprint(3, "2026-02-02", "2026-02-13"),
+            self._sprint(4, "2026-02-16", "2026-02-27", state="active"),
+            self._sprint(5, "2026-03-02", "2026-03-13", state="future"),
+        ]
+
+        # Edges are inclusive: sprint 1 ends on the 16th, sprint 3 starts on the 2nd.
+        kept = sprints_in_range(sprints, date(2026, 1, 16), date(2026, 2, 2))
+
+        self.assertEqual([sprint["id"] for sprint in kept], [1, 2, 3])
+        self.assertEqual(sprints_in_range(sprints, date(2026, 2, 16), date(2026, 3, 31)), [])
+
+    def test_trend_for_takes_the_five_previous_closed_sprints(self):
+        closed = [self._sprint(i, f"2026-01-{i + 1:02d}", f"2026-01-{i + 1:02d}") for i in range(1, 8)]
+
+        self.assertEqual([s["id"] for s in trend_for(closed[6], closed)], [2, 3, 4, 5, 6])
+        self.assertEqual([s["id"] for s in trend_for(closed[2], closed)], [1, 2])
+        self.assertEqual(trend_for(closed[0], closed), [])
+
+    def test_build_report_data_marks_an_active_sprint_in_progress(self):
+        sprint = self._sprint(2446, "2026-03-02", "2026-03-13", state="active")
+
+        data = build_report_data(self._jira(), [sprint])
+
+        self.assertTrue(data["in_progress"])
+        self.assertEqual(data["title_period"], "Sprint 2446 (en cours)")
+        self.assertEqual(data["focus"]["id"], 2446)
+        self.assertEqual(data["project_name"], "")
+        entry = data["sprints"][0]
+        self.assertEqual(entry["metrics"]["planned"], 3)
+        self.assertEqual(entry["categories"], entry["scope"]["status_categories"])
+        self.assertEqual(data["totals"]["planned"], 3)
+        self.assertEqual(data["totals"]["added"], 2)
+
+    def test_build_report_data_titles_several_sprints_and_sums_them(self):
+        sprints = [self._sprint(1, "2026-01-05", "2026-01-16"), self._sprint(2, "2026-01-19", "2026-01-30")]
+
+        data = build_report_data(self._jira(), sprints)
+
+        self.assertFalse(data["in_progress"])
+        self.assertEqual(data["title_period"], "du 05/01/2026 au 30/01/2026")
+        self.assertEqual(data["focus"]["id"], 2)
+        self.assertEqual(data["totals"]["planned"], 6)
+        self.assertEqual(data["totals"]["closed"], 6)
+
+    def test_build_report_data_survives_a_history_error(self):
+        def failing(keys):
+            raise JIRAError(status_code=500, text="boom")
+
+        sprint = self._sprint(1, "2026-01-05", "2026-01-16")
+
+        data = build_report_data(self._jira(get_status_histories=failing), [sprint])
+
+        entry = data["sprints"][0]
+        self.assertTrue(entry["warnings"]["history_error"])
+        self.assertIsNone(entry["histories"])
+        self.assertIsNone(entry["metrics"]["cycle_median"])
+        self.assertEqual(entry["metrics"]["planned"], 3)
+
+    def test_build_report_data_caches_closed_sprints_only(self):
+        calls = []
+        closed = self._sprint(1, "2026-01-05", "2026-01-16")
+        active = self._sprint(2, "2026-01-19", "2026-01-30", state="active")
+        jira = self._jira(calls)
+
+        build_report_data(jira, [closed, active])
+        build_report_data(jira, [closed, active])
+
+        self.assertEqual(calls, [("scope", 1), ("scope", 2), ("scope", 2)])
+
+    def test_sprint_warning_lines_write_one_sentence_per_warning(self):
+        lines = sprint_warning_lines(
+            {
+                "planned_created_late": [{"key": "BKL1-1"}, {"key": "BKL1-2"}],
+                "missing_from_report": ["BKL1-7"],
+                "without_history": [],
+                "history_error": "Jira ne répond pas",
+            }
+        )
+
+        self.assertEqual(lines[0], "2 tickets prévus créés après le début du sprint : BKL1-1, BKL1-2")
+        self.assertEqual(len(lines), 3)
+        self.assertTrue(any("BKL1-7" in line for line in lines))
+        self.assertTrue(any("Jira ne répond pas" in line for line in lines))
