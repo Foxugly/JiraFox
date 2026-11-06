@@ -1,5 +1,5 @@
 import base64
-from datetime import date, datetime, timezone as dt_timezone
+from datetime import date, datetime, timedelta, timezone as dt_timezone
 from io import BytesIO
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -871,7 +871,7 @@ class SprintCapacityTests(TestCase):
         self.alice.refresh_from_db()
         self.assertEqual((self.alice.holidays, self.alice.name), (0, "Alice"))
 
-    def test_sprint_hours_are_listed_in_the_admin(self):
+    def test_sprint_hours_and_periods_are_listed_in_the_admin(self):
         capacity = sprint_capacities(self.team, 41)[0]
         self.client.force_login(get_user_model().objects.create_superuser(username="admin", password="secret"))
 
@@ -880,6 +880,12 @@ class SprintCapacityTests(TestCase):
 
         self.assertContains(listing, "Alice")
         self.assertEqual(change.status_code, 200)
+
+        period = SprintPeriod.objects.create(
+            team=self.team, sprint_id=41, start=timezone.now(), end=timezone.now() + timedelta(days=10)
+        )
+        self.assertContains(self.client.get(reverse("admin:sprint_sprintperiod_changelist")), "Core")
+        self.assertEqual(self.client.get(reverse("admin:sprint_sprintperiod_change", args=[period.pk])).status_code, 200)
 
     @patch("sprint.views.get_connected_jira_for_user")
     def test_reset_button_copies_the_templates_again(self, mock_get_jira):
