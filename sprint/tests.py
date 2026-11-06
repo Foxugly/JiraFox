@@ -871,6 +871,16 @@ class SprintCapacityTests(TestCase):
         self.alice.refresh_from_db()
         self.assertEqual((self.alice.holidays, self.alice.name), (0, "Alice"))
 
+    def test_sprint_hours_are_listed_in_the_admin(self):
+        capacity = sprint_capacities(self.team, 41)[0]
+        self.client.force_login(get_user_model().objects.create_superuser(username="admin", password="secret"))
+
+        listing = self.client.get(reverse("admin:sprint_sprintcapacity_changelist"))
+        change = self.client.get(reverse("admin:sprint_sprintcapacity_change", args=[capacity.pk]))
+
+        self.assertContains(listing, "Alice")
+        self.assertEqual(change.status_code, 200)
+
     @patch("sprint.views.get_connected_jira_for_user")
     def test_reset_button_copies_the_templates_again(self, mock_get_jira):
         user = get_user_model().objects.create_user(username="member", password="secret")
