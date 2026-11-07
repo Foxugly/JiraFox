@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: JiraFox\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-27 12:04+0100\n"
+"POT-Creation-Date: 2026-11-07 13:31+0100\n"
 "PO-Revision-Date: 2026-09-15 00:00+0200\n"
 "Last-Translator: Codex <codex@local>\n"
 "Language-Team: English <en@local>\n"
@@ -41,7 +41,7 @@ msgstr "Email"
 msgid "Language"
 msgstr "Language"
 
-#: .\JiraFox\tests.py:152 .\JiraFox\views.py:264
+#: .\JiraFox\tests.py:147 .\JiraFox\views.py:264
 msgid "Current sprint issues"
 msgstr "Current sprint issues"
 
@@ -57,7 +57,8 @@ msgstr "Current sprint Done"
 msgid "Current sprint WIP"
 msgstr "Current sprint WIP"
 
-#: .\JiraFox\views.py:276 .\templates\sprint\sprint_xls_report.html:68
+#: .\JiraFox\views.py:276 .\templates\sprint\_capacity_table.html:30
+#: .\templates\team\_dev_table.html:47
 msgid "Fastlane"
 msgstr "Fastlane"
 
@@ -114,28 +115,34 @@ msgstr ""
 msgid "Jira returned an error."
 msgstr ""
 
-#: .\jiramodule\selectors.py:10
-msgid "No current Jira configuration. Create one and mark it as current."
+#: .\jiramodule\selectors.py:79
+msgid "You have no project. Create one, or ask a member to add you to theirs."
 msgstr ""
 
-#: .\jiramodule\selectors.py:12
-msgid "Several Jira configurations are marked as current. Keep only one."
+#: .\jiramodule\selectors.py:83
+#, python-format
+msgid "The project %(project)s has no Jira URL."
+msgstr ""
+
+#: .\jiramodule\selectors.py:88
+#, python-format
+msgid "You have no Jira token for %(url)s. Add it to your Jira connections."
 msgstr ""
 
 #: .\jiramodule\services\bulk_operations.py:104
 msgid "No change"
 msgstr "No change"
 
-#: .\jiramodule\services\bulk_operations.py:115 .\jiramodule\tests.py:185
+#: .\jiramodule\services\bulk_operations.py:115 .\jiramodule\tests.py:415
 msgid "Updated"
 msgstr "Updated"
 
-#: .\jiramodule\services\jira_config_service.py:21
+#: .\jiramodule\services\jira_config_service.py:30
 #, python-format
-msgid "The current Jira configuration is incomplete: %(fields)s."
+msgid "The current project is incomplete: %(fields)s."
 msgstr ""
 
-#: .\jiramodule\services\jira_config_service.py:35
+#: .\jiramodule\services\jira_config_service.py:44
 #, python-format
 msgid "Unable to connect to Jira at %(url)s."
 msgstr ""
@@ -144,51 +151,150 @@ msgstr ""
 msgid "Not enough information to compute metrics (missing created/status/changelog)."
 msgstr "Not enough information to compute metrics (missing created/status/changelog)."
 
-#: .\jiramodule\tests.py:148 .\templates\jira\bulk_operations.html:17
+#: .\jiramodule\tests.py:378 .\templates\jira\bulk_operations.html:17
 msgid "Available operations"
 msgstr "Available operations"
 
-#: .\jiramodule\views.py:74
+#: .\jiramodule\views.py:73
 msgid "JQL is required."
 msgstr "JQL is required."
 
-#: .\jiramodule\views.py:77
+#: .\jiramodule\views.py:76
 msgid "Add at least one label to add or remove."
 msgstr "Add at least one label to add or remove."
 
-#: .\jiramodule\views.py:90
+#: .\jiramodule\views.py:89
 #, python-format
 msgid "Preview failed: %(error)s"
 msgstr "Preview failed: %(error)s"
 
-#: .\jiramodule\views.py:94
+#: .\jiramodule\views.py:93
 #, python-format
 msgid "Preview ready: %(count)s ticket(s) will change."
 msgstr "Preview ready: %(count)s ticket(s) will change."
 
-#: .\jiramodule\views.py:103
+#: .\jiramodule\views.py:102
 msgid "No bulk labels preview to apply."
 msgstr "No bulk labels preview to apply."
 
-#: .\jiramodule\views.py:115
+#: .\jiramodule\views.py:114
 #, python-format
 msgid "Bulk labels applied: %(success_count)s updated, %(error_count)s error(s)."
 msgstr "Bulk labels applied: %(success_count)s updated, %(error_count)s error(s)."
 
-#: .\sprint\views.py:171
+#: .\sprint\scope_flow.py:164
+#, python-format
+msgid "Planned and added issues do not add up to the %(count)s issues."
+msgstr ""
+
+#: .\sprint\scope_flow.py:172 .\sprint\tests.py:2250
+#, python-format
+msgid "Closed rate (%(group)s) does not add up."
+msgstr ""
+
+#: .\sprint\scope_flow.py:176
+#, python-format
+msgid "Unchanged rate (%(group)s) does not add up."
+msgstr ""
+
+#: .\sprint\scope_flow.py:192
+msgid "The flow diagram does not add up."
+msgstr ""
+
+#: .\sprint\views.py:170
 msgid "Sprint bounds reset to the Jira dates."
 msgstr ""
 
-#: .\sprint\views.py:177
+#: .\sprint\views.py:176
 msgid "Enter a start and an end, the start before the end."
 msgstr ""
 
-#: .\sprint\views.py:182
+#: .\sprint\views.py:181
 msgid "Sprint bounds saved."
 msgstr ""
 
+#: .\sprint\views.py:210
+msgid "Sprint hours reset to the developers' templates."
+msgstr ""
+
+#: .\sprint\views.py:293
+msgid "Planned issues closed"
+msgstr ""
+
+#: .\sprint\views.py:294
+msgid "Added issues closed"
+msgstr ""
+
+#: .\sprint\views.py:295
+msgid "All issues closed"
+msgstr ""
+
+#: .\sprint\views.py:300
+msgid "Planned issues unchanged"
+msgstr ""
+
+#: .\sprint\views.py:301
+msgid "Added issues unchanged"
+msgstr ""
+
+#: .\sprint\views.py:302
+msgid "All issues unchanged"
+msgstr "All issues unchanged"
+
+#: .\sprint\views.py:509
+msgid "Pick at least one sprint to build a report."
+msgstr "Pick at least one sprint to build a report."
+
+#: .\sprint\views.py:529
+msgid "The analysis does not match these sprints: paste the answer again."
+msgstr ""
+
+#: .\team\report_template.py:20
+msgid "This file is not a readable PowerPoint (.pptx) deck."
+msgstr ""
+
+#: .\team\report_template.py:22
+msgid "The deck must contain the 6 example slides."
+msgstr ""
+
+#: .\team\views.py:111
+msgid "Project created."
+msgstr "Project created."
+
+#: .\team\views.py:126
+msgid "Project saved."
+msgstr "Project saved."
+
+#: .\team\views.py:149
+#, python-format
+msgid "Project %(name)s deleted."
+msgstr ""
+
+#: .\team\views.py:159
+msgid "Choose a user to add."
+msgstr ""
+
+#: .\team\views.py:162
+#, python-format
+msgid "%(user)s added to the project."
+msgstr ""
+
+#: .\team\views.py:174
+msgid "A project keeps at least one member: delete it instead."
+msgstr ""
+
+#: .\team\views.py:177
+#, python-format
+msgid "You left the project %(name)s."
+msgstr ""
+
+#: .\team\views.py:179
+#, python-format
+msgid "%(user)s removed from the project."
+msgstr "%(user)s removed from the project."
+
 #: .\templates\about.html:4 .\templates\about.html:8
-#: .\templates\includes\header.html:37
+#: .\templates\includes\header.html:41
 msgid "About"
 msgstr "About"
 
@@ -282,7 +388,7 @@ msgstr "Login"
 
 #: .\templates\account\login.html:15
 msgid "Retrouvez votre cockpit Jira, vos métriques de flux et vos configurations de board dans une interface pensée pour aller vite."
-msgstr "Retrouvez votre cockpit Jira, vos métriques de flux et vos configurations de board dans une interface pensée pour aller vite."
+msgstr "Find your Jira cockpit, your flow metrics and your board settings in an interface built for speed."
 
 #: .\templates\account\login.html:18
 msgid "Dashboard sprint"
@@ -298,11 +404,11 @@ msgstr "Capacity export"
 
 #: .\templates\account\login.html:32
 msgid "Accéder à JiraFox"
-msgstr "Accéder à JiraFox"
+msgstr "Access JiraFox"
 
 #: .\templates\account\login.html:33
 msgid "Connectez-vous avec votre compte pour reprendre là où vous vous êtes arrêté."
-msgstr "Connectez-vous avec votre compte pour reprendre là où vous vous êtes arrêté."
+msgstr "Sign in to your account to pick up where you left off."
 
 #: .\templates\account\login.html:42
 msgid "Identifiant ou email"
@@ -325,24 +431,24 @@ msgstr "Log in"
 #: .\templates\account\login.html:80
 #: .\templates\account\password_change.html:80
 msgid "Mot de passe oublié ?"
-msgstr "Mot de passe oublié ?"
+msgstr "Forgot your password?"
 
 #: .\templates\account\login.html:81 .\templates\account\password_reset.html:47
 #: .\templates\account\signup.html:13
 msgid "Créer un compte"
-msgstr "Créer un compte"
+msgstr "Create an account"
 
 #: .\templates\account\logout.html:10
 msgid "Déconnexion"
-msgstr "Déconnexion"
+msgstr "Log out"
 
 #: .\templates\account\logout.html:12
 msgid "Êtes-vous sûr de vouloir vous déconnecter ?"
-msgstr "Êtes-vous sûr de vouloir vous déconnecter ?"
+msgstr "Are you sure you want to log out?"
 
 #: .\templates\account\logout.html:19
 msgid "Se déconnecter"
-msgstr "Se déconnecter"
+msgstr "Log out"
 
 #: .\templates\account\logout.html:22
 #: .\templates\account\password_reset_from_key.html:86
@@ -352,7 +458,7 @@ msgstr "Cancel"
 
 #: .\templates\account\logout.html:30
 msgid "Astuce : vous pouvez revenir à la page d’accueil."
-msgstr "Astuce : vous pouvez revenir à la page d’accueil."
+msgstr "Tip: you can go back to the home page."
 
 #: .\templates\account\password_change.html:10 .\templates\settings.html:84
 msgid "Security"
@@ -365,7 +471,7 @@ msgstr "Change password"
 
 #: .\templates\account\password_change.html:14
 msgid "Mettez à jour votre mot de passe sans quitter votre session JiraFox."
-msgstr "Mettez à jour votre mot de passe sans quitter votre session JiraFox."
+msgstr "Update your password without leaving your JiraFox session."
 
 #: .\templates\account\password_change.html:17
 msgid "Authenticated flow"
@@ -385,7 +491,7 @@ msgstr "Secure"
 
 #: .\templates\account\password_change.html:27
 msgid "Mettre à jour l'accès"
-msgstr "Mettre à jour l'accès"
+msgstr "Update access"
 
 #: .\templates\account\password_change.html:29
 msgid "Saisissez votre mot de passe actuel, puis choisissez un nouveau mot de passe."
@@ -413,7 +519,7 @@ msgstr "Save the new password"
 #: .\templates\account\password_change.html:79
 #: .\templates\account\password_reset_from_key_done.html:23
 msgid "Retour à l'accueil"
-msgstr "Retour à l'accueil"
+msgstr "Back to home"
 
 #: .\templates\account\password_reset.html:10
 #: .\templates\account\password_reset_done.html:10
@@ -424,11 +530,11 @@ msgstr "Recovery"
 
 #: .\templates\account\password_reset.html:12
 msgid "Mot de passe oublié"
-msgstr "Mot de passe oublié"
+msgstr "Forgot password"
 
 #: .\templates\account\password_reset.html:14
 msgid "Envoyez un lien de réinitialisation pour reprendre rapidement la main sur votre accès JiraFox."
-msgstr "Envoyez un lien de réinitialisation pour reprendre rapidement la main sur votre accès JiraFox."
+msgstr "Send a reset link to quickly regain control of your JiraFox access."
 
 #: .\templates\account\password_reset.html:17
 msgid "Email reset"
@@ -440,11 +546,11 @@ msgstr "Access recovery"
 
 #: .\templates\account\password_reset.html:26
 msgid "Réinitialiser l'accès"
-msgstr "Réinitialiser l'accès"
+msgstr "Reset access"
 
 #: .\templates\account\password_reset.html:27
 msgid "Entrez votre adresse email. Si un compte existe, vous recevrez un lien de réinitialisation."
-msgstr "Entrez votre adresse email. Si un compte existe, vous recevrez un lien de réinitialisation."
+msgstr "Enter your email address. If an account exists, you will receive a reset link."
 
 #: .\templates\account\password_reset.html:34
 #: .\templates\account\signup.html:52
@@ -453,22 +559,22 @@ msgstr "Email address"
 
 #: .\templates\account\password_reset.html:43
 msgid "Envoyer le lien de réinitialisation"
-msgstr "Envoyer le lien de réinitialisation"
+msgstr "Send reset link"
 
 #: .\templates\account\password_reset.html:46
 #: .\templates\account\password_reset_done.html:32
 #: .\templates\account\password_reset_from_key.html:33
 #: .\templates\account\password_reset_from_key.html:84
 msgid "Retour à la connexion"
-msgstr "Retour à la connexion"
+msgstr "Back to log in"
 
 #: .\templates\account\password_reset_done.html:12
 msgid "Email envoyé"
-msgstr "Email envoyé"
+msgstr "Email sent"
 
 #: .\templates\account\password_reset_done.html:14
 msgid "Le lien de réinitialisation part par email. Vous pouvez revenir ici si besoin dans quelques minutes."
-msgstr "Le lien de réinitialisation part par email. Vous pouvez revenir ici si besoin dans quelques minutes."
+msgstr "The reset link is on its way by email. You can come back here in a few minutes if needed."
 
 #: .\templates\account\password_reset_done.html:17
 msgid "Password reset"
@@ -484,11 +590,11 @@ msgstr "Pending"
 
 #: .\templates\account\password_reset_done.html:27
 msgid "Vérifiez votre boîte mail"
-msgstr "Vérifiez votre boîte mail"
+msgstr "Check your inbox"
 
 #: .\templates\account\password_reset_done.html:29
 msgid "Nous vous avons envoyé un email. Si vous ne l'avez pas reçu, vérifiez votre dossier spam. Sinon, contactez-nous si rien n'arrive dans quelques minutes."
-msgstr "Nous vous avons envoyé un email. Si vous ne l'avez pas reçu, vérifiez votre dossier spam. Sinon, contactez-nous si rien n'arrive dans quelques minutes."
+msgstr "We have sent you an email. If you have not received it, check your spam folder. Otherwise, contact us if nothing arrives within a few minutes."
 
 #: .\templates\account\password_reset_done.html:33
 msgid "Renvoyer la demande"
@@ -500,20 +606,20 @@ msgstr "Invalid link"
 
 #: .\templates\account\password_reset_from_key.html:15
 msgid "Ce lien de réinitialisation n'est plus valide ou a déjà été utilisé."
-msgstr "Ce lien de réinitialisation n'est plus valide ou a déjà été utilisé."
+msgstr "This reset link is no longer valid or has already been used."
 
 #: .\templates\account\password_reset_from_key.html:20
 msgid "Choisissez un nouveau mot de passe pour finaliser la récupération de votre accès."
-msgstr "Choisissez un nouveau mot de passe pour finaliser la récupération de votre accès."
+msgstr "Choose a new password to finish recovering your access."
 
 #: .\templates\account\password_reset_from_key.html:28
 msgid "Réinitialisation impossible"
-msgstr "Réinitialisation impossible"
+msgstr "Reset not possible"
 
 #: .\templates\account\password_reset_from_key.html:30
 #, python-format
 msgid "Le lien de réinitialisation est invalide, probablement parce qu'il a déjà été utilisé. Merci de faire une <a href=\"%(passwd_reset_url)s\">nouvelle demande</a>."
-msgstr "Le lien de réinitialisation est invalide, probablement parce qu'il a déjà été utilisé. Merci de faire une <a href=\"%(passwd_reset_url)s\">nouvelle demande</a>."
+msgstr "The reset link is invalid, probably because it has already been used. Please make a <a href=\"%(passwd_reset_url)s\">new request</a>."
 
 #: .\templates\account\password_reset_from_key.html:34
 msgid "Nouvelle demande"
@@ -521,7 +627,7 @@ msgstr "New request"
 
 #: .\templates\account\password_reset_from_key.html:37
 msgid "Définir un nouveau mot de passe"
-msgstr "Définir un nouveau mot de passe"
+msgstr "Set a new password"
 
 #: .\templates\account\password_reset_from_key.html:38
 msgid "Saisissez puis confirmez votre nouveau mot de passe."
@@ -529,19 +635,19 @@ msgstr "Enter and confirm your new password."
 
 #: .\templates\account\password_reset_from_key_done.html:12
 msgid "Mot de passe mis à jour"
-msgstr "Mot de passe mis à jour"
+msgstr "Password updated"
 
 #: .\templates\account\password_reset_from_key_done.html:14
 msgid "La réinitialisation est terminée. Vous pouvez maintenant vous reconnecter avec votre nouveau mot de passe."
-msgstr "La réinitialisation est terminée. Vous pouvez maintenant vous reconnecter avec votre nouveau mot de passe."
+msgstr "The reset is complete. You can now log in again with your new password."
 
 #: .\templates\account\password_reset_from_key_done.html:19
 msgid "Changement confirmé"
-msgstr "Changement confirmé"
+msgstr "Change confirmed"
 
 #: .\templates\account\password_reset_from_key_done.html:20
 msgid "Votre mot de passe a bien été modifié."
-msgstr "Votre mot de passe a bien été modifié."
+msgstr "Your password has been changed."
 
 #: .\templates\account\signup.html:11
 msgid "Workspace access"
@@ -549,7 +655,7 @@ msgstr "Workspace access"
 
 #: .\templates\account\signup.html:15
 msgid "Ouvrez votre accès pour centraliser vos boards, vos métriques de sprint et vos exports d'équipe dans un seul cockpit."
-msgstr "Ouvrez votre accès pour centraliser vos boards, vos métriques de sprint et vos exports d'équipe dans un seul cockpit."
+msgstr "Open your access to bring your boards, sprint metrics and team exports together in a single cockpit."
 
 #: .\templates\account\signup.html:18
 msgid "Board configuration"
@@ -569,7 +675,7 @@ msgstr "New account"
 
 #: .\templates\account\signup.html:33
 msgid "Remplissez les informations essentielles pour démarrer."
-msgstr "Remplissez les informations essentielles pour démarrer."
+msgstr "Fill in the essential details to get started."
 
 #: .\templates\account\signup.html:41
 msgid "Nom d'utilisateur"
@@ -581,11 +687,11 @@ msgstr "Confirm password"
 
 #: .\templates\account\signup.html:82
 msgid "Créer mon compte"
-msgstr "Créer mon compte"
+msgstr "Create my account"
 
 #: .\templates\account\signup.html:85
 msgid "Déjà un compte ?"
-msgstr "Déjà un compte ?"
+msgstr "Already have an account?"
 
 #: .\templates\base.html:45 .\templates\base.html:82
 msgid "Confirmation"
@@ -597,9 +703,9 @@ msgid "Close"
 msgstr "Close"
 
 #: .\templates\base.html:52 .\templates\base.html:71 .\templates\base.html:84
-#: .\templates\jira\jira_config_list.html:136
-#: .\templates\jira\partials\jira_config_modal_form.html:84
-#: .\templates\sprint\sprint_xls_report.html:131
+#: .\templates\jira\jira_config_list.html:118
+#: .\templates\jira\partials\jira_config_modal_form.html:66
+#: .\templates\team\_dev_table_js.html:11
 msgid "Cancel"
 msgstr "Cancel"
 
@@ -633,7 +739,7 @@ msgstr "Reload"
 #: .\templates\dashboard\_toolbar_actions.html:6
 #: .\templates\issue\issue_header.html:19 .\templates\query.html:36
 #: .\templates\query_toolbar_actions.html:4
-#: .\templates\sprint\sprint_toolbar_actions.html:21
+#: .\templates\sprint\sprint_toolbar_actions.html:27
 #: .\templates\sprint\sprint_wia.html:41
 msgid "Open in Jira"
 msgstr "Open in Jira"
@@ -684,11 +790,13 @@ msgstr "Max age"
 #: .\templates\dashboard.html:33 .\templates\dashboard\_aging_table.html:18
 #: .\templates\jira\bulk_labels.html:80 .\templates\jira\bulk_labels.html:136
 #: .\templates\query.html:65 .\templates\sprint\sprint_detail.html:29
+#: .\templates\sprint\sprint_scope_flow.html:222
 #: .\templates\sprint\sprint_wia.html:56
 msgid "Key"
 msgstr "Key"
 
 #: .\templates\dashboard.html:34 .\templates\dashboard\_aging_table.html:19
+#: .\templates\sprint\management_report.html:62
 #: .\templates\sprint\sprint_wia.html:57
 msgid "Title"
 msgstr "Title"
@@ -700,6 +808,7 @@ msgstr "Age"
 #: .\templates\dashboard.html:36 .\templates\dashboard\_aging_table.html:22
 #: .\templates\issue\issue_detail.html:37 .\templates\query.html:70
 #: .\templates\sprint\sprint_detail.html:33
+#: .\templates\sprint\sprint_scope_flow.html:230
 msgid "Assignee"
 msgstr "Assignee"
 
@@ -786,28 +895,28 @@ msgstr "status"
 
 #: .\templates\dashboard.html:67
 msgid "<strong>WIP (Work In Progress)</strong><br> Nombre total de tickets actuellement en cours (statuts actifs).<br> Un WIP trop eleve augmente le multitache, l'attente et ralentit le flux."
-msgstr "<strong>WIP (Work In Progress)</strong><br> Nombre total de tickets actuellement en cours (statuts actifs).<br> Un WIP trop eleve augmente le multitache, l'attente et ralentit le flux."
+msgstr "<strong>WIP (Work In Progress)</strong><br> Total number of tickets currently in progress (active statuses).<br> A WIP that is too high increases multitasking and waiting, and slows the flow."
 
 #: .\templates\dashboard.html:72
 msgid "<strong>Aging WIP &gt; 10 jours</strong><br> Nombre de tickets en cours depuis plus de 10 jours.<br> Un volume eleve indique un risque de blocage ou de dispersion du travail."
-msgstr "<strong>Aging WIP &gt; 10 jours</strong><br> Nombre de tickets en cours depuis plus de 10 jours.<br> Un volume eleve indique un risque de blocage ou de dispersion du travail."
+msgstr "<strong>Aging WIP &gt; 10 days</strong><br> Number of tickets in progress for more than 10 days.<br> A high count points to a risk of blockage or scattered work."
 
 #: .\templates\dashboard.html:77
 #, python-format
 msgid "<strong>Cycle Time (P50)</strong><br>Temps median necessaire pour terminer un ticket a partir du premier statut <em>In Progress</em>.<br>Le P50 signifie que 50%% des tickets sont termines en moins de cette duree."
-msgstr ""
+msgstr "<strong>Cycle Time (P50)</strong><br>Median time needed to finish a ticket from its first <em>In Progress</em> status.<br>P50 means that 50%% of tickets are finished in less than this time."
 
 #: .\templates\dashboard.html:80
 msgid "<strong>Lead Time (P50)</strong><br> Temps median entre la creation d'un ticket et sa finalisation.<br> Il reflete l'experience reelle du client."
-msgstr "<strong>Lead Time (P50)</strong><br> Temps median entre la creation d'un ticket et sa finalisation.<br> Il reflete l'experience reelle du client."
+msgstr "<strong>Lead Time (P50)</strong><br> Median time between a ticket's creation and its completion.<br> It reflects the customer's real experience."
 
 #: .\templates\dashboard.html:85
 msgid "<strong>Throughput (7 jours)</strong><br> Nombre de tickets termines au cours des 7 derniers jours.<br> Indicateur cle de capacite et de stabilite du flux."
-msgstr "<strong>Throughput (7 jours)</strong><br> Nombre de tickets termines au cours des 7 derniers jours.<br> Indicateur cle de capacite et de stabilite du flux."
+msgstr "<strong>Throughput (7 days)</strong><br> Number of tickets finished over the last 7 days.<br> Key indicator of capacity and flow stability."
 
 #: .\templates\dashboard.html:90
 msgid "<strong>Flow efficiency</strong><br> Part du temps ou le ticket est <em>reellement travaille</em> (cycle time) par rapport au temps total entre creation et fin (lead time).<br> <strong>Bas</strong> : beaucoup d'attente. <strong>Haut</strong> : flux fluide."
-msgstr "<strong>Flow efficiency</strong><br> Part du temps ou le ticket est <em>reellement travaille</em> (cycle time) par rapport au temps total entre creation et fin (lead time).<br> <strong>Bas</strong> : beaucoup d'attente. <strong>Haut</strong> : flux fluide."
+msgstr "<strong>Flow efficiency</strong><br> Share of the time the ticket is <em>actually worked on</em> (cycle time) compared with the total time between creation and completion (lead time).<br> <strong>Low</strong>: a lot of waiting. <strong>High</strong>: smooth flow."
 
 #: .\templates\dashboard\_aging_table.html:5
 msgid "Table"
@@ -875,7 +984,7 @@ msgstr "See the flow before it jams."
 
 #: .\templates\home.html:16
 msgid "JiraFox rassemble les signaux utiles du sprint: aging, throughput, bottlenecks, capacite et acces directs a Jira. L'objectif n'est pas d'ajouter une couche de reporting, mais de rendre les decisions visibles plus vite."
-msgstr "JiraFox rassemble les signaux utiles du sprint: aging, throughput, bottlenecks, capacite et acces directs a Jira. L'objectif n'est pas d'ajouter une couche de reporting, mais de rendre les decisions visibles plus vite."
+msgstr "JiraFox gathers the useful sprint signals: aging, throughput, bottlenecks, capacity and direct access to Jira. The aim is not to add a reporting layer, but to make decisions visible faster."
 
 #: .\templates\home.html:21
 msgid "Ouvrir le dashboard"
@@ -926,6 +1035,7 @@ msgid "Ouvrir"
 msgstr "Open"
 
 #: .\templates\home.html:84 .\templates\sprint\sprint_list.html:11
+#: .\templates\sprint\sprint_trends.html:83
 msgid "Sprints"
 msgstr "Sprints"
 
@@ -937,63 +1047,89 @@ msgstr "List sprints, browse their details and quickly switch to Jira or export.
 msgid "Parcourir"
 msgstr "Browse"
 
-#: .\templates\home.html:93
-msgid "Connexions Jira"
-msgstr "Jira connections"
+#: .\templates\home.html:93 .\templates\team\project_list.html:14
+msgid "Projects"
+msgstr "Projects"
 
 #: .\templates\home.html:95
-msgid "Gerer plusieurs boards, tester les acces et choisir la configuration courante."
-msgstr "Manage multiple boards, test access and choose the current configuration."
+msgid "Share a board and its developers with your colleagues, each with their own Jira token."
+msgstr ""
 
-#: .\templates\home.html:97
-msgid "Configurer"
-msgstr "Configure"
+#: .\templates\home.html:98 .\templates\includes\header.html:109
+#: .\templates\jira\jira_unavailable.html:41
+#: .\templates\team\project_form.html:20 .\templates\team\project_list.html:4
+#: .\templates\team\project_list.html:7
+msgid "My projects"
+msgstr "My projects"
+
+#: .\templates\home.html:99 .\templates\includes\header.html:114
+#: .\templates\jira\jira_config_list.html:5
+#: .\templates\jira\jira_unavailable.html:44
+msgid "My Jira connections"
+msgstr "My Jira connections"
 
 #: .\templates\includes\header.html:20
-#: .\templates\jira\jira_unavailable.html:49
+#: .\templates\jira\jira_unavailable.html:52
 msgid "Home"
 msgstr "Home"
 
-#: .\templates\includes\header.html:26
+#: .\templates\includes\header.html:26 .\templates\sprint\sprint_trends.html:12
+#: .\templates\sprint\sprint_trends.html:88
 msgid "Sprint"
 msgstr "Sprint"
 
-#: .\templates\includes\header.html:29 .\templates\query.html:8
+#: .\templates\includes\header.html:28
+msgid "Sprint list"
+msgstr "Sprint list"
+
+#: .\templates\includes\header.html:29 .\templates\sprint\sprint_trends.html:8
+#: .\templates\sprint\sprint_trends.html:12
+msgid "Several sprints"
+msgstr "Several sprints"
+
+#: .\templates\includes\header.html:33 .\templates\query.html:8
 msgid "Query"
 msgstr "Query"
 
-#: .\templates\includes\header.html:33 .\templates\includes\header.html:89
+#: .\templates\includes\header.html:37 .\templates\includes\header.html:119
 #: .\templates\jira\bulk_labels.html:8 .\templates\jira\bulk_operations.html:4
 #: .\templates\jira\bulk_operations.html:9
 msgid "Bulk operations"
 msgstr "Bulk operations"
 
-#: .\templates\includes\header.html:44 .\templates\includes\header.html:45
+#: .\templates\includes\header.html:53 .\templates\query.html:141
+#: .\templates\settings.html:97 .\templates\team\project_list.html:45
+msgid "Current project"
+msgstr "Current project"
+
+#: .\templates\includes\header.html:62 .\templates\settings.html:116
+#: .\templates\team\project_form.html:4 .\templates\team\project_form.html:15
+#: .\templates\team\project_list.html:20
+msgid "New project"
+msgstr "New project"
+
+#: .\templates\includes\header.html:69 .\templates\includes\header.html:70
 msgid "Toggle dark mode"
 msgstr "Toggle dark mode"
 
-#: .\templates\includes\header.html:53
+#: .\templates\includes\header.html:78
 msgid "Language switch"
 msgstr "Language switch"
 
-#: .\templates\includes\header.html:79 .\templates\settings.html:4
-#: .\templates\settings.html:14
+#: .\templates\includes\header.html:104 .\templates\settings.html:4
+#: .\templates\settings.html:14 .\templates\team\project_form.html:34
 msgid "Settings"
 msgstr "Settings"
 
-#: .\templates\includes\header.html:84
-msgid "Jira"
-msgstr "Jira"
-
-#: .\templates\includes\header.html:94 .\templates\settings.html:91
+#: .\templates\includes\header.html:124 .\templates\settings.html:91
 msgid "Change password"
 msgstr "Change password"
 
-#: .\templates\includes\header.html:102
+#: .\templates\includes\header.html:132
 msgid "Log out"
 msgstr "Log out"
 
-#: .\templates\includes\header.html:111
+#: .\templates\includes\header.html:141
 msgid "Log in"
 msgstr "Log in"
 
@@ -1045,9 +1181,9 @@ msgstr "State"
 msgid "Type"
 msgstr "Type"
 
-#: .\templates\issue\issue_detail.html:41
-#: .\templates\jira\jira_config_list.html:36 .\templates\query.html:153
-#: .\templates\settings.html:102
+#: .\templates\issue\issue_detail.html:41 .\templates\query.html:153
+#: .\templates\settings.html:102 .\templates\team\project_devs.html:20
+#: .\templates\team\project_form.html:13 .\templates\team\project_list.html:33
 msgid "Project"
 msgstr "Project"
 
@@ -1147,6 +1283,7 @@ msgstr "Apply changes"
 
 #: .\templates\jira\bulk_labels.html:81 .\templates\jira\bulk_labels.html:137
 #: .\templates\query.html:66 .\templates\sprint\sprint_detail.html:30
+#: .\templates\sprint\sprint_scope_flow.html:223
 msgid "Summary"
 msgstr "Summary"
 
@@ -1312,13 +1449,9 @@ msgstr "Apply only when the preview is exact."
 msgid "Review the execution result."
 msgstr "Review the execution result."
 
-#: .\templates\jira\jira_config_list.html:5
-msgid "Mes configurations Jira"
-msgstr "My Jira configurations"
-
 #: .\templates\jira\jira_config_list.html:6
-msgid "Creer, tester et activer plusieurs connexions selon vos boards et vos contextes d'equipe."
-msgstr "Create, test and activate multiple connections for your boards and team contexts."
+msgid "Your personal token for each Jira. Boards, projects and developers are set on the projects, shared with their members."
+msgstr ""
 
 #: .\templates\jira\jira_config_list.html:14
 msgid "Jira connections"
@@ -1329,119 +1462,95 @@ msgid "Ajouter"
 msgstr "Add"
 
 #: .\templates\jira\jira_config_list.html:34 .\templates\query.html:145
-#: .\templates\settings.html:100
+#: .\templates\settings.html:100 .\templates\team\project_list.html:31
 msgid "URL"
 msgstr "URL"
 
-#: .\templates\jira\jira_config_list.html:35 .\templates\query.html:149
-#: .\templates\settings.html:101
-msgid "Board"
-msgstr "Board"
-
-#: .\templates\jira\jira_config_list.html:37
-msgid "Epic"
-msgstr "Epic"
-
-#: .\templates\jira\jira_config_list.html:38
+#: .\templates\jira\jira_config_list.html:35
 msgid "Dernier test"
 msgstr "Last test"
 
-#: .\templates\jira\jira_config_list.html:39
-msgid "Current"
-msgstr "Current"
-
-#: .\templates\jira\jira_config_list.html:40
+#: .\templates\jira\jira_config_list.html:36
 #: .\templates\sprint\sprint_detail.html:34
 #: .\templates\sprint\sprint_list.html:45
 #: .\templates\sprint\sprint_report.html:24
+#: .\templates\team\project_list.html:36
 msgid "Actions"
 msgstr "Actions"
 
-#: .\templates\jira\jira_config_list.html:76
-msgid "Definir comme configuration courante"
-msgstr "Set as current configuration"
-
-#: .\templates\jira\jira_config_list.html:82
+#: .\templates\jira\jira_config_list.html:65
 msgid "Tester la connexion"
 msgstr "Test connection"
 
-#: .\templates\jira\jira_config_list.html:87
+#: .\templates\jira\jira_config_list.html:70
 msgid "Editer"
 msgstr "Edit"
 
-#: .\templates\jira\jira_config_list.html:94
+#: .\templates\jira\jira_config_list.html:77
 msgid "Supprimer"
-msgstr "Supprimer"
+msgstr "Delete"
 
-#: .\templates\jira\jira_config_list.html:103
+#: .\templates\jira\jira_config_list.html:86
 msgid "Aucune configuration."
 msgstr "No configuration."
 
-#: .\templates\jira\jira_config_list.html:124
+#: .\templates\jira\jira_config_list.html:106
 msgid "Saving..."
 msgstr "Saving..."
 
-#: .\templates\jira\jira_config_list.html:125
+#: .\templates\jira\jira_config_list.html:107
 msgid "Testing..."
 msgstr "Testing..."
 
-#: .\templates\jira\jira_config_list.html:126
+#: .\templates\jira\jira_config_list.html:108
 msgid "Connection test in progress..."
 msgstr "Connection test in progress..."
 
-#: .\templates\jira\jira_config_list.html:127
+#: .\templates\jira\jira_config_list.html:109
 msgid "Connection OK"
 msgstr "Connection OK"
 
-#: .\templates\jira\jira_config_list.html:128
+#: .\templates\jira\jira_config_list.html:110
 msgid "Connection failed"
 msgstr "Connection failed"
 
-#: .\templates\jira\jira_config_list.html:129
+#: .\templates\jira\jira_config_list.html:111
 msgid "unknown error"
 msgstr "unknown error"
 
-#: .\templates\jira\jira_config_list.html:130
+#: .\templates\jira\jira_config_list.html:112
 msgid "Configuration saved."
 msgstr "Configuration saved."
 
-#: .\templates\jira\jira_config_list.html:131
+#: .\templates\jira\jira_config_list.html:113
 msgid "Jira connection validated."
 msgstr "Jira connection validated."
 
-#: .\templates\jira\jira_config_list.html:132
+#: .\templates\jira\jira_config_list.html:114
 msgid "Jira connection failed."
 msgstr "Jira connection failed."
 
-#: .\templates\jira\jira_config_list.html:133
+#: .\templates\jira\jira_config_list.html:115
 msgid "Delete configuration"
 msgstr "Delete configuration"
 
-#: .\templates\jira\jira_config_list.html:134
+#: .\templates\jira\jira_config_list.html:116
 msgid "Delete this Jira configuration?"
 msgstr "Delete this Jira configuration?"
 
-#: .\templates\jira\jira_config_list.html:135
+#: .\templates\jira\jira_config_list.html:117
 msgid "Delete"
 msgstr "Delete"
 
-#: .\templates\jira\jira_config_list.html:137
+#: .\templates\jira\jira_config_list.html:119
 msgid "Configuration deleted."
 msgstr "Configuration deleted."
 
-#: .\templates\jira\jira_config_list.html:138
+#: .\templates\jira\jira_config_list.html:120
 msgid "Jira connection OK."
 msgstr "Jira connection OK."
 
-#: .\templates\jira\jira_config_list.html:139
-msgid "Current configuration updated."
-msgstr "Current configuration updated."
-
-#: .\templates\jira\jira_config_list.html:140
-msgid "Unable to save current configuration."
-msgstr "Unable to save current configuration."
-
-#: .\templates\jira\jira_config_list.html:141
+#: .\templates\jira\jira_config_list.html:121
 msgid "Unexpected response format"
 msgstr "Unexpected response format"
 
@@ -1462,35 +1571,34 @@ msgid "Jira connection failed"
 msgstr ""
 
 #: .\templates\jira\jira_unavailable.html:26
-msgid "JiraFox reads everything live from Jira: complete your Jira configuration to use this page."
+msgid "JiraFox reads everything live from Jira: complete your project and your Jira connection to use this page."
 msgstr ""
 
 #: .\templates\jira\jira_unavailable.html:28
 msgid "Jira could not be reached or refused the request. Check the URL and the API token, then try again."
 msgstr ""
 
-#: .\templates\jira\jira_unavailable.html:41
-msgid "Open my Jira configurations"
-msgstr ""
-
-#: .\templates\jira\jira_unavailable.html:45
+#: .\templates\jira\jira_unavailable.html:48
 msgid "Try again"
 msgstr ""
 
 #: .\templates\jira\partials\jira_config_modal_form.html:4
+#: .\templates\team\project_list.html:58
 msgid "Edit"
 msgstr "Edit"
 
 #: .\templates\jira\partials\jira_config_modal_form.html:4
-#: .\templates\jira\partials\jira_config_modal_form.html:86
+#: .\templates\jira\partials\jira_config_modal_form.html:68
+#: .\templates\team\project_form.html:111
 msgid "Add"
 msgstr "Add"
 
 #: .\templates\jira\partials\jira_config_modal_form.html:4
-msgid "a Jira configuration"
-msgstr "a Jira configuration"
+msgid "a Jira connection"
+msgstr "a Jira connection"
 
 #: .\templates\jira\partials\jira_config_modal_form.html:20
+#: .\templates\team\project_form.html:47
 msgid "Jira URL"
 msgstr "Jira URL"
 
@@ -1502,39 +1610,24 @@ msgstr "Ex:"
 msgid "Token"
 msgstr "Token"
 
-#: .\templates\jira\partials\jira_config_modal_form.html:36
-msgid "Board ID"
-msgstr "Board ID"
-
-#: .\templates\jira\partials\jira_config_modal_form.html:40
-msgid "Project ID"
-msgstr "Project ID"
-
-#: .\templates\jira\partials\jira_config_modal_form.html:44
-msgid "Recurrent Epic Key"
-msgstr "Recurrent Epic Key"
-
-#: .\templates\jira\partials\jira_config_modal_form.html:50
-msgid "Current configuration"
-msgstr "Current configuration"
-
-#: .\templates\jira\partials\jira_config_modal_form.html:60
+#: .\templates\jira\partials\jira_config_modal_form.html:42
 msgid "Last test:"
 msgstr "Last test:"
 
-#: .\templates\jira\partials\jira_config_modal_form.html:70
+#: .\templates\jira\partials\jira_config_modal_form.html:52
 msgid "Last error:"
 msgstr "Last error:"
 
-#: .\templates\jira\partials\jira_config_modal_form.html:77
+#: .\templates\jira\partials\jira_config_modal_form.html:59
 msgid "You can save and then test, or test directly after editing."
 msgstr "You can save and then test, or test directly after editing."
 
-#: .\templates\jira\partials\jira_config_modal_form.html:82
+#: .\templates\jira\partials\jira_config_modal_form.html:64
 msgid "Test connection"
 msgstr "Test connection"
 
-#: .\templates\jira\partials\jira_config_modal_form.html:86
+#: .\templates\jira\partials\jira_config_modal_form.html:68
+#: .\templates\team\project_form.html:78
 msgid "Save"
 msgstr "Save"
 
@@ -1562,7 +1655,7 @@ msgstr "Query failed"
 msgid "Results"
 msgstr "Results"
 
-#: .\templates\query.html:58
+#: .\templates\query.html:58 .\templates\sprint\sprint_scope_flow.html:366
 msgid "issue(s)"
 msgstr "issue(s)"
 
@@ -1586,18 +1679,21 @@ msgstr "No presets available."
 msgid "Recent queries"
 msgstr "Recent queries"
 
-#: .\templates\query.html:141 .\templates\settings.html:97
-msgid "Current Jira configuration"
-msgstr "Current Jira configuration"
+#: .\templates\query.html:149 .\templates\settings.html:101
+#: .\templates\team\project_list.html:32
+msgid "Board"
+msgstr "Board"
 
 #: .\templates\query.html:157 .\templates\settings.html:103
-#: .\templates\sprint\sprint_xls_report.html:17
-msgid "Team"
-msgstr "Team"
+#: .\templates\sprint\sprint_list.html:41
+#: .\templates\sprint\sprint_report.html:22 .\templates\team\_dev_table.html:31
+#: .\templates\team\project_form.html:42 .\templates\team\project_list.html:30
+msgid "Name"
+msgstr "Name"
 
-#: .\templates\query.html:162
-msgid "No active Jira configuration."
-msgstr "No active Jira configuration."
+#: .\templates\query.html:162 .\templates\settings.html:114
+msgid "You have no project yet."
+msgstr ""
 
 #: .\templates\query.html:168
 msgid "Epic bootstrap"
@@ -1639,17 +1735,121 @@ msgstr "Password management"
 msgid "Update your password from an authenticated session."
 msgstr "Update your password from an authenticated session."
 
-#: .\templates\settings.html:106
+#: .\templates\settings.html:107
+msgid "Manage the project"
+msgstr ""
+
+#: .\templates\settings.html:110
 msgid "Manage Jira connections"
 msgstr "Manage Jira connections"
 
-#: .\templates\settings.html:109
-msgid "No current Jira configuration is active for this account."
-msgstr "No current Jira configuration is active for this account."
+#: .\templates\sprint\_capacity_table.html:22
+#: .\templates\team\_dev_table.html:39
+msgid "Workload"
+msgstr "Workload"
 
-#: .\templates\settings.html:111
-msgid "Create a Jira connection"
-msgstr "Create a Jira connection"
+#: .\templates\sprint\_capacity_table.html:23
+#: .\templates\sprint\_capacity_table.html:27
+#: .\templates\sprint\_capacity_table.html:31
+#: .\templates\sprint\_capacity_table.html:35
+#: .\templates\sprint\_capacity_table.html:39
+msgid "Template:"
+msgstr ""
+
+#: .\templates\sprint\_capacity_table.html:26
+#: .\templates\team\_dev_table.html:43
+msgid "Holidays"
+msgstr "Holidays"
+
+#: .\templates\sprint\_capacity_table.html:34
+#: .\templates\team\_dev_table.html:51
+msgid "Project meetings"
+msgstr "Project meetings"
+
+#: .\templates\sprint\_capacity_table.html:38
+#: .\templates\team\_dev_table.html:55
+msgid "Other meetings"
+msgstr "Other meetings"
+
+#: .\templates\sprint\_capacity_table.html:42
+msgid "Workload minus holidays, fastlane and meetings."
+msgstr ""
+
+#: .\templates\sprint\_capacity_table.html:42
+msgid "Available"
+msgstr "Available"
+
+#: .\templates\sprint\_capacity_table.html:49
+msgid "Value set for this sprint, apart from the developer's template (hover a cell to see the template)."
+msgstr ""
+
+#: .\templates\sprint\management_report.html:4
+#: .\templates\sprint\management_report.html:8
+#: .\templates\sprint\sprint_toolbar_actions.html:21
+#: .\templates\sprint\sprint_trends.html:56
+msgid "Management report"
+msgstr "Management report"
+
+#: .\templates\sprint\management_report.html:12
+msgid "Sprints in this report:"
+msgstr "Sprints in this report:"
+
+#: .\templates\sprint\management_report.html:26
+msgid "1. Copy the prompt and the dossier"
+msgstr ""
+
+#: .\templates\sprint\management_report.html:27
+msgid "The text below holds the instructions and the figures of the report. Paste it into Copilot."
+msgstr ""
+
+#: .\templates\sprint\management_report.html:30
+msgid "Copy"
+msgstr "Copy"
+
+#: .\templates\sprint\management_report.html:33
+msgid "2. Paste Copilot answer"
+msgstr ""
+
+#: .\templates\sprint\management_report.html:42
+msgid "Read the answer"
+msgstr ""
+
+#: .\templates\sprint\management_report.html:47
+msgid "3. Review the analysis"
+msgstr ""
+
+#: .\templates\sprint\management_report.html:48
+msgid "One bullet per line. Figures on the slides always come from JiraFox."
+msgstr ""
+
+#: .\templates\sprint\management_report.html:55
+msgid "Where the team stands"
+msgstr ""
+
+#: .\templates\sprint\management_report.html:57
+msgid "Trend"
+msgstr ""
+
+#: .\templates\sprint\management_report.html:59
+msgid "Risks"
+msgstr ""
+
+#: .\templates\sprint\management_report.html:63
+msgid "Explanation"
+msgstr ""
+
+#: .\templates\sprint\management_report.html:67
+#: .\templates\sprint\management_report.html:80
+msgid "Download the PowerPoint"
+msgstr ""
+
+#: .\templates\sprint\management_report.html:72
+msgid "The report is built from the Jira figures only, without any written analysis."
+msgstr ""
+
+#: .\templates\sprint\management_report.html:100
+msgid "Copied"
+msgstr ""
 
 #: .\templates\sprint\sprint_detail.html:17
 msgid "Sprint backlog"
@@ -1698,6 +1898,7 @@ msgid "Future"
 msgstr "Future"
 
 #: .\templates\sprint\sprint_list.html:30
+#: .\templates\sprint\sprint_trends.html:91
 msgid "Closed"
 msgstr "Closed"
 
@@ -1705,18 +1906,13 @@ msgstr "Closed"
 msgid "Filter"
 msgstr "Filter"
 
-#: .\templates\sprint\sprint_list.html:41
-#: .\templates\sprint\sprint_report.html:22
-msgid "Name"
-msgstr "Name"
-
 #: .\templates\sprint\sprint_list.html:43
-#: .\templates\sprint\sprint_xls_report.html:94
+#: .\templates\sprint\sprint_xls_report.html:52
 msgid "Start"
 msgstr "Start"
 
 #: .\templates\sprint\sprint_list.html:44
-#: .\templates\sprint\sprint_xls_report.html:98
+#: .\templates\sprint\sprint_xls_report.html:56
 msgid "End"
 msgstr "End"
 
@@ -1732,14 +1928,329 @@ msgstr "Sprint report"
 msgid "Ready-to-open JQL queries by sprint segment."
 msgstr "Ready-to-open JQL queries by sprint segment."
 
+#: .\templates\sprint\sprint_scope_flow.html:23
+#: .\templates\sprint\sprint_scope_flow.html:32
+#: .\templates\sprint\sprint_toolbar_actions.html:18
+msgid "Sprint scope"
+msgstr "Sprint scope"
+
+#: .\templates\sprint\sprint_scope_flow.html:35
+msgid "Status of the planned issues at the sprint start, planned or added during the sprint, how the issues ended (Jira sprint report) and their status at the sprint end. Sub-tasks are not counted."
+msgstr ""
+
+#: .\templates\sprint\sprint_scope_flow.html:37
+msgid "Planned at the sprint start or added during the sprint, how the issues ended (Jira sprint report) and their current status. Sub-tasks are not counted."
+msgstr ""
+
+#: .\templates\sprint\sprint_scope_flow.html:42
+#: .\templates\sprint\sprint_warnings.html:5
+msgid "These figures do not add up, do not trust them:"
+msgstr ""
+
+#: .\templates\sprint\sprint_scope_flow.html:48
+#, python-format
+msgid "%(counter)s issue counted as planned by Jira was created after the sprint start date (%(start)s): the sprint was started later than that date, or the issue was created right in it. Its status on entering the sprint is its status at creation:"
+msgid_plural "%(counter)s issues counted as planned by Jira were created after the sprint start date (%(start)s): the sprint was started later than that date, or they were created right in it. Their status on entering the sprint is their status at creation:"
+msgstr[0] ""
+msgstr[1] ""
+
+#: .\templates\sprint\sprint_scope_flow.html:54
+#, python-format
+msgid "%(counter)s issue of the sprint was already done outside of it, so it is left out of these figures (remove it from the sprint in Jira):"
+msgid_plural "%(counter)s issues of the sprint were already done outside of it, so they are left out of these figures (remove them from the sprint in Jira):"
+msgstr[0] ""
+msgstr[1] ""
+
+#: .\templates\sprint\sprint_scope_flow.html:60
+#, python-format
+msgid "%(counter)s issue of the sprint is missing from Jira's sprint report, so from these figures (left out by the board's filter?):"
+msgid_plural "%(counter)s issues of the sprint are missing from Jira's sprint report, so from these figures (left out by the board's filter?):"
+msgstr[0] ""
+msgstr[1] ""
+
+#: .\templates\sprint\sprint_scope_flow.html:66
+msgid "Could not check that Jira's sprint report holds every issue of the sprint:"
+msgstr ""
+
+#: .\templates\sprint\sprint_scope_flow.html:71
+#, python-format
+msgid "%(counter)s issue has no status history (counted as \"No status\"):"
+msgid_plural "%(counter)s issues have no status history (counted as \"No status\"):"
+msgstr[0] ""
+msgstr[1] ""
+
+#: .\templates\sprint\sprint_scope_flow.html:77
+msgid "Status history could not be loaded, current statuses are shown:"
+msgstr ""
+
+#: .\templates\sprint\sprint_scope_flow.html:82
+#: .\templates\sprint\sprint_trends.html:89
+msgid "Planned"
+msgstr ""
+
+#: .\templates\sprint\sprint_scope_flow.html:83
+#: .\templates\sprint\sprint_scope_flow.html:170
+#: .\templates\sprint\sprint_scope_flow.html:250
+#: .\templates\sprint\sprint_scope_flow.html:391
+msgid "Added during sprint"
+msgstr ""
+
+#: .\templates\sprint\sprint_scope_flow.html:94
+msgid "Issues closed during the sprint out of the issues started by its end (To Do left out), including the issues removed from the sprint. Issues completed in another sprint are not counted."
+msgstr ""
+
+#: .\templates\sprint\sprint_scope_flow.html:96
+#, python-format
+msgid "%(done)s closed / %(started)s started"
+msgstr ""
+
+#: .\templates\sprint\sprint_scope_flow.html:98
+msgid "Issues closed during the sprint out of all the issues, To Do included, including the issues removed from the sprint. Issues completed in another sprint are not counted."
+msgstr ""
+
+#: .\templates\sprint\sprint_scope_flow.html:100
+#, python-format
+msgid "%(done)s closed / %(total)s in total"
+msgstr ""
+
+#: .\templates\sprint\sprint_scope_flow.html:106
+#, python-format
+msgid "%(counter)s not started"
+msgid_plural "%(counter)s not started"
+msgstr[0] ""
+msgstr[1] ""
+
+#: .\templates\sprint\sprint_scope_flow.html:118
+msgid "Issues in the same status on entering the sprint and at its end, out of all the issues of the group; an unknown status on entering it counts as changed."
+msgstr ""
+
+#: .\templates\sprint\sprint_scope_flow.html:121
+#, python-format
+msgid "%(same)s in the same status as on entering / %(compared)s issues"
+msgstr ""
+
+#: .\templates\sprint\sprint_scope_flow.html:122
+#, python-format
+msgid "%(still)s never changed · %(back)s changed and came back"
+msgstr ""
+
+#: .\templates\sprint\sprint_scope_flow.html:133
+msgid "Flow"
+msgstr ""
+
+#: .\templates\sprint\sprint_scope_flow.html:139
+msgid "Status evolution"
+msgstr "Status evolution"
+
+#: .\templates\sprint\sprint_scope_flow.html:153
+#: .\templates\sprint\sprint_scope_flow.html:199
+#: .\templates\sprint\sprint_weighted_throughput_distribution.html:34
+msgid "Aucune donnée à afficher"
+msgstr "No data to display"
+
+#: .\templates\sprint\sprint_scope_flow.html:161
+msgid "Status of each issue when it entered the sprint (the sprint start for planned issues, the moment it was added otherwise) compared with its status at the sprint end."
+msgstr ""
+
+#: .\templates\sprint\sprint_scope_flow.html:164
+#: .\templates\sprint\sprint_scope_flow.html:210
+#: .\templates\sprint\sprint_trends.html:136
+msgid "Issues"
+msgstr "Issues"
+
+#: .\templates\sprint\sprint_scope_flow.html:166
+#: .\templates\sprint\sprint_scope_flow.html:389
+msgid "All issues"
+msgstr "All issues"
+
+#: .\templates\sprint\sprint_scope_flow.html:168
+#: .\templates\sprint\sprint_scope_flow.html:249
+#: .\templates\sprint\sprint_scope_flow.html:390
+msgid "Planned at start"
+msgstr ""
+
+#: .\templates\sprint\sprint_scope_flow.html:176
+msgid "Status on entering the sprint → status at the sprint end"
+msgstr ""
+
+#: .\templates\sprint\sprint_scope_flow.html:177
+msgid "The diagonal holds the issues in the same status; ↺ marks those that changed status and came back. Click a cell to list its issues."
+msgstr ""
+
+#: .\templates\sprint\sprint_scope_flow.html:188
+msgid "Same status or not, by status on entering the sprint"
+msgstr ""
+
+#: .\templates\sprint\sprint_scope_flow.html:189
+msgid "Click a bar to list its issues."
+msgstr ""
+
+#: .\templates\sprint\sprint_scope_flow.html:199
+msgid "The status history is needed to compare the statuses."
+msgstr ""
+
+#: .\templates\sprint\sprint_scope_flow.html:214
+msgid "Show all"
+msgstr ""
+
+#: .\templates\sprint\sprint_scope_flow.html:217
+msgid "Click a flow of the diagram to list its issues."
+msgstr ""
+
+#: .\templates\sprint\sprint_scope_flow.html:224
+msgid "Origin"
+msgstr ""
+
+#: .\templates\sprint\sprint_scope_flow.html:225
+msgid "Status at sprint start"
+msgstr ""
+
+#: .\templates\sprint\sprint_scope_flow.html:226
+msgid "Status on entering the sprint"
+msgstr ""
+
+#: .\templates\sprint\sprint_scope_flow.html:227
+msgid "Outcome"
+msgstr ""
+
+#: .\templates\sprint\sprint_scope_flow.html:228
+msgid "Status at sprint end"
+msgstr ""
+
+#: .\templates\sprint\sprint_scope_flow.html:229
+msgid "Current status"
+msgstr "Current status"
+
+#: .\templates\sprint\sprint_scope_flow.html:251
+msgid "Completed"
+msgstr ""
+
+#: .\templates\sprint\sprint_scope_flow.html:252
+#: .\templates\sprint\sprint_scope_flow.html:253
+msgid "Not completed"
+msgstr "Not completed"
+
+#: .\templates\sprint\sprint_scope_flow.html:264
+msgid "No status"
+msgstr "No status"
+
+#: .\templates\sprint\sprint_scope_flow.html:395
+msgid "Total"
+msgstr ""
+
+#: .\templates\sprint\sprint_scope_flow.html:443
+msgid "Entry ↓ / End →"
+msgstr ""
+
+#: .\templates\sprint\sprint_scope_flow.html:488
+msgid "Same status, no change"
+msgstr "Same status, no change"
+
+#: .\templates\sprint\sprint_scope_flow.html:490
+msgid "Same status, changed and came back"
+msgstr ""
+
+#: .\templates\sprint\sprint_scope_flow.html:492
+msgid "Changed status"
+msgstr "Changed status"
+
 #: .\templates\sprint\sprint_toolbar_actions.html:9
 msgid "Report"
 msgstr "Report"
 
+#: .\templates\sprint\sprint_trends.html:17
+msgid "From"
+msgstr ""
+
+#: .\templates\sprint\sprint_trends.html:21
+msgid "To"
+msgstr ""
+
+#: .\templates\sprint\sprint_trends.html:25
+msgid "Pick sprints in this range"
+msgstr ""
+
+#: .\templates\sprint\sprint_trends.html:30
+msgid "Closed sprints, most recent first. Tick the ones to include."
+msgstr ""
+
+#: .\templates\sprint\sprint_trends.html:40
+msgid "No closed sprint on this board."
+msgstr ""
+
+#: .\templates\sprint\sprint_trends.html:43
+msgid "Show these sprints"
+msgstr "Show these sprints"
+
+#: .\templates\sprint\sprint_trends.html:48
+msgid "No closed sprint in this range"
+msgstr ""
+
+#: .\templates\sprint\sprint_trends.html:54
+msgid "Trends"
+msgstr ""
+
+#: .\templates\sprint\sprint_trends.html:61
+msgid "Throughput, WIP at sprint end and cycle time (business days)"
+msgstr ""
+
+#: .\templates\sprint\sprint_trends.html:65
+#, python-format
+msgid "Planned issues closed and added issues (%%)"
+msgstr ""
+
+#: .\templates\sprint\sprint_trends.html:73
+msgid "Kanban snapshot"
+msgstr ""
+
+#: .\templates\sprint\sprint_trends.html:76
+#, python-format
+msgid "%(wip)s issues in progress at the sprint end, %(aging)s aging (%(percent)s %%)."
+msgstr ""
+
+#: .\templates\sprint\sprint_trends.html:78
+msgid "No snapshot: the status history of the last sprint could not be loaded."
+msgstr ""
+
+#: .\templates\sprint\sprint_trends.html:90
+msgid "Added"
+msgstr ""
+
+#: .\templates\sprint\sprint_trends.html:92
+msgid "Not started"
+msgstr ""
+
+#: .\templates\sprint\sprint_trends.html:93
+#: .\templates\sprint\sprint_trends.html:146
+msgid "Planned closed"
+msgstr ""
+
+#: .\templates\sprint\sprint_trends.html:94
+#: .\templates\sprint\sprint_trends.html:147
+msgid "Added share"
+msgstr ""
+
+#: .\templates\sprint\sprint_trends.html:95
+#: .\templates\sprint\sprint_trends.html:129
+msgid "Median cycle"
+msgstr ""
+
+#: .\templates\sprint\sprint_trends.html:127
+msgid "Throughput"
+msgstr "Throughput"
+
+#: .\templates\sprint\sprint_trends.html:128
+msgid "WIP at sprint end"
+msgstr "WIP at sprint end"
+
+#: .\templates\sprint\sprint_trends.html:137
+msgid "Days"
+msgstr ""
+
 #: .\templates\sprint\sprint_weighted_throughput_distribution.html:8
 #: .\templates\sprint\sprint_weighted_throughput_distribution.html:17
 msgid "Distribution du débit par pondération"
-msgstr "Distribution du débit par pondération"
+msgstr "Throughput distribution by weighting"
 
 #: .\templates\sprint\sprint_weighted_throughput_distribution.html:19
 msgid "Histogramme des tickets Done par story points."
@@ -1747,15 +2258,11 @@ msgstr "Histogram of Done tickets by story points."
 
 #: .\templates\sprint\sprint_weighted_throughput_distribution.html:23
 msgid "Total tickets Done"
-msgstr "Total tickets Done"
-
-#: .\templates\sprint\sprint_weighted_throughput_distribution.html:34
-msgid "Aucune donnée à afficher"
-msgstr "Aucune donnée à afficher"
+msgstr "Total Done tickets"
 
 #: .\templates\sprint\sprint_weighted_throughput_distribution.html:36
 msgid "Aucun ticket Done avec story points n'a été trouvé pour ce sprint."
-msgstr "Aucun ticket Done avec story points n'a été trouvé pour ce sprint."
+msgstr "No Done ticket with story points was found for this sprint."
 
 #: .\templates\sprint\sprint_weighted_throughput_distribution.html:60
 #: .\templates\sprint\sprint_weighted_throughput_distribution.html:89
@@ -1768,7 +2275,7 @@ msgstr "story points"
 
 #: .\templates\sprint\sprint_weighted_throughput_distribution.html:77
 msgid "ticket(s) Done"
-msgstr "ticket(s) Done"
+msgstr "Done ticket(s)"
 
 #: .\templates\sprint\sprint_wia.html:19
 msgid "Work Item Age Diagram"
@@ -1822,158 +2329,279 @@ msgstr "item"
 msgid "Item age (days)"
 msgstr "Item age (days)"
 
-#: .\templates\sprint\sprint_xls_report.html:15
+#: .\templates\sprint\sprint_xls_report.html:19
 msgid "Capacity sheet"
 msgstr "Capacity sheet"
 
-#: .\templates\sprint\sprint_xls_report.html:18
-msgid "Ajuster la capacite, les conges et les temps recurrents avant generation du fichier."
-msgstr "Adjust capacity, holidays and recurring time before generating the file."
+#: .\templates\sprint\sprint_xls_report.html:21
+msgid "Team"
+msgstr "Team"
 
 #: .\templates\sprint\sprint_xls_report.html:22
-msgid "Ajouter un dev"
-msgstr "Add developer"
+msgid "Hours of this sprint only, copied from the developers' templates: adjust the holidays and recurring time before generating the file."
+msgstr ""
 
-#: .\templates\sprint\sprint_xls_report.html:39
-msgid "Reordonner le dev"
-msgstr "Reorder developer"
+#: .\templates\sprint\sprint_xls_report.html:26
+#: .\templates\team\project_devs.html:4 .\templates\team\project_devs.html:13
+#: .\templates\team\project_form.html:24 .\templates\team\project_list.html:35
+#: .\templates\team\project_list.html:55
+msgid "Developers"
+msgstr "Developers"
+
+#: .\templates\sprint\sprint_xls_report.html:28
+msgid "Replace this sprint's hours with the developers' templates?"
+msgstr ""
+
+#: .\templates\sprint\sprint_xls_report.html:33
+msgid "Start again from the template"
+msgstr ""
 
 #: .\templates\sprint\sprint_xls_report.html:45
-msgid "Retirer de la team"
-msgstr "Remove from team"
-
-#: .\templates\sprint\sprint_xls_report.html:56
-msgid "Jira username: matches worklogs and assignees exactly, and adds the time logged outside the sprint to the logged sheet."
-msgstr ""
-
-#: .\templates\sprint\sprint_xls_report.html:56
-msgid "Jira ID"
-msgstr ""
-
-#: .\templates\sprint\sprint_xls_report.html:57
-msgid "Ex: TDPTAV"
-msgstr ""
-
-#: .\templates\sprint\sprint_xls_report.html:60
-msgid "Workload"
-msgstr "Workload"
-
-#: .\templates\sprint\sprint_xls_report.html:64
-msgid "Holidays"
-msgstr "Holidays"
-
-#: .\templates\sprint\sprint_xls_report.html:72
-msgid "Project meetings"
-msgstr "Project meetings"
-
-#: .\templates\sprint\sprint_xls_report.html:76
-msgid "Other meetings"
-msgstr "Other meetings"
-
-#: .\templates\sprint\sprint_xls_report.html:87
 msgid "Logged sheet period"
 msgstr ""
 
-#: .\templates\sprint\sprint_xls_report.html:89
+#: .\templates\sprint\sprint_xls_report.html:47
 msgid "Set by hand."
 msgstr ""
 
-#: .\templates\sprint\sprint_xls_report.html:89
+#: .\templates\sprint\sprint_xls_report.html:47
 msgid "Jira sprint dates."
 msgstr ""
 
-#: .\templates\sprint\sprint_xls_report.html:90
+#: .\templates\sprint\sprint_xls_report.html:48
 msgid "Jira:"
 msgstr ""
 
-#: .\templates\sprint\sprint_xls_report.html:102
+#: .\templates\sprint\sprint_xls_report.html:60
 msgid "Save bounds"
 msgstr ""
 
-#: .\templates\sprint\sprint_xls_report.html:104
+#: .\templates\sprint\sprint_xls_report.html:62
 msgid "Reset to Jira dates"
 msgstr ""
 
-#: .\templates\sprint\sprint_xls_report.html:110
+#: .\templates\sprint\sprint_xls_report.html:68
 msgid "Generer le Capacity Sheet"
 msgstr "Generate the Capacity Sheet"
 
-#: .\templates\sprint\sprint_xls_report.html:113
+#: .\templates\sprint\sprint_xls_report.html:71
 msgid "One tab per developer: planned vs logged hours and ticket status at sprint start and end."
 msgstr ""
 
-#: .\templates\sprint\sprint_xls_report.html:114
+#: .\templates\sprint\sprint_xls_report.html:72
 msgid "Generate logged sheet"
 msgstr ""
 
-#: .\templates\sprint\sprint_xls_report.html:125
+#: .\templates\team\_dev_table.html:14
+msgid "Reordonner le dev"
+msgstr "Reorder developer"
+
+#: .\templates\team\_dev_table.html:20
+msgid "Retirer de la team"
+msgstr "Remove from team"
+
+#: .\templates\team\_dev_table.html:35
+msgid "Jira username: matches worklogs and assignees exactly. Without it, the developer is matched by name."
+msgstr ""
+
+#: .\templates\team\_dev_table.html:35
+msgid "Jira ID"
+msgstr ""
+
+#: .\templates\team\_dev_table.html:36
+msgid "Ex: TDPTAV"
+msgstr ""
+
+#: .\templates\team\_dev_table_js.html:5
 msgid "Value saved."
 msgstr "Value saved."
 
-#: .\templates\sprint\sprint_xls_report.html:126
+#: .\templates\team\_dev_table_js.html:6
 msgid "Unable to save value."
 msgstr "Unable to save value."
 
-#: .\templates\sprint\sprint_xls_report.html:127
+#: .\templates\team\_dev_table_js.html:7
 msgid "Add developer"
 msgstr "Add developer"
 
-#: .\templates\sprint\sprint_xls_report.html:128
+#: .\templates\team\_dev_table_js.html:8
 msgid "Developer name"
 msgstr "Developer name"
 
-#: .\templates\sprint\sprint_xls_report.html:129
+#: .\templates\team\_dev_table_js.html:9
 msgid "Ex: Jane Doe"
 msgstr "Ex: Jane Doe"
 
-#: .\templates\sprint\sprint_xls_report.html:130
+#: .\templates\team\_dev_table_js.html:10 .\templates\team\project_form.html:78
 msgid "Create"
 msgstr "Create"
 
-#: .\templates\sprint\sprint_xls_report.html:132
+#: .\templates\team\_dev_table_js.html:12
 msgid "Developer added."
 msgstr "Developer added."
 
-#: .\templates\sprint\sprint_xls_report.html:133
+#: .\templates\team\_dev_table_js.html:13
 msgid "Unable to create developer."
 msgstr "Unable to create developer."
 
-#: .\templates\sprint\sprint_xls_report.html:134
+#: .\templates\team\_dev_table_js.html:14
 msgid "Remove developer"
 msgstr "Remove developer"
 
-#: .\templates\sprint\sprint_xls_report.html:135
+#: .\templates\team\_dev_table_js.html:15
 msgid "Remove this developer from the team?"
 msgstr "Remove this developer from the team?"
 
-#: .\templates\sprint\sprint_xls_report.html:136
+#: .\templates\team\_dev_table_js.html:16
 msgid "Remove"
 msgstr "Remove"
 
-#: .\templates\sprint\sprint_xls_report.html:137
+#: .\templates\team\_dev_table_js.html:17
 msgid "Developer removed from team."
 msgstr "Developer removed from team."
 
-#: .\templates\sprint\sprint_xls_report.html:138
+#: .\templates\team\_dev_table_js.html:18
 msgid "Unable to remove developer."
 msgstr "Unable to remove developer."
 
-#: .\templates\sprint\sprint_xls_report.html:139
+#: .\templates\team\_dev_table_js.html:19
 msgid "Column order saved."
 msgstr "Column order saved."
 
-#: .\templates\sprint\sprint_xls_report.html:140
+#: .\templates\team\_dev_table_js.html:20
 msgid "Unable to save column order."
 msgstr "Unable to save column order."
 
+#: .\templates\team\project_devs.html:16
+msgid "The project's developers, shared by its members. Their hours are the template of a sprint: each sprint's capacity sheet starts from a copy of them, then is adjusted for that sprint only. The Jira ID matches worklogs and assignees. Drag the columns to reorder them."
+msgstr ""
+
+#: .\templates\team\project_devs.html:23
+msgid "Ajouter un dev"
+msgstr "Add developer"
+
+#: .\templates\team\project_form.html:16
+msgid "Every member reads this board with their own Jira token: each needs a Jira connection for this URL."
+msgstr ""
+
+#: .\templates\team\project_form.html:52
+msgid "Board ID"
+msgstr "Board ID"
+
+#: .\templates\team\project_form.html:57
+msgid "Project ID"
+msgstr "Project ID"
+
+#: .\templates\team\project_form.html:62
+msgid "Recurrent Epic Key"
+msgstr "Recurrent Epic Key"
+
+#: .\templates\team\project_form.html:66
+msgid "Statuses counted as started"
+msgstr ""
+
+#: .\templates\team\project_form.html:68
+msgid "Comma-separated. Jira puts some statuses in its To Do category (grey): the sprint scope then counts their issues as not started. List here the ones that mean the work has begun."
+msgstr ""
+
+#: .\templates\team\project_form.html:71
 msgid "PowerPoint template"
 msgstr ""
 
+#: .\templates\team\project_form.html:74
 msgid "The company deck with its 6 example slides. Stays on this PC."
 msgstr ""
 
-msgid "This file is not a readable PowerPoint (.pptx) deck."
+#: .\templates\team\project_form.html:87 .\templates\team\project_list.html:34
+msgid "Members"
 msgstr ""
 
-msgid "The deck must contain the 6 example slides."
+#: .\templates\team\project_form.html:91
+msgid "you"
 msgstr ""
+
+#: .\templates\team\project_form.html:95
+msgid "Leave the project"
+msgstr ""
+
+#: .\templates\team\project_form.html:95
+msgid "Remove from the project"
+msgstr ""
+
+#: .\templates\team\project_form.html:105
+msgid "User"
+msgstr ""
+
+#: .\templates\team\project_form.html:115
+msgid "Every user is already a member."
+msgstr ""
+
+#: .\templates\team\project_form.html:120
+msgid "Delete this project, its developers and its sprint bounds for every member?"
+msgstr ""
+
+#: .\templates\team\project_form.html:123
+msgid "Delete the project"
+msgstr ""
+
+#: .\templates\team\project_list.html:8
+msgid "A project is a Jira board shared by its members, each with their own Jira token, and its developers. Switch project in the header."
+msgstr ""
+
+#: .\templates\team\project_list.html:67
+msgid "You are a member of no project yet: create one, or ask a member to add you."
+msgstr ""
+
+#~ msgid "Connexions Jira"
+#~ msgstr "Jira connections"
+
+#~ msgid "Gerer plusieurs boards, tester les acces et choisir la configuration courante."
+#~ msgstr "Manage multiple boards, test access and choose the current configuration."
+
+#~ msgid "Configurer"
+#~ msgstr "Configure"
+
+#~ msgid "Jira"
+#~ msgstr "Jira"
+
+#~ msgid "Mes configurations Jira"
+#~ msgstr "My Jira configurations"
+
+#~ msgid "Creer, tester et activer plusieurs connexions selon vos boards et vos contextes d'equipe."
+#~ msgstr "Create, test and activate multiple connections for your boards and team contexts."
+
+#~ msgid "Epic"
+#~ msgstr "Epic"
+
+#~ msgid "Current"
+#~ msgstr "Current"
+
+#~ msgid "Definir comme configuration courante"
+#~ msgstr "Set as current configuration"
+
+#~ msgid "Current configuration updated."
+#~ msgstr "Current configuration updated."
+
+#~ msgid "Unable to save current configuration."
+#~ msgstr "Unable to save current configuration."
+
+#~ msgid "a Jira configuration"
+#~ msgstr "a Jira configuration"
+
+#~ msgid "Current configuration"
+#~ msgstr "Current configuration"
+
+#~ msgid "Current Jira configuration"
+#~ msgstr "Current Jira configuration"
+
+#~ msgid "No active Jira configuration."
+#~ msgstr "No active Jira configuration."
+
+#~ msgid "No current Jira configuration is active for this account."
+#~ msgstr "No current Jira configuration is active for this account."
+
+#~ msgid "Create a Jira connection"
+#~ msgstr "Create a Jira connection"
+
+#~ msgid "Ajuster la capacite, les conges et les temps recurrents avant generation du fichier."
+#~ msgstr "Adjust capacity, holidays and recurring time before generating the file."

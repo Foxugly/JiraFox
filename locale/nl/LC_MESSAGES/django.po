@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: JiraFox\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06 00:55+0100\n"
+"POT-Creation-Date: 2026-11-07 13:31+0100\n"
 "PO-Revision-Date: 2026-09-15 00:00+0200\n"
 "Last-Translator: Codex <codex@local>\n"
 "Language-Team: Dutch <nl@local>\n"
@@ -43,7 +43,7 @@ msgstr "Taal"
 
 #: .\JiraFox\tests.py:147 .\JiraFox\views.py:264
 msgid "Current sprint issues"
-msgstr "Current sprint issues"
+msgstr "Tickets van de huidige sprint"
 
 #: .\JiraFox\views.py:132
 msgid "Settings updated."
@@ -51,20 +51,20 @@ msgstr "Instellingen bijgewerkt."
 
 #: .\JiraFox\views.py:268
 msgid "Current sprint Done"
-msgstr "Current sprint Done"
+msgstr "Huidige sprint: Done"
 
 #: .\JiraFox\views.py:272
 msgid "Current sprint WIP"
-msgstr "Current sprint WIP"
+msgstr "Huidige sprint: WIP"
 
-#: .\JiraFox\views.py:276 .\templates\sprint\_capacity_table.html:29
+#: .\JiraFox\views.py:276 .\templates\sprint\_capacity_table.html:30
 #: .\templates\team\_dev_table.html:47
 msgid "Fastlane"
 msgstr "Fastlane"
 
 #: .\JiraFox\views.py:284
 msgid "Recently resolved"
-msgstr "Recently resolved"
+msgstr "Recent opgelost"
 
 #: .\jiramodule\exceptions.py:43
 msgid "Jira rejected the credentials (HTTP 401). Check the API token."
@@ -149,11 +149,11 @@ msgstr "Kan geen verbinding maken met Jira op %(url)s."
 
 #: .\jiramodule\services\kanban_metrics.py:136
 msgid "Not enough information to compute metrics (missing created/status/changelog)."
-msgstr "Not enough information to compute metrics (missing created/status/changelog)."
+msgstr "Onvoldoende informatie om de metrics te berekenen (created/status/changelog ontbreekt)."
 
 #: .\jiramodule\tests.py:378 .\templates\jira\bulk_operations.html:17
 msgid "Available operations"
-msgstr "Available operations"
+msgstr "Beschikbare bewerkingen"
 
 #: .\jiramodule\views.py:73
 msgid "JQL is required."
@@ -161,33 +161,33 @@ msgstr "JQL is verplicht."
 
 #: .\jiramodule\views.py:76
 msgid "Add at least one label to add or remove."
-msgstr "Add at least one label to add or remove."
+msgstr "Geef minstens één label op om toe te voegen of te verwijderen."
 
 #: .\jiramodule\views.py:89
 #, python-format
 msgid "Preview failed: %(error)s"
-msgstr "Preview failed: %(error)s"
+msgstr "Voorbeeld mislukt: %(error)s"
 
 #: .\jiramodule\views.py:93
 #, python-format
 msgid "Preview ready: %(count)s ticket(s) will change."
-msgstr "Preview ready: %(count)s ticket(s) will change."
+msgstr "Voorbeeld klaar: %(count)s ticket(s) worden gewijzigd."
 
 #: .\jiramodule\views.py:102
 msgid "No bulk labels preview to apply."
-msgstr "No bulk labels preview to apply."
+msgstr "Geen voorbeeld van bulklabels om toe te passen."
 
 #: .\jiramodule\views.py:114
 #, python-format
 msgid "Bulk labels applied: %(success_count)s updated, %(error_count)s error(s)."
-msgstr "Bulk labels applied: %(success_count)s updated, %(error_count)s error(s)."
+msgstr "Bulklabels toegepast: %(success_count)s bijgewerkt, %(error_count)s fout(en)."
 
 #: .\sprint\scope_flow.py:164
 #, python-format
 msgid "Planned and added issues do not add up to the %(count)s issues."
 msgstr "Geplande en toegevoegde tickets komen niet uit op de %(count)s tickets."
 
-#: .\sprint\scope_flow.py:172 .\sprint\tests.py:2212
+#: .\sprint\scope_flow.py:172 .\sprint\tests.py:2250
 #, python-format
 msgid "Closed rate (%(group)s) does not add up."
 msgstr "Het afsluitpercentage (%(group)s) klopt niet."
@@ -308,11 +308,11 @@ msgstr "Technisch overzicht"
 
 #: .\templates\about.html:17
 msgid "JiraFox connects to Jira, structures sprint and issue data, and exposes focused screens for backlog review, WIA, kanban reading, exports and dashboard monitoring."
-msgstr "JiraFox connects to Jira, structures sprint and issue data, and exposes focused screens for backlog review, WIA, kanban reading, exports and dashboard monitoring."
+msgstr "JiraFox maakt verbinding met Jira, structureert sprint- en ticketgegevens en biedt gerichte schermen voor backlogreview, WIA, kanbanweergave, exports en dashboardmonitoring."
 
 #: .\templates\about.html:20
 msgid "The project has been progressively refactored to separate service logic, Django views, templates and frontend scripts."
-msgstr "The project has been progressively refactored to separate service logic, Django views, templates and frontend scripts."
+msgstr "Het project is stapsgewijs gerefactord om servicelogica, Django-views, templates en frontendscripts te scheiden."
 
 #: .\templates\about.html:26
 msgid "Technology stack"
@@ -336,7 +336,7 @@ msgstr "Kwaliteit"
 
 #: .\templates\about.html:31
 msgid "Django checks, targeted unit tests, service-layer refactoring"
-msgstr "Django checks, targeted unit tests, service-layer refactoring"
+msgstr "Django-checks, gerichte unittests, refactoring van de servicelaag"
 
 #: .\templates\about.html:37
 msgid "Main capabilities"
@@ -344,23 +344,23 @@ msgstr "Belangrijkste mogelijkheden"
 
 #: .\templates\about.html:39
 msgid "Sprint list and sprint detail views"
-msgstr "Sprint list and sprint detail views"
+msgstr "Sprintlijst en sprintdetailweergaven"
 
 #: .\templates\about.html:40
 msgid "Issue detail pages with flow metrics and status history"
-msgstr "Issue detail pages with flow metrics and status history"
+msgstr "Ticketdetailpagina's met flowmetrics en statushistoriek"
 
 #: .\templates\about.html:41
 msgid "Operational dashboard for active sprint monitoring"
-msgstr "Operational dashboard for active sprint monitoring"
+msgstr "Operationeel dashboard voor de opvolging van de actieve sprint"
 
 #: .\templates\about.html:42
 msgid "WIA, kanban and XLS reporting screens"
-msgstr "WIA, kanban and XLS reporting screens"
+msgstr "WIA-, kanban- en XLS-rapportageschermen"
 
 #: .\templates\about.html:43
 msgid "Per-user Jira connection management"
-msgstr "Per-user Jira connection management"
+msgstr "Beheer van Jira-verbindingen per gebruiker"
 
 #: .\templates\about.html:49
 msgid "Project links"
@@ -380,7 +380,7 @@ msgstr "Copyright"
 
 #: .\templates\account\login.html:11
 msgid "Secure access"
-msgstr "Secure access"
+msgstr "Beveiligde toegang"
 
 #: .\templates\account\login.html:13
 msgid "Connexion"
@@ -388,15 +388,15 @@ msgstr "Aanmelden"
 
 #: .\templates\account\login.html:15
 msgid "Retrouvez votre cockpit Jira, vos métriques de flux et vos configurations de board dans une interface pensée pour aller vite."
-msgstr "Retrouvez votre cockpit Jira, vos métriques de flux et vos configurations de board dans une interface pensée pour aller vite."
+msgstr "Vind uw Jira-cockpit, uw flowmetrics en uw boardconfiguraties terug in een interface die gebouwd is voor snelheid."
 
 #: .\templates\account\login.html:18
 msgid "Dashboard sprint"
-msgstr "Dashboard sprint"
+msgstr "Sprintdashboard"
 
 #: .\templates\account\login.html:22
 msgid "Issue aging"
-msgstr "Issue aging"
+msgstr "Veroudering van tickets"
 
 #: .\templates\account\login.html:26 .\templates\home.html:52
 msgid "Capacity export"
@@ -404,11 +404,11 @@ msgstr "Capaciteitsexport"
 
 #: .\templates\account\login.html:32
 msgid "Accéder à JiraFox"
-msgstr "Accéder à JiraFox"
+msgstr "JiraFox openen"
 
 #: .\templates\account\login.html:33
 msgid "Connectez-vous avec votre compte pour reprendre là où vous vous êtes arrêté."
-msgstr "Connectez-vous avec votre compte pour reprendre là où vous vous êtes arrêté."
+msgstr "Meld u aan met uw account om verder te gaan waar u gebleven was."
 
 #: .\templates\account\login.html:42
 msgid "Identifiant ou email"
@@ -431,24 +431,24 @@ msgstr "Aanmelden"
 #: .\templates\account\login.html:80
 #: .\templates\account\password_change.html:80
 msgid "Mot de passe oublié ?"
-msgstr "Mot de passe oublié ?"
+msgstr "Wachtwoord vergeten?"
 
 #: .\templates\account\login.html:81 .\templates\account\password_reset.html:47
 #: .\templates\account\signup.html:13
 msgid "Créer un compte"
-msgstr "Créer un compte"
+msgstr "Account aanmaken"
 
 #: .\templates\account\logout.html:10
 msgid "Déconnexion"
-msgstr "Déconnexion"
+msgstr "Afmelden"
 
 #: .\templates\account\logout.html:12
 msgid "Êtes-vous sûr de vouloir vous déconnecter ?"
-msgstr "Êtes-vous sûr de vouloir vous déconnecter ?"
+msgstr "Weet u zeker dat u zich wilt afmelden?"
 
 #: .\templates\account\logout.html:19
 msgid "Se déconnecter"
-msgstr "Se déconnecter"
+msgstr "Afmelden"
 
 #: .\templates\account\logout.html:22
 #: .\templates\account\password_reset_from_key.html:86
@@ -458,7 +458,7 @@ msgstr "Annuleren"
 
 #: .\templates\account\logout.html:30
 msgid "Astuce : vous pouvez revenir à la page d’accueil."
-msgstr "Astuce : vous pouvez revenir à la page d’accueil."
+msgstr "Tip: u kunt terugkeren naar de startpagina."
 
 #: .\templates\account\password_change.html:10 .\templates\settings.html:84
 msgid "Security"
@@ -467,35 +467,35 @@ msgstr "Beveiliging"
 #: .\templates\account\password_change.html:12
 #: .\templates\account\password_reset_from_key.html:73
 msgid "Changer le mot de passe"
-msgstr "Changer le mot de passe"
+msgstr "Wachtwoord wijzigen"
 
 #: .\templates\account\password_change.html:14
 msgid "Mettez à jour votre mot de passe sans quitter votre session JiraFox."
-msgstr "Mettez à jour votre mot de passe sans quitter votre session JiraFox."
+msgstr "Werk uw wachtwoord bij zonder uw JiraFox-sessie te verlaten."
 
 #: .\templates\account\password_change.html:17
 msgid "Authenticated flow"
-msgstr "Authenticated flow"
+msgstr "Ingelogde sessie"
 
 #: .\templates\account\password_change.html:18
 msgid "In session"
-msgstr "In session"
+msgstr "In sessie"
 
 #: .\templates\account\password_change.html:21
 msgid "Password update"
-msgstr "Password update"
+msgstr "Wachtwoord bijwerken"
 
 #: .\templates\account\password_change.html:22
 msgid "Secure"
-msgstr "Secure"
+msgstr "Beveiligd"
 
 #: .\templates\account\password_change.html:27
 msgid "Mettre à jour l'accès"
-msgstr "Mettre à jour l'accès"
+msgstr "Toegang bijwerken"
 
 #: .\templates\account\password_change.html:29
 msgid "Saisissez votre mot de passe actuel, puis choisissez un nouveau mot de passe."
-msgstr "Saisissez votre mot de passe actuel, puis choisissez un nouveau mot de passe."
+msgstr "Voer uw huidige wachtwoord in en kies daarna een nieuw wachtwoord."
 
 #: .\templates\account\password_change.html:43
 msgid "Mot de passe actuel"
@@ -510,7 +510,7 @@ msgstr "Nieuw wachtwoord"
 #: .\templates\account\password_change.html:66
 #: .\templates\account\password_reset_from_key.html:64
 msgid "Confirmer le nouveau mot de passe"
-msgstr "Confirmer le nouveau mot de passe"
+msgstr "Nieuw wachtwoord bevestigen"
 
 #: .\templates\account\password_change.html:75
 msgid "Enregistrer le nouveau mot de passe"
@@ -519,7 +519,7 @@ msgstr "Nieuw wachtwoord opslaan"
 #: .\templates\account\password_change.html:79
 #: .\templates\account\password_reset_from_key_done.html:23
 msgid "Retour à l'accueil"
-msgstr "Retour à l'accueil"
+msgstr "Terug naar de startpagina"
 
 #: .\templates\account\password_reset.html:10
 #: .\templates\account\password_reset_done.html:10
@@ -530,15 +530,15 @@ msgstr "Herstel"
 
 #: .\templates\account\password_reset.html:12
 msgid "Mot de passe oublié"
-msgstr "Mot de passe oublié"
+msgstr "Wachtwoord vergeten"
 
 #: .\templates\account\password_reset.html:14
 msgid "Envoyez un lien de réinitialisation pour reprendre rapidement la main sur votre accès JiraFox."
-msgstr "Envoyez un lien de réinitialisation pour reprendre rapidement la main sur votre accès JiraFox."
+msgstr "Stuur een resetlink om snel weer controle te krijgen over uw JiraFox-toegang."
 
 #: .\templates\account\password_reset.html:17
 msgid "Email reset"
-msgstr "Email reset"
+msgstr "E-mailreset"
 
 #: .\templates\account\password_reset.html:21
 msgid "Access recovery"
@@ -546,11 +546,11 @@ msgstr "Toegang herstellen"
 
 #: .\templates\account\password_reset.html:26
 msgid "Réinitialiser l'accès"
-msgstr "Réinitialiser l'accès"
+msgstr "Toegang resetten"
 
 #: .\templates\account\password_reset.html:27
 msgid "Entrez votre adresse email. Si un compte existe, vous recevrez un lien de réinitialisation."
-msgstr "Entrez votre adresse email. Si un compte existe, vous recevrez un lien de réinitialisation."
+msgstr "Voer uw e-mailadres in. Als er een account bestaat, ontvangt u een resetlink."
 
 #: .\templates\account\password_reset.html:34
 #: .\templates\account\signup.html:52
@@ -559,22 +559,22 @@ msgstr "E-mailadres"
 
 #: .\templates\account\password_reset.html:43
 msgid "Envoyer le lien de réinitialisation"
-msgstr "Envoyer le lien de réinitialisation"
+msgstr "Resetlink versturen"
 
 #: .\templates\account\password_reset.html:46
 #: .\templates\account\password_reset_done.html:32
 #: .\templates\account\password_reset_from_key.html:33
 #: .\templates\account\password_reset_from_key.html:84
 msgid "Retour à la connexion"
-msgstr "Retour à la connexion"
+msgstr "Terug naar het aanmelden"
 
 #: .\templates\account\password_reset_done.html:12
 msgid "Email envoyé"
-msgstr "Email envoyé"
+msgstr "E-mail verzonden"
 
 #: .\templates\account\password_reset_done.html:14
 msgid "Le lien de réinitialisation part par email. Vous pouvez revenir ici si besoin dans quelques minutes."
-msgstr "Le lien de réinitialisation part par email. Vous pouvez revenir ici si besoin dans quelques minutes."
+msgstr "De resetlink wordt per e-mail verstuurd. U kunt over enkele minuten hier terugkomen indien nodig."
 
 #: .\templates\account\password_reset_done.html:17
 msgid "Password reset"
@@ -582,7 +582,7 @@ msgstr "Wachtwoord resetten"
 
 #: .\templates\account\password_reset_done.html:21
 msgid "Delivery"
-msgstr "Delivery"
+msgstr "Verzending"
 
 #: .\templates\account\password_reset_done.html:22
 msgid "Pending"
@@ -590,64 +590,64 @@ msgstr "In behandeling"
 
 #: .\templates\account\password_reset_done.html:27
 msgid "Vérifiez votre boîte mail"
-msgstr "Vérifiez votre boîte mail"
+msgstr "Controleer uw mailbox"
 
 #: .\templates\account\password_reset_done.html:29
 msgid "Nous vous avons envoyé un email. Si vous ne l'avez pas reçu, vérifiez votre dossier spam. Sinon, contactez-nous si rien n'arrive dans quelques minutes."
-msgstr "Nous vous avons envoyé un email. Si vous ne l'avez pas reçu, vérifiez votre dossier spam. Sinon, contactez-nous si rien n'arrive dans quelques minutes."
+msgstr "We hebben u een e-mail gestuurd. Als u hem niet hebt ontvangen, controleer dan uw spammap. Neem anders contact met ons op als er binnen enkele minuten niets aankomt."
 
 #: .\templates\account\password_reset_done.html:33
 msgid "Renvoyer la demande"
-msgstr "Renvoyer la demande"
+msgstr "Aanvraag opnieuw versturen"
 
 #: .\templates\account\password_reset_from_key.html:13
 msgid "Lien invalide"
-msgstr "Lien invalide"
+msgstr "Ongeldige link"
 
 #: .\templates\account\password_reset_from_key.html:15
 msgid "Ce lien de réinitialisation n'est plus valide ou a déjà été utilisé."
-msgstr "Ce lien de réinitialisation n'est plus valide ou a déjà été utilisé."
+msgstr "Deze resetlink is niet meer geldig of is al gebruikt."
 
 #: .\templates\account\password_reset_from_key.html:20
 msgid "Choisissez un nouveau mot de passe pour finaliser la récupération de votre accès."
-msgstr "Choisissez un nouveau mot de passe pour finaliser la récupération de votre accès."
+msgstr "Kies een nieuw wachtwoord om het herstel van uw toegang af te ronden."
 
 #: .\templates\account\password_reset_from_key.html:28
 msgid "Réinitialisation impossible"
-msgstr "Réinitialisation impossible"
+msgstr "Resetten niet mogelijk"
 
 #: .\templates\account\password_reset_from_key.html:30
 #, python-format
 msgid "Le lien de réinitialisation est invalide, probablement parce qu'il a déjà été utilisé. Merci de faire une <a href=\"%(passwd_reset_url)s\">nouvelle demande</a>."
-msgstr "Le lien de réinitialisation est invalide, probablement parce qu'il a déjà été utilisé. Merci de faire une <a href=\"%(passwd_reset_url)s\">nouvelle demande</a>."
+msgstr "De resetlink is ongeldig, waarschijnlijk omdat hij al is gebruikt. Doe a.u.b. een <a href=\"%(passwd_reset_url)s\">nieuwe aanvraag</a>."
 
 #: .\templates\account\password_reset_from_key.html:34
 msgid "Nouvelle demande"
-msgstr "Nouvelle demande"
+msgstr "Nieuwe aanvraag"
 
 #: .\templates\account\password_reset_from_key.html:37
 msgid "Définir un nouveau mot de passe"
-msgstr "Définir un nouveau mot de passe"
+msgstr "Een nieuw wachtwoord instellen"
 
 #: .\templates\account\password_reset_from_key.html:38
 msgid "Saisissez puis confirmez votre nouveau mot de passe."
-msgstr "Saisissez puis confirmez votre nouveau mot de passe."
+msgstr "Voer uw nieuwe wachtwoord in en bevestig het."
 
 #: .\templates\account\password_reset_from_key_done.html:12
 msgid "Mot de passe mis à jour"
-msgstr "Mot de passe mis à jour"
+msgstr "Wachtwoord bijgewerkt"
 
 #: .\templates\account\password_reset_from_key_done.html:14
 msgid "La réinitialisation est terminée. Vous pouvez maintenant vous reconnecter avec votre nouveau mot de passe."
-msgstr "La réinitialisation est terminée. Vous pouvez maintenant vous reconnecter avec votre nouveau mot de passe."
+msgstr "De reset is voltooid. U kunt zich nu opnieuw aanmelden met uw nieuwe wachtwoord."
 
 #: .\templates\account\password_reset_from_key_done.html:19
 msgid "Changement confirmé"
-msgstr "Changement confirmé"
+msgstr "Wijziging bevestigd"
 
 #: .\templates\account\password_reset_from_key_done.html:20
 msgid "Votre mot de passe a bien été modifié."
-msgstr "Votre mot de passe a bien été modifié."
+msgstr "Uw wachtwoord is gewijzigd."
 
 #: .\templates\account\signup.html:11
 msgid "Workspace access"
@@ -655,7 +655,7 @@ msgstr "Workspacetoegang"
 
 #: .\templates\account\signup.html:15
 msgid "Ouvrez votre accès pour centraliser vos boards, vos métriques de sprint et vos exports d'équipe dans un seul cockpit."
-msgstr "Ouvrez votre accès pour centraliser vos boards, vos métriques de sprint et vos exports d'équipe dans un seul cockpit."
+msgstr "Open uw toegang om uw boards, sprintmetrics en teamexports in één cockpit te bundelen."
 
 #: .\templates\account\signup.html:18
 msgid "Board configuration"
@@ -675,7 +675,7 @@ msgstr "Nieuw account"
 
 #: .\templates\account\signup.html:33
 msgid "Remplissez les informations essentielles pour démarrer."
-msgstr "Remplissez les informations essentielles pour démarrer."
+msgstr "Vul de essentiële gegevens in om te beginnen."
 
 #: .\templates\account\signup.html:41
 msgid "Nom d'utilisateur"
@@ -687,11 +687,11 @@ msgstr "Wachtwoord bevestigen"
 
 #: .\templates\account\signup.html:82
 msgid "Créer mon compte"
-msgstr "Créer mon compte"
+msgstr "Mijn account aanmaken"
 
 #: .\templates\account\signup.html:85
 msgid "Déjà un compte ?"
-msgstr "Déjà un compte ?"
+msgstr "Al een account?"
 
 #: .\templates\base.html:45 .\templates\base.html:82
 msgid "Confirmation"
@@ -848,7 +848,7 @@ msgstr "Story points"
 
 #: .\templates\dashboard.html:45
 msgid "Done tickets"
-msgstr "Done tickets"
+msgstr "Done-tickets"
 
 #: .\templates\dashboard.html:46
 msgid "No Done tickets"
@@ -879,11 +879,11 @@ msgstr "Openen"
 
 #: .\templates\dashboard.html:52
 msgid "Summary API unavailable, using local fallback."
-msgstr "Summary API unavailable, using local fallback."
+msgstr "Summary-API niet beschikbaar, lokale fallback wordt gebruikt."
 
 #: .\templates\dashboard.html:53
 msgid "Items API unavailable, using local fallback."
-msgstr "Items API unavailable, using local fallback."
+msgstr "Items-API niet beschikbaar, lokale fallback wordt gebruikt."
 
 #: .\templates\dashboard.html:54
 msgid "vs last week"
@@ -895,28 +895,28 @@ msgstr "status"
 
 #: .\templates\dashboard.html:67
 msgid "<strong>WIP (Work In Progress)</strong><br> Nombre total de tickets actuellement en cours (statuts actifs).<br> Un WIP trop eleve augmente le multitache, l'attente et ralentit le flux."
-msgstr "<strong>WIP (Work In Progress)</strong><br> Nombre total de tickets actuellement en cours (statuts actifs).<br> Un WIP trop eleve augmente le multitache, l'attente et ralentit le flux."
+msgstr "<strong>WIP (Work In Progress)</strong><br> Totaal aantal tickets dat momenteel in uitvoering is (actieve statussen).<br> Een te hoge WIP verhoogt multitasking en wachttijd en vertraagt de flow."
 
 #: .\templates\dashboard.html:72
 msgid "<strong>Aging WIP &gt; 10 jours</strong><br> Nombre de tickets en cours depuis plus de 10 jours.<br> Un volume eleve indique un risque de blocage ou de dispersion du travail."
-msgstr "<strong>Aging WIP &gt; 10 jours</strong><br> Nombre de tickets en cours depuis plus de 10 jours.<br> Un volume eleve indique un risque de blocage ou de dispersion du travail."
+msgstr "<strong>Aging WIP &gt; 10 dagen</strong><br> Aantal tickets dat al meer dan 10 dagen in uitvoering is.<br> Een hoog aantal wijst op een risico op blokkering of versnippering van het werk."
 
 #: .\templates\dashboard.html:77
 #, python-format
 msgid "<strong>Cycle Time (P50)</strong><br>Temps median necessaire pour terminer un ticket a partir du premier statut <em>In Progress</em>.<br>Le P50 signifie que 50%% des tickets sont termines en moins de cette duree."
-msgstr "<strong>Cycle Time (P50)</strong><br>Temps median necessaire pour terminer un ticket a partir du premier statut <em>In Progress</em>.<br>Le P50 signifie que 50%% des tickets sont termines en moins de cette duree."
+msgstr "<strong>Cycle Time (P50)</strong><br>Mediane tijd die nodig is om een ticket af te werken vanaf de eerste status <em>In Progress</em>.<br>P50 betekent dat 50%% van de tickets in minder dan deze tijd is afgewerkt."
 
 #: .\templates\dashboard.html:80
 msgid "<strong>Lead Time (P50)</strong><br> Temps median entre la creation d'un ticket et sa finalisation.<br> Il reflete l'experience reelle du client."
-msgstr "<strong>Lead Time (P50)</strong><br> Temps median entre la creation d'un ticket et sa finalisation.<br> Il reflete l'experience reelle du client."
+msgstr "<strong>Lead Time (P50)</strong><br> Mediane tijd tussen het aanmaken van een ticket en de afronding ervan.<br> Het weerspiegelt de werkelijke ervaring van de klant."
 
 #: .\templates\dashboard.html:85
 msgid "<strong>Throughput (7 jours)</strong><br> Nombre de tickets termines au cours des 7 derniers jours.<br> Indicateur cle de capacite et de stabilite du flux."
-msgstr "<strong>Throughput (7 jours)</strong><br> Nombre de tickets termines au cours des 7 derniers jours.<br> Indicateur cle de capacite et de stabilite du flux."
+msgstr "<strong>Throughput (7 dagen)</strong><br> Aantal tickets dat de afgelopen 7 dagen is afgewerkt.<br> Sleutelindicator voor capaciteit en stabiliteit van de flow."
 
 #: .\templates\dashboard.html:90
 msgid "<strong>Flow efficiency</strong><br> Part du temps ou le ticket est <em>reellement travaille</em> (cycle time) par rapport au temps total entre creation et fin (lead time).<br> <strong>Bas</strong> : beaucoup d'attente. <strong>Haut</strong> : flux fluide."
-msgstr "<strong>Flow efficiency</strong><br> Part du temps ou le ticket est <em>reellement travaille</em> (cycle time) par rapport au temps total entre creation et fin (lead time).<br> <strong>Bas</strong> : beaucoup d'attente. <strong>Haut</strong> : flux fluide."
+msgstr "<strong>Flow efficiency</strong><br> Aandeel van de tijd waarin er <em>echt aan het ticket wordt gewerkt</em> (cycle time) ten opzichte van de totale tijd tussen aanmaak en afronding (lead time).<br> <strong>Laag</strong>: veel wachttijd. <strong>Hoog</strong>: vlotte flow."
 
 #: .\templates\dashboard\_aging_table.html:5
 msgid "Table"
@@ -929,7 +929,7 @@ msgstr "Grafiek"
 
 #: .\templates\dashboard\_insights.html:60
 msgid "No Done tickets to display."
-msgstr "No Done tickets to display."
+msgstr "Geen Done-tickets om weer te geven."
 
 #: .\templates\dashboard\_insights.html:69
 msgid "Insights"
@@ -937,7 +937,7 @@ msgstr "Inzichten"
 
 #: .\templates\dashboard\_insights.html:93
 msgid "Tip: thickening statuses typically indicate a bottleneck."
-msgstr "Tip: thickening statuses typically indicate a bottleneck."
+msgstr "Tip: statussen die dikker worden wijzen doorgaans op een bottleneck."
 
 #: .\templates\dashboard\_kpis.html:29 .\templates\dashboard\_kpis.html:39
 msgid "business days"
@@ -963,7 +963,7 @@ msgstr "Sprint: %(sprint_name)s"
 
 #: .\templates\dashboard\_toolbar_actions.html:2
 msgid "Sprint links"
-msgstr "Sprint links"
+msgstr "Sprintlinks"
 
 #: .\templates\dashboard\_toolbar_actions.html:10
 #: .\templates\dashboard\_toolbar_actions.html:11
@@ -972,11 +972,11 @@ msgstr "Sprintdetail bekijken"
 
 #: .\templates\dashboard\_toolbar_actions.html:15
 msgid "Dashboard status"
-msgstr "Dashboard status"
+msgstr "Dashboardstatus"
 
 #: .\templates\home.html:12
 msgid "Pilotage agile"
-msgstr "Pilotage agile"
+msgstr "Agile sturing"
 
 #: .\templates\home.html:14
 msgid "Voir le flux avant qu'il ne se grippe."
@@ -984,7 +984,7 @@ msgstr "Zie de flow voordat die vastloopt."
 
 #: .\templates\home.html:16
 msgid "JiraFox rassemble les signaux utiles du sprint: aging, throughput, bottlenecks, capacite et acces directs a Jira. L'objectif n'est pas d'ajouter une couche de reporting, mais de rendre les decisions visibles plus vite."
-msgstr "JiraFox rassemble les signaux utiles du sprint: aging, throughput, bottlenecks, capacite et acces directs a Jira. L'objectif n'est pas d'ajouter une couche de reporting, mais de rendre les decisions visibles plus vite."
+msgstr "JiraFox bundelt de nuttige signalen van de sprint: aging, throughput, bottlenecks, capaciteit en directe toegang tot Jira. Het doel is niet om een rapportagelaag toe te voegen, maar om beslissingen sneller zichtbaar te maken."
 
 #: .\templates\home.html:21
 msgid "Ouvrir le dashboard"
@@ -996,19 +996,19 @@ msgstr "Sprints verkennen"
 
 #: .\templates\home.html:37
 msgid "En un regard"
-msgstr "En un regard"
+msgstr "In één oogopslag"
 
 #: .\templates\home.html:39
 msgid "Un cockpit plus qu'une homepage."
-msgstr "Un cockpit plus qu'une homepage."
+msgstr "Een cockpit eerder dan een homepage."
 
 #: .\templates\home.html:41
 msgid "Chaque ecran pousse vers une action concrete: verifier l'age reel du travail, ouvrir la bonne requete Jira, ou recaler la capacite de l'equipe."
-msgstr "Chaque ecran pousse vers une action concrete: verifier l'age reel du travail, ouvrir la bonne requete Jira, ou recaler la capacite de l'equipe."
+msgstr "Elk scherm leidt naar een concrete actie: de werkelijke leeftijd van het werk controleren, de juiste Jira-query openen of de capaciteit van het team bijstellen."
 
 #: .\templates\home.html:44
 msgid "Work item aging"
-msgstr "Work item aging"
+msgstr "Veroudering van werkitems"
 
 #: .\templates\home.html:48
 msgid "Flow efficiency"
@@ -1016,19 +1016,19 @@ msgstr "Flow efficiency"
 
 #: .\templates\home.html:63
 msgid "Parcours"
-msgstr "Parcours"
+msgstr "Trajecten"
 
 #: .\templates\home.html:65
 msgid "Entrees principales"
-msgstr "Entrees principales"
+msgstr "Hoofdingangen"
 
 #: .\templates\home.html:67
 msgid "Trois acces penses pour aller du signal au detail sans detour."
-msgstr "Trois acces penses pour aller du signal au detail sans detour."
+msgstr "Drie toegangen om zonder omweg van signaal naar detail te gaan."
 
 #: .\templates\home.html:77
 msgid "Vue synthetique du sprint courant, avec KPIs, WIA chart, bottlenecks et top aging items."
-msgstr "Vue synthetique du sprint courant, avec KPIs, WIA chart, bottlenecks et top aging items."
+msgstr "Beknopt overzicht van de huidige sprint, met KPI's, WIA-chart, bottlenecks en top aging items."
 
 #: .\templates\home.html:79
 msgid "Ouvrir"
@@ -1041,7 +1041,7 @@ msgstr "Sprints"
 
 #: .\templates\home.html:86
 msgid "Lister les sprints, naviguer dans leurs details et basculer rapidement vers Jira ou l'export."
-msgstr "Lister les sprints, naviguer dans leurs details et basculer rapidement vers Jira ou l'export."
+msgstr "Sprints weergeven, door de details navigeren en snel overschakelen naar Jira of de export."
 
 #: .\templates\home.html:88
 msgid "Parcourir"
@@ -1114,7 +1114,7 @@ msgstr "Donkere modus wisselen"
 
 #: .\templates\includes\header.html:78
 msgid "Language switch"
-msgstr "Language switch"
+msgstr "Taalwissel"
 
 #: .\templates\includes\header.html:104 .\templates\settings.html:4
 #: .\templates\settings.html:14 .\templates\team\project_form.html:34
@@ -1148,7 +1148,7 @@ msgstr "d"
 #: .\templates\issue\issue_detail.html:20
 #: .\templates\issue\issue_detail.html:28
 msgid "business h"
-msgstr "business h"
+msgstr "werkuren"
 
 #: .\templates\issue\issue_detail.html:18
 msgid "Cycle time"
@@ -1156,11 +1156,11 @@ msgstr "Cycle time"
 
 #: .\templates\issue\issue_detail.html:21
 msgid "First in progress"
-msgstr "First in progress"
+msgstr "Eerste In Progress"
 
 #: .\templates\issue\issue_detail.html:26
 msgid "Current WIP age"
-msgstr "Current WIP age"
+msgstr "Huidige WIP-leeftijd"
 
 #: .\templates\issue\issue_detail.html:36
 msgid "Informations"
@@ -1168,7 +1168,7 @@ msgstr "Informatie"
 
 #: .\templates\issue\issue_detail.html:38
 msgid "Created"
-msgstr "Created"
+msgstr "Aangemaakt"
 
 #: .\templates\issue\issue_detail.html:39
 #: .\templates\sprint\sprint_detail.html:32
@@ -1193,7 +1193,7 @@ msgstr "Scrum / effort"
 
 #: .\templates\issue\issue_detail.html:48
 msgid "Original estimate"
-msgstr "Original estimate"
+msgstr "Oorspronkelijke schatting"
 
 #: .\templates\issue\issue_detail.html:49
 msgid "Remaining"
@@ -1205,7 +1205,7 @@ msgstr "Besteed"
 
 #: .\templates\issue\issue_detail.html:55
 msgid "Time in status"
-msgstr "Time in status"
+msgstr "Tijd in status"
 
 #: .\templates\issue\issue_detail.html:71
 msgid "No data."
@@ -1217,15 +1217,15 @@ msgstr "Geschiedenis"
 
 #: .\templates\issue\issue_detail.html:81
 msgid "Status changes"
-msgstr "Status changes"
+msgstr "Statuswijzigingen"
 
 #: .\templates\issue\issue_detail.html:110
 msgid "No status change found."
-msgstr "No status change found."
+msgstr "Geen statuswijziging gevonden."
 
 #: .\templates\issue\issue_detail.html:118
 msgid "Raw data (debug)"
-msgstr "Raw data (debug)"
+msgstr "Ruwe gegevens (debug)"
 
 #: .\templates\issue\issue_header.html:6
 #: .\templates\sprint\sprint_toolbar_actions.html:3
@@ -1238,20 +1238,20 @@ msgstr "Labels in bulk"
 
 #: .\templates\jira\bulk_labels.html:9
 msgid "Bulk Labels by JQL"
-msgstr "Bulk Labels by JQL"
+msgstr "Bulklabels via JQL"
 
 #: .\templates\jira\bulk_labels.html:17
 msgid "Prepare operation"
-msgstr "Prepare operation"
+msgstr "Bewerking voorbereiden"
 
 #: .\templates\jira\bulk_labels.html:18
 msgid "Add and remove labels from issues selected by JQL."
-msgstr "Add and remove labels from issues selected by JQL."
+msgstr "Labels toevoegen en verwijderen bij tickets die via JQL zijn geselecteerd."
 
 #: .\templates\jira\bulk_labels.html:20
 #: .\templates\jira\bulk_operations.html:64
 msgid "Preview first"
-msgstr "Preview first"
+msgstr "Eerst voorbeeld bekijken"
 
 #: .\templates\jira\bulk_labels.html:33
 msgid "Labels to add"
@@ -1275,7 +1275,7 @@ msgstr "issue(s) gevonden"
 
 #: .\templates\jira\bulk_labels.html:65
 msgid "Only rows marked as changed will be updated."
-msgstr "Only rows marked as changed will be updated."
+msgstr "Alleen rijen die als gewijzigd zijn gemarkeerd, worden bijgewerkt."
 
 #: .\templates\jira\bulk_labels.html:71
 msgid "Apply changes"
@@ -1289,7 +1289,7 @@ msgstr "Samenvatting"
 
 #: .\templates\jira\bulk_labels.html:82
 msgid "Current labels"
-msgstr "Current labels"
+msgstr "Huidige labels"
 
 #: .\templates\jira\bulk_labels.html:83
 msgid "Next labels"
@@ -1313,7 +1313,7 @@ msgstr "Geen issues teruggegeven."
 
 #: .\templates\jira\bulk_labels.html:131
 msgid "Last execution"
-msgstr "Last execution"
+msgstr "Laatste uitvoering"
 
 #: .\templates\jira\bulk_labels.html:138
 msgid "Result"
@@ -1329,31 +1329,31 @@ msgstr "Overgeslagen"
 
 #: .\templates\jira\bulk_labels.html:168
 msgid "Template documentation"
-msgstr "Template documentation"
+msgstr "Documentatie van het sjabloon"
 
 #: .\templates\jira\bulk_labels.html:171
 msgid "Execution model"
-msgstr "Execution model"
+msgstr "Uitvoeringsmodel"
 
 #: .\templates\jira\bulk_labels.html:173
 msgid "Every operation runs in two steps. Preview stores a frozen list of target tickets in your session. Apply updates only that frozen list, not a freshly re-evaluated JQL result."
-msgstr "Every operation runs in two steps. Preview stores a frozen list of target tickets in your session. Apply updates only that frozen list, not a freshly re-evaluated JQL result."
+msgstr "Elke bewerking verloopt in twee stappen. Het voorbeeld slaat een bevroren lijst van doeltickets op in uw sessie. Toepassen werkt alleen die bevroren lijst bij, niet een opnieuw geëvalueerd JQL-resultaat."
 
 #: .\templates\jira\bulk_labels.html:177
 msgid "Label input format"
-msgstr "Label input format"
+msgstr "Invoerformaat van labels"
 
 #: .\templates\jira\bulk_labels.html:179
 msgid "Use comma-separated labels. New lines are accepted too. Duplicate labels are removed before preview."
-msgstr "Use comma-separated labels. New lines are accepted too. Duplicate labels are removed before preview."
+msgstr "Gebruik door komma's gescheiden labels. Nieuwe regels worden ook aanvaard. Dubbele labels worden vóór het voorbeeld verwijderd."
 
 #: .\templates\jira\bulk_labels.html:183
 msgid "Safety rules"
-msgstr "Safety rules"
+msgstr "Veiligheidsregels"
 
 #: .\templates\jira\bulk_labels.html:185
 msgid "Use a small limit first. Review the Change column. Apply only when the preview matches exactly what you expect."
-msgstr "Use a small limit first. Review the Change column. Apply only when the preview matches exactly what you expect."
+msgstr "Begin met een kleine limiet. Controleer de kolom Change. Pas alleen toe wanneer het voorbeeld exact overeenkomt met wat u verwacht."
 
 #: .\templates\jira\bulk_labels.html:192
 msgid "JQL examples"
@@ -1361,27 +1361,27 @@ msgstr "JQL-voorbeelden"
 
 #: .\templates\jira\bulk_operations.html:8
 msgid "Jira automation"
-msgstr "Jira automation"
+msgstr "Jira-automatisering"
 
 #: .\templates\jira\bulk_operations.html:18
 msgid "Browser-driven Jira operations with preview before apply."
-msgstr "Browser-driven Jira operations with preview before apply."
+msgstr "Via de browser aangestuurde Jira-bewerkingen met voorbeeld vóór toepassing."
 
 #: .\templates\jira\bulk_operations.html:26
 msgid "Labels by JQL"
-msgstr "Labels by JQL"
+msgstr "Labels via JQL"
 
 #: .\templates\jira\bulk_operations.html:27
 msgid "Add or remove labels from a frozen preview of JQL-selected issues."
-msgstr "Add or remove labels from a frozen preview of JQL-selected issues."
+msgstr "Labels toevoegen of verwijderen via een bevroren voorbeeld van tickets die met JQL zijn geselecteerd."
 
 #: .\templates\jira\bulk_operations.html:34
 msgid "Bulk create issues"
-msgstr "Bulk create issues"
+msgstr "Tickets in bulk aanmaken"
 
 #: .\templates\jira\bulk_operations.html:35
 msgid "Create multiple tasks, bugs or epics from structured input."
-msgstr "Create multiple tasks, bugs or epics from structured input."
+msgstr "Meerdere taken, bugs of epics aanmaken op basis van gestructureerde invoer."
 
 #: .\templates\jira\bulk_operations.html:36
 #: .\templates\jira\bulk_operations.html:44
@@ -1391,63 +1391,63 @@ msgstr "Roadmap"
 
 #: .\templates\jira\bulk_operations.html:42
 msgid "Assign by JQL"
-msgstr "Assign by JQL"
+msgstr "Toewijzen via JQL"
 
 #: .\templates\jira\bulk_operations.html:43
 msgid "Assign selected issues to a developer after preview."
-msgstr "Assign selected issues to a developer after preview."
+msgstr "Geselecteerde tickets na het voorbeeld aan een ontwikkelaar toewijzen."
 
 #: .\templates\jira\bulk_operations.html:50
 msgid "Transition by JQL"
-msgstr "Transition by JQL"
+msgstr "Transitie via JQL"
 
 #: .\templates\jira\bulk_operations.html:51
 msgid "Move selected issues through a Jira workflow transition."
-msgstr "Move selected issues through a Jira workflow transition."
+msgstr "Geselecteerde tickets verplaatsen via een Jira-workflowtransitie."
 
 #: .\templates\jira\bulk_operations.html:61
 msgid "Safety model"
-msgstr "Safety model"
+msgstr "Veiligheidsmodel"
 
 #: .\templates\jira\bulk_operations.html:65
 msgid "Every operation should show affected issues and computed changes before Jira is modified."
-msgstr "Every operation should show affected issues and computed changes before Jira is modified."
+msgstr "Elke bewerking moet de betrokken tickets en de berekende wijzigingen tonen voordat Jira wordt aangepast."
 
 #: .\templates\jira\bulk_operations.html:68
 msgid "Frozen target set"
-msgstr "Frozen target set"
+msgstr "Bevroren doelset"
 
 #: .\templates\jira\bulk_operations.html:69
 msgid "Apply should use the previewed issue list, not a freshly evaluated JQL query."
-msgstr "Apply should use the previewed issue list, not a freshly evaluated JQL query."
+msgstr "Toepassen moet de lijst tickets uit het voorbeeld gebruiken, niet een opnieuw geëvalueerde JQL-query."
 
 #: .\templates\jira\bulk_operations.html:72
 msgid "Small batches"
-msgstr "Small batches"
+msgstr "Kleine batches"
 
 #: .\templates\jira\bulk_operations.html:73
 msgid "Start with a small limit, validate the result, then increase the scope."
-msgstr "Start with a small limit, validate the result, then increase the scope."
+msgstr "Begin met een kleine limiet, controleer het resultaat en vergroot dan het bereik."
 
 #: .\templates\jira\bulk_operations.html:79
 msgid "Recommended workflow"
-msgstr "Recommended workflow"
+msgstr "Aanbevolen werkwijze"
 
 #: .\templates\jira\bulk_operations.html:81
 msgid "Write or select a precise JQL query."
-msgstr "Write or select a precise JQL query."
+msgstr "Schrijf of kies een nauwkeurige JQL-query."
 
 #: .\templates\jira\bulk_operations.html:82
 msgid "Run preview and inspect changed rows."
-msgstr "Run preview and inspect changed rows."
+msgstr "Voer het voorbeeld uit en controleer de gewijzigde rijen."
 
 #: .\templates\jira\bulk_operations.html:83
 msgid "Apply only when the preview is exact."
-msgstr "Apply only when the preview is exact."
+msgstr "Pas alleen toe wanneer het voorbeeld klopt."
 
 #: .\templates\jira\bulk_operations.html:84
 msgid "Review the execution result."
-msgstr "Review the execution result."
+msgstr "Controleer het uitvoeringsresultaat."
 
 #: .\templates\jira\jira_config_list.html:6
 msgid "Your personal token for each Jira. Boards, projects and developers are set on the projects, shared with their members."
@@ -1492,7 +1492,7 @@ msgstr "Verwijderen"
 
 #: .\templates\jira\jira_config_list.html:86
 msgid "Aucune configuration."
-msgstr "Aucune configuration."
+msgstr "Geen configuratie."
 
 #: .\templates\jira\jira_config_list.html:106
 msgid "Saving..."
@@ -1504,7 +1504,7 @@ msgstr "Testen..."
 
 #: .\templates\jira\jira_config_list.html:108
 msgid "Connection test in progress..."
-msgstr "Connection test in progress..."
+msgstr "Verbindingstest bezig..."
 
 #: .\templates\jira\jira_config_list.html:109
 msgid "Connection OK"
@@ -1520,23 +1520,23 @@ msgstr "onbekende fout"
 
 #: .\templates\jira\jira_config_list.html:112
 msgid "Configuration saved."
-msgstr "Configuration saved."
+msgstr "Configuratie opgeslagen."
 
 #: .\templates\jira\jira_config_list.html:113
 msgid "Jira connection validated."
-msgstr "Jira connection validated."
+msgstr "Jira-verbinding gevalideerd."
 
 #: .\templates\jira\jira_config_list.html:114
 msgid "Jira connection failed."
-msgstr "Jira connection failed."
+msgstr "Jira-verbinding mislukt."
 
 #: .\templates\jira\jira_config_list.html:115
 msgid "Delete configuration"
-msgstr "Delete configuration"
+msgstr "Configuratie verwijderen"
 
 #: .\templates\jira\jira_config_list.html:116
 msgid "Delete this Jira configuration?"
-msgstr "Delete this Jira configuration?"
+msgstr "Deze Jira-configuratie verwijderen?"
 
 #: .\templates\jira\jira_config_list.html:117
 msgid "Delete"
@@ -1544,15 +1544,15 @@ msgstr "Verwijderen"
 
 #: .\templates\jira\jira_config_list.html:119
 msgid "Configuration deleted."
-msgstr "Configuration deleted."
+msgstr "Configuratie verwijderd."
 
 #: .\templates\jira\jira_config_list.html:120
 msgid "Jira connection OK."
-msgstr "Jira connection OK."
+msgstr "Jira-verbinding OK."
 
 #: .\templates\jira\jira_config_list.html:121
 msgid "Unexpected response format"
-msgstr "Unexpected response format"
+msgstr "Onverwacht antwoordformaat"
 
 #: .\templates\jira\jira_unavailable.html:4
 msgid "Jira unavailable"
@@ -1620,7 +1620,7 @@ msgstr "Laatste fout:"
 
 #: .\templates\jira\partials\jira_config_modal_form.html:59
 msgid "You can save and then test, or test directly after editing."
-msgstr "You can save and then test, or test directly after editing."
+msgstr "U kunt eerst opslaan en dan testen, of meteen testen na het bewerken."
 
 #: .\templates\jira\partials\jira_config_modal_form.html:64
 msgid "Test connection"
@@ -1641,7 +1641,7 @@ msgstr "Jira-queryconsole"
 
 #: .\templates\query.html:31
 msgid "Load full issue details"
-msgstr "Load full issue details"
+msgstr "Volledige ticketdetails laden"
 
 #: .\templates\query.html:40
 msgid "Run"
@@ -1649,7 +1649,7 @@ msgstr "Uitvoeren"
 
 #: .\templates\query.html:49
 msgid "Query failed"
-msgstr "Query failed"
+msgstr "Query mislukt"
 
 #: .\templates\query.html:57
 msgid "Results"
@@ -1657,7 +1657,7 @@ msgstr "Resultaten"
 
 #: .\templates\query.html:58 .\templates\sprint\sprint_scope_flow.html:366
 msgid "issue(s)"
-msgstr "issue(s)"
+msgstr "ticket(s)"
 
 #: .\templates\query.html:69
 msgid "Category"
@@ -1673,7 +1673,7 @@ msgstr "Presets"
 
 #: .\templates\query.html:122
 msgid "No presets available."
-msgstr "No presets available."
+msgstr "Geen presets beschikbaar."
 
 #: .\templates\query.html:129
 msgid "Recent queries"
@@ -1697,7 +1697,7 @@ msgstr "U hebt nog geen project."
 
 #: .\templates\query.html:168
 msgid "Epic bootstrap"
-msgstr "Epic bootstrap"
+msgstr "Epic-bootstrap"
 
 #: .\templates\query.html:173
 msgid "Create epics"
@@ -1705,11 +1705,11 @@ msgstr "Epics aanmaken"
 
 #: .\templates\settings.html:7
 msgid "Profile and workspace settings"
-msgstr "Profile and workspace settings"
+msgstr "Profiel- en werkruimte-instellingen"
 
 #: .\templates\settings.html:8
 msgid "Manage your account details, preferred language and the Jira configuration currently driving the workspace."
-msgstr "Manage your account details, preferred language and the Jira configuration currently driving the workspace."
+msgstr "Beheer uw accountgegevens, uw voorkeurstaal en de Jira-configuratie die momenteel de werkruimte aanstuurt."
 
 #: .\templates\settings.html:25
 msgid "User profile"
@@ -1717,7 +1717,7 @@ msgstr "Gebruikersprofiel"
 
 #: .\templates\settings.html:26
 msgid "These values are used for your account and interface preferences."
-msgstr "These values are used for your account and interface preferences."
+msgstr "Deze waarden worden gebruikt voor uw account en uw interfacevoorkeuren."
 
 #: .\templates\settings.html:61
 msgid "Interface language"
@@ -1729,11 +1729,11 @@ msgstr "Instellingen opslaan"
 
 #: .\templates\settings.html:87
 msgid "Password management"
-msgstr "Password management"
+msgstr "Wachtwoordbeheer"
 
 #: .\templates\settings.html:88
 msgid "Update your password from an authenticated session."
-msgstr "Update your password from an authenticated session."
+msgstr "Werk uw wachtwoord bij vanuit een ingelogde sessie."
 
 #: .\templates\settings.html:107
 msgid "Manage the project"
@@ -1743,25 +1743,45 @@ msgstr "Project beheren"
 msgid "Manage Jira connections"
 msgstr "Jira-verbindingen beheren"
 
-#: .\templates\sprint\_capacity_table.html:21
+#: .\templates\sprint\_capacity_table.html:22
 #: .\templates\team\_dev_table.html:39
 msgid "Workload"
 msgstr "Werklast"
 
-#: .\templates\sprint\_capacity_table.html:25
+#: .\templates\sprint\_capacity_table.html:23
+#: .\templates\sprint\_capacity_table.html:27
+#: .\templates\sprint\_capacity_table.html:31
+#: .\templates\sprint\_capacity_table.html:35
+#: .\templates\sprint\_capacity_table.html:39
+msgid "Template:"
+msgstr "Sjabloon:"
+
+#: .\templates\sprint\_capacity_table.html:26
 #: .\templates\team\_dev_table.html:43
 msgid "Holidays"
 msgstr "Verlof"
 
-#: .\templates\sprint\_capacity_table.html:33
+#: .\templates\sprint\_capacity_table.html:34
 #: .\templates\team\_dev_table.html:51
 msgid "Project meetings"
 msgstr "Projectmeetings"
 
-#: .\templates\sprint\_capacity_table.html:37
+#: .\templates\sprint\_capacity_table.html:38
 #: .\templates\team\_dev_table.html:55
 msgid "Other meetings"
 msgstr "Andere meetings"
+
+#: .\templates\sprint\_capacity_table.html:42
+msgid "Workload minus holidays, fastlane and meetings."
+msgstr "Werklast min verlof, fastlane en meetings."
+
+#: .\templates\sprint\_capacity_table.html:42
+msgid "Available"
+msgstr "Beschikbaar"
+
+#: .\templates\sprint\_capacity_table.html:49
+msgid "Value set for this sprint, apart from the developer's template (hover a cell to see the template)."
+msgstr "Waarde die alleen voor deze sprint geldt, los van het sjabloon van de ontwikkelaar (beweeg over een cel om het sjabloon te zien)."
 
 #: .\templates\sprint\management_report.html:4
 #: .\templates\sprint\management_report.html:8
@@ -1833,11 +1853,11 @@ msgstr "Gekopieerd"
 
 #: .\templates\sprint\sprint_detail.html:17
 msgid "Sprint backlog"
-msgstr "Sprint backlog"
+msgstr "Sprintbacklog"
 
 #: .\templates\sprint\sprint_detail.html:18
 msgid "Detailed sprint issue view with direct access to details and Jira."
-msgstr "Detailed sprint issue view with direct access to details and Jira."
+msgstr "Gedetailleerd overzicht van de sprinttickets met directe toegang tot details en Jira."
 
 #: .\templates\sprint\sprint_header.html:2
 #, python-format
@@ -1851,7 +1871,7 @@ msgstr "Kanban"
 
 #: .\templates\sprint\sprint_kanban.html:14
 msgid "Column-by-column view of sprint issues."
-msgstr "Column-by-column view of sprint issues."
+msgstr "Kolom-per-kolomweergave van de sprinttickets."
 
 #: .\templates\sprint\sprint_kanban.html:27
 msgid "No issue"
@@ -1867,7 +1887,7 @@ msgstr "Kan Kanban niet laden"
 
 #: .\templates\sprint\sprint_list.html:12
 msgid "Sprint map"
-msgstr "Sprint map"
+msgstr "Sprintoverzicht"
 
 #: .\templates\sprint\sprint_list.html:22
 msgid "Active"
@@ -1906,7 +1926,7 @@ msgstr "Sprintrapport"
 
 #: .\templates\sprint\sprint_report.html:14
 msgid "Ready-to-open JQL queries by sprint segment."
-msgstr "Ready-to-open JQL queries by sprint segment."
+msgstr "Kant-en-klare JQL-queries per sprintsegment."
 
 #: .\templates\sprint\sprint_scope_flow.html:23
 #: .\templates\sprint\sprint_scope_flow.html:32
@@ -2026,7 +2046,7 @@ msgstr "Statusverloop"
 #: .\templates\sprint\sprint_scope_flow.html:199
 #: .\templates\sprint\sprint_weighted_throughput_distribution.html:34
 msgid "Aucune donnée à afficher"
-msgstr "Aucune donnée à afficher"
+msgstr "Geen gegevens om weer te geven"
 
 #: .\templates\sprint\sprint_scope_flow.html:161
 msgid "Status of each issue when it entered the sprint (the sprint start for planned issues, the moment it was added otherwise) compared with its status at the sprint end."
@@ -2036,7 +2056,7 @@ msgstr "Status van elk ticket bij het binnenkomen in de sprint (het begin van de
 #: .\templates\sprint\sprint_scope_flow.html:210
 #: .\templates\sprint\sprint_trends.html:136
 msgid "Issues"
-msgstr "Issues"
+msgstr "Tickets"
 
 #: .\templates\sprint\sprint_scope_flow.html:166
 #: .\templates\sprint\sprint_scope_flow.html:389
@@ -2116,7 +2136,7 @@ msgstr "Geen status"
 
 #: .\templates\sprint\sprint_scope_flow.html:395
 msgid "Total"
-msgstr "Total"
+msgstr "Totaal"
 
 #: .\templates\sprint\sprint_scope_flow.html:443
 msgid "Entry ↓ / End →"
@@ -2230,19 +2250,19 @@ msgstr "Dagen"
 #: .\templates\sprint\sprint_weighted_throughput_distribution.html:8
 #: .\templates\sprint\sprint_weighted_throughput_distribution.html:17
 msgid "Distribution du débit par pondération"
-msgstr "Distribution du débit par pondération"
+msgstr "Verdeling van de throughput per weging"
 
 #: .\templates\sprint\sprint_weighted_throughput_distribution.html:19
 msgid "Histogramme des tickets Done par story points."
-msgstr "Histogramme des tickets Done par story points."
+msgstr "Histogram van Done-tickets per story points."
 
 #: .\templates\sprint\sprint_weighted_throughput_distribution.html:23
 msgid "Total tickets Done"
-msgstr "Total tickets Done"
+msgstr "Totaal Done-tickets"
 
 #: .\templates\sprint\sprint_weighted_throughput_distribution.html:36
 msgid "Aucun ticket Done avec story points n'a été trouvé pour ce sprint."
-msgstr "Aucun ticket Done avec story points n'a été trouvé pour ce sprint."
+msgstr "Er is geen Done-ticket met story points gevonden voor deze sprint."
 
 #: .\templates\sprint\sprint_weighted_throughput_distribution.html:60
 #: .\templates\sprint\sprint_weighted_throughput_distribution.html:89
@@ -2255,7 +2275,7 @@ msgstr "story points"
 
 #: .\templates\sprint\sprint_weighted_throughput_distribution.html:77
 msgid "ticket(s) Done"
-msgstr "ticket(s) Done"
+msgstr "Done-ticket(s)"
 
 #: .\templates\sprint\sprint_wia.html:19
 msgid "Work Item Age Diagram"
@@ -2263,7 +2283,7 @@ msgstr "Work Item Age-diagram"
 
 #: .\templates\sprint\sprint_wia.html:20
 msgid "Chart and table are powered by the same API."
-msgstr "Chart and table are powered by the same API."
+msgstr "Grafiek en tabel gebruiken dezelfde API."
 
 #: .\templates\sprint\sprint_wia.html:49
 msgid "Items sorted by descending age"
@@ -2283,7 +2303,7 @@ msgstr "Cycle Time (dagen)"
 
 #: .\templates\sprint\sprint_wia.html:61
 msgid "First In Progress"
-msgstr "First In Progress"
+msgstr "Eerste In Progress"
 
 #: .\templates\sprint\sprint_wia.html:62
 msgid "Link"
@@ -2307,7 +2327,7 @@ msgstr "item"
 
 #: .\templates\sprint\sprint_wia.html:92
 msgid "Item age (days)"
-msgstr "Item age (days)"
+msgstr "Leeftijd van item (dagen)"
 
 #: .\templates\sprint\sprint_xls_report.html:19
 msgid "Capacity sheet"
@@ -2374,11 +2394,11 @@ msgstr "Urenrapport genereren"
 
 #: .\templates\team\_dev_table.html:14
 msgid "Reordonner le dev"
-msgstr "Reordonner le dev"
+msgstr "Ontwikkelaar herordenen"
 
 #: .\templates\team\_dev_table.html:20
 msgid "Retirer de la team"
-msgstr "Retirer de la team"
+msgstr "Uit het team verwijderen"
 
 #: .\templates\team\_dev_table.html:35
 msgid "Jira username: matches worklogs and assignees exactly. Without it, the developer is matched by name."
@@ -2430,7 +2450,7 @@ msgstr "Ontwikkelaar verwijderen"
 
 #: .\templates\team\_dev_table_js.html:15
 msgid "Remove this developer from the team?"
-msgstr "Remove this developer from the team?"
+msgstr "Deze ontwikkelaar uit het team verwijderen?"
 
 #: .\templates\team\_dev_table_js.html:16
 msgid "Remove"
@@ -2446,11 +2466,11 @@ msgstr "Kan ontwikkelaar niet verwijderen."
 
 #: .\templates\team\_dev_table_js.html:19
 msgid "Column order saved."
-msgstr "Column order saved."
+msgstr "Kolomvolgorde opgeslagen."
 
 #: .\templates\team\_dev_table_js.html:20
 msgid "Unable to save column order."
-msgstr "Unable to save column order."
+msgstr "Kolomvolgorde kan niet worden opgeslagen."
 
 #: .\templates\team\project_devs.html:16
 msgid "The project's developers, shared by its members. Their hours are the template of a sprint: each sprint's capacity sheet starts from a copy of them, then is adjusted for that sprint only. The Jira ID matches worklogs and assignees. Drag the columns to reorder them."
@@ -2474,7 +2494,7 @@ msgstr "Project-ID"
 
 #: .\templates\team\project_form.html:62
 msgid "Recurrent Epic Key"
-msgstr "Recurrent Epic Key"
+msgstr "Sleutel van terugkerende epic"
 
 #: .\templates\team\project_form.html:66
 msgid "Statuses counted as started"

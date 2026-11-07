@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: JiraFox\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06 00:55+0100\n"
+"POT-Creation-Date: 2026-11-07 13:31+0100\n"
 "PO-Revision-Date: 2026-09-15 00:00+0200\n"
 "Last-Translator: Codex <codex@local>\n"
 "Language-Team: French <fr@local>\n"
@@ -57,7 +57,7 @@ msgstr "Sprint courant terminé"
 msgid "Current sprint WIP"
 msgstr "WIP du sprint courant"
 
-#: .\JiraFox\views.py:276 .\templates\sprint\_capacity_table.html:29
+#: .\JiraFox\views.py:276 .\templates\sprint\_capacity_table.html:30
 #: .\templates\team\_dev_table.html:47
 msgid "Fastlane"
 msgstr "Fastlane"
@@ -161,33 +161,33 @@ msgstr "Le JQL est obligatoire."
 
 #: .\jiramodule\views.py:76
 msgid "Add at least one label to add or remove."
-msgstr "Add at least one label to add or remove."
+msgstr "Ajoutez au moins un label à ajouter ou à retirer."
 
 #: .\jiramodule\views.py:89
 #, python-format
 msgid "Preview failed: %(error)s"
-msgstr "Preview failed: %(error)s"
+msgstr "Échec de l'aperçu : %(error)s"
 
 #: .\jiramodule\views.py:93
 #, python-format
 msgid "Preview ready: %(count)s ticket(s) will change."
-msgstr "Preview ready: %(count)s ticket(s) will change."
+msgstr "Aperçu prêt : %(count)s ticket(s) seront modifiés."
 
 #: .\jiramodule\views.py:102
 msgid "No bulk labels preview to apply."
-msgstr "No bulk labels preview to apply."
+msgstr "Aucun aperçu de labels en masse à appliquer."
 
 #: .\jiramodule\views.py:114
 #, python-format
 msgid "Bulk labels applied: %(success_count)s updated, %(error_count)s error(s)."
-msgstr "Bulk labels applied: %(success_count)s updated, %(error_count)s error(s)."
+msgstr "Labels en masse appliqués : %(success_count)s mis à jour, %(error_count)s erreur(s)."
 
 #: .\sprint\scope_flow.py:164
 #, python-format
 msgid "Planned and added issues do not add up to the %(count)s issues."
 msgstr "Les tickets prévus et ajoutés ne totalisent pas les %(count)s tickets."
 
-#: .\sprint\scope_flow.py:172 .\sprint\tests.py:2212
+#: .\sprint\scope_flow.py:172 .\sprint\tests.py:2250
 #, python-format
 msgid "Closed rate (%(group)s) does not add up."
 msgstr "Le taux de clôture (%(group)s) ne tombe pas juste."
@@ -308,11 +308,11 @@ msgstr "Vue technique"
 
 #: .\templates\about.html:17
 msgid "JiraFox connects to Jira, structures sprint and issue data, and exposes focused screens for backlog review, WIA, kanban reading, exports and dashboard monitoring."
-msgstr "JiraFox connects to Jira, structures sprint and issue data, and exposes focused screens for backlog review, WIA, kanban reading, exports and dashboard monitoring."
+msgstr "JiraFox se connecte à Jira, structure les données de sprint et de tickets, et propose des écrans ciblés pour la revue du backlog, la WIA, la lecture du kanban, les exports et le suivi du dashboard."
 
 #: .\templates\about.html:20
 msgid "The project has been progressively refactored to separate service logic, Django views, templates and frontend scripts."
-msgstr "The project has been progressively refactored to separate service logic, Django views, templates and frontend scripts."
+msgstr "Le projet a été refactorisé progressivement pour séparer la logique de service, les vues Django, les templates et les scripts frontend."
 
 #: .\templates\about.html:26
 msgid "Technology stack"
@@ -344,23 +344,23 @@ msgstr "Fonctionnalités principales"
 
 #: .\templates\about.html:39
 msgid "Sprint list and sprint detail views"
-msgstr "Sprint list and sprint detail views"
+msgstr "Liste des sprints et vues détaillées d'un sprint"
 
 #: .\templates\about.html:40
 msgid "Issue detail pages with flow metrics and status history"
-msgstr "Issue detail pages with flow metrics and status history"
+msgstr "Pages de détail des tickets avec métriques de flux et historique des statuts"
 
 #: .\templates\about.html:41
 msgid "Operational dashboard for active sprint monitoring"
-msgstr "Operational dashboard for active sprint monitoring"
+msgstr "Dashboard opérationnel pour le suivi du sprint actif"
 
 #: .\templates\about.html:42
 msgid "WIA, kanban and XLS reporting screens"
-msgstr "WIA, kanban and XLS reporting screens"
+msgstr "Écrans WIA, kanban et reporting XLS"
 
 #: .\templates\about.html:43
 msgid "Per-user Jira connection management"
-msgstr "Per-user Jira connection management"
+msgstr "Gestion des connexions Jira par utilisateur"
 
 #: .\templates\about.html:49
 msgid "Project links"
@@ -479,7 +479,7 @@ msgstr "Flux authentifié"
 
 #: .\templates\account\password_change.html:18
 msgid "In session"
-msgstr "In session"
+msgstr "En session"
 
 #: .\templates\account\password_change.html:21
 msgid "Password update"
@@ -538,11 +538,11 @@ msgstr "Envoyez un lien de réinitialisation pour reprendre rapidement la main s
 
 #: .\templates\account\password_reset.html:17
 msgid "Email reset"
-msgstr "Email reset"
+msgstr "Réinitialisation par email"
 
 #: .\templates\account\password_reset.html:21
 msgid "Access recovery"
-msgstr "Access recovery"
+msgstr "Récupération de l'accès"
 
 #: .\templates\account\password_reset.html:26
 msgid "Réinitialiser l'accès"
@@ -582,7 +582,7 @@ msgstr "Réinitialisation du mot de passe"
 
 #: .\templates\account\password_reset_done.html:21
 msgid "Delivery"
-msgstr "Delivery"
+msgstr "Envoi"
 
 #: .\templates\account\password_reset_done.html:22
 msgid "Pending"
@@ -803,7 +803,7 @@ msgstr "Titre"
 
 #: .\templates\dashboard.html:35 .\templates\dashboard\_aging_table.html:21
 msgid "Age"
-msgstr "Age"
+msgstr "Âge"
 
 #: .\templates\dashboard.html:36 .\templates\dashboard\_aging_table.html:22
 #: .\templates\issue\issue_detail.html:37 .\templates\query.html:70
@@ -879,11 +879,11 @@ msgstr "Ouvrir"
 
 #: .\templates\dashboard.html:52
 msgid "Summary API unavailable, using local fallback."
-msgstr "Summary API unavailable, using local fallback."
+msgstr "API Summary indisponible, utilisation du repli local."
 
 #: .\templates\dashboard.html:53
 msgid "Items API unavailable, using local fallback."
-msgstr "Items API unavailable, using local fallback."
+msgstr "API Items indisponible, utilisation du repli local."
 
 #: .\templates\dashboard.html:54
 msgid "vs last week"
@@ -895,20 +895,20 @@ msgstr "statut"
 
 #: .\templates\dashboard.html:67
 msgid "<strong>WIP (Work In Progress)</strong><br> Nombre total de tickets actuellement en cours (statuts actifs).<br> Un WIP trop eleve augmente le multitache, l'attente et ralentit le flux."
-msgstr "<strong>WIP (Work In Progress)</strong><br> Nombre total de tickets actuellement en cours (statuts actifs).<br> Un WIP trop eleve augmente le multitache, l'attente et ralentit le flux."
+msgstr "<strong>WIP (Work In Progress)</strong><br> Nombre total de tickets actuellement en cours (statuts actifs).<br> Un WIP trop élevé augmente le multitâche, l'attente et ralentit le flux."
 
 #: .\templates\dashboard.html:72
 msgid "<strong>Aging WIP &gt; 10 jours</strong><br> Nombre de tickets en cours depuis plus de 10 jours.<br> Un volume eleve indique un risque de blocage ou de dispersion du travail."
-msgstr "<strong>Aging WIP &gt; 10 jours</strong><br> Nombre de tickets en cours depuis plus de 10 jours.<br> Un volume eleve indique un risque de blocage ou de dispersion du travail."
+msgstr "<strong>Aging WIP &gt; 10 jours</strong><br> Nombre de tickets en cours depuis plus de 10 jours.<br> Un volume élevé indique un risque de blocage ou de dispersion du travail."
 
 #: .\templates\dashboard.html:77
 #, python-format
 msgid "<strong>Cycle Time (P50)</strong><br>Temps median necessaire pour terminer un ticket a partir du premier statut <em>In Progress</em>.<br>Le P50 signifie que 50%% des tickets sont termines en moins de cette duree."
-msgstr "<strong>Cycle Time (P50)</strong><br>Temps median necessaire pour terminer un ticket a partir du premier statut <em>In Progress</em>.<br>Le P50 signifie que 50%% des tickets sont termines en moins de cette duree."
+msgstr "<strong>Cycle Time (P50)</strong><br>Temps médian nécessaire pour terminer un ticket à partir du premier statut <em>In Progress</em>.<br>Le P50 signifie que 50%% des tickets sont terminés en moins de cette durée."
 
 #: .\templates\dashboard.html:80
 msgid "<strong>Lead Time (P50)</strong><br> Temps median entre la creation d'un ticket et sa finalisation.<br> Il reflete l'experience reelle du client."
-msgstr "<strong>Lead Time (P50)</strong><br> Temps median entre la creation d'un ticket et sa finalisation.<br> Il reflete l'experience reelle du client."
+msgstr "<strong>Lead Time (P50)</strong><br> Temps médian entre la création d'un ticket et sa finalisation.<br> Il reflète l'expérience réelle du client."
 
 #: .\templates\dashboard.html:85
 msgid "<strong>Throughput (7 jours)</strong><br> Nombre de tickets termines au cours des 7 derniers jours.<br> Indicateur cle de capacite et de stabilite du flux."
@@ -916,7 +916,7 @@ msgstr "<strong>Débit (7 jours)</strong><br> Nombre de tickets terminés au cou
 
 #: .\templates\dashboard.html:90
 msgid "<strong>Flow efficiency</strong><br> Part du temps ou le ticket est <em>reellement travaille</em> (cycle time) par rapport au temps total entre creation et fin (lead time).<br> <strong>Bas</strong> : beaucoup d'attente. <strong>Haut</strong> : flux fluide."
-msgstr "<strong>Flow efficiency</strong><br> Part du temps ou le ticket est <em>reellement travaille</em> (cycle time) par rapport au temps total entre creation et fin (lead time).<br> <strong>Bas</strong> : beaucoup d'attente. <strong>Haut</strong> : flux fluide."
+msgstr "<strong>Flow efficiency</strong><br> Part du temps où le ticket est <em>réellement travaillé</em> (cycle time) par rapport au temps total entre création et fin (lead time).<br> <strong>Bas</strong> : beaucoup d'attente. <strong>Haut</strong> : flux fluide."
 
 #: .\templates\dashboard\_aging_table.html:5
 msgid "Table"
@@ -929,7 +929,7 @@ msgstr "Graphique"
 
 #: .\templates\dashboard\_insights.html:60
 msgid "No Done tickets to display."
-msgstr "No Done tickets to display."
+msgstr "Aucun ticket Done à afficher."
 
 #: .\templates\dashboard\_insights.html:69
 msgid "Insights"
@@ -937,7 +937,7 @@ msgstr "Insights"
 
 #: .\templates\dashboard\_insights.html:93
 msgid "Tip: thickening statuses typically indicate a bottleneck."
-msgstr "Tip: thickening statuses typically indicate a bottleneck."
+msgstr "Astuce : des statuts qui s'épaississent indiquent généralement un goulot d'étranglement."
 
 #: .\templates\dashboard\_kpis.html:29 .\templates\dashboard\_kpis.html:39
 msgid "business days"
@@ -959,7 +959,7 @@ msgstr "Dashboard"
 #: .\templates\dashboard\_toolbar.html:3
 #, python-format
 msgid "Sprint: %(sprint_name)s"
-msgstr "Sprint: %(sprint_name)s"
+msgstr "Sprint : %(sprint_name)s"
 
 #: .\templates\dashboard\_toolbar_actions.html:2
 msgid "Sprint links"
@@ -1004,7 +1004,7 @@ msgstr "Un cockpit plus qu'une homepage."
 
 #: .\templates\home.html:41
 msgid "Chaque ecran pousse vers une action concrete: verifier l'age reel du travail, ouvrir la bonne requete Jira, ou recaler la capacite de l'equipe."
-msgstr "Chaque ecran pousse vers une action concrete: verifier l'age reel du travail, ouvrir la bonne requete Jira, ou recaler la capacite de l'equipe."
+msgstr "Chaque écran pousse vers une action concrète : vérifier l'âge réel du travail, ouvrir la bonne requête Jira ou recaler la capacité de l'équipe."
 
 #: .\templates\home.html:44
 msgid "Work item aging"
@@ -1020,15 +1020,15 @@ msgstr "Parcours"
 
 #: .\templates\home.html:65
 msgid "Entrees principales"
-msgstr "Entrees principales"
+msgstr "Entrées principales"
 
 #: .\templates\home.html:67
 msgid "Trois acces penses pour aller du signal au detail sans detour."
-msgstr "Trois acces penses pour aller du signal au detail sans detour."
+msgstr "Trois accès pensés pour aller du signal au détail sans détour."
 
 #: .\templates\home.html:77
 msgid "Vue synthetique du sprint courant, avec KPIs, WIA chart, bottlenecks et top aging items."
-msgstr "Vue synthetique du sprint courant, avec KPIs, WIA chart, bottlenecks et top aging items."
+msgstr "Vue synthétique du sprint courant, avec KPIs, WIA chart, bottlenecks et top aging items."
 
 #: .\templates\home.html:79
 msgid "Ouvrir"
@@ -1041,7 +1041,7 @@ msgstr "Sprints"
 
 #: .\templates\home.html:86
 msgid "Lister les sprints, naviguer dans leurs details et basculer rapidement vers Jira ou l'export."
-msgstr "Lister les sprints, naviguer dans leurs details et basculer rapidement vers Jira ou l'export."
+msgstr "Lister les sprints, naviguer dans leurs détails et basculer rapidement vers Jira ou l'export."
 
 #: .\templates\home.html:88
 msgid "Parcourir"
@@ -1142,13 +1142,13 @@ msgstr "Lead time"
 #: .\templates\issue\issue_detail.html:27
 #: .\templates\issue\issue_detail.html:62 .\templates\sprint\sprint_wia.html:93
 msgid "d"
-msgstr "d"
+msgstr "j"
 
 #: .\templates\issue\issue_detail.html:13
 #: .\templates\issue\issue_detail.html:20
 #: .\templates\issue\issue_detail.html:28
 msgid "business h"
-msgstr "business h"
+msgstr "h ouvrées"
 
 #: .\templates\issue\issue_detail.html:18
 msgid "Cycle time"
@@ -1238,15 +1238,15 @@ msgstr "Labels en masse"
 
 #: .\templates\jira\bulk_labels.html:9
 msgid "Bulk Labels by JQL"
-msgstr "Bulk Labels by JQL"
+msgstr "Labels en masse par JQL"
 
 #: .\templates\jira\bulk_labels.html:17
 msgid "Prepare operation"
-msgstr "Prepare operation"
+msgstr "Préparer l'opération"
 
 #: .\templates\jira\bulk_labels.html:18
 msgid "Add and remove labels from issues selected by JQL."
-msgstr "Add and remove labels from issues selected by JQL."
+msgstr "Ajouter et retirer des labels sur les tickets sélectionnés par JQL."
 
 #: .\templates\jira\bulk_labels.html:20
 #: .\templates\jira\bulk_operations.html:64
@@ -1275,7 +1275,7 @@ msgstr "ticket(s) trouvé(s)"
 
 #: .\templates\jira\bulk_labels.html:65
 msgid "Only rows marked as changed will be updated."
-msgstr "Only rows marked as changed will be updated."
+msgstr "Seules les lignes marquées comme modifiées seront mises à jour."
 
 #: .\templates\jira\bulk_labels.html:71
 msgid "Apply changes"
@@ -1333,11 +1333,11 @@ msgstr "Documentation du template"
 
 #: .\templates\jira\bulk_labels.html:171
 msgid "Execution model"
-msgstr "Execution model"
+msgstr "Modèle d'exécution"
 
 #: .\templates\jira\bulk_labels.html:173
 msgid "Every operation runs in two steps. Preview stores a frozen list of target tickets in your session. Apply updates only that frozen list, not a freshly re-evaluated JQL result."
-msgstr "Every operation runs in two steps. Preview stores a frozen list of target tickets in your session. Apply updates only that frozen list, not a freshly re-evaluated JQL result."
+msgstr "Chaque opération se déroule en deux étapes. L'aperçu enregistre dans votre session une liste figée de tickets cibles. L'application ne met à jour que cette liste figée, pas le résultat d'un JQL réévalué."
 
 #: .\templates\jira\bulk_labels.html:177
 msgid "Label input format"
@@ -1345,7 +1345,7 @@ msgstr "Format des labels"
 
 #: .\templates\jira\bulk_labels.html:179
 msgid "Use comma-separated labels. New lines are accepted too. Duplicate labels are removed before preview."
-msgstr "Use comma-separated labels. New lines are accepted too. Duplicate labels are removed before preview."
+msgstr "Séparez les labels par des virgules. Les retours à la ligne sont acceptés aussi. Les doublons sont supprimés avant l'aperçu."
 
 #: .\templates\jira\bulk_labels.html:183
 msgid "Safety rules"
@@ -1353,7 +1353,7 @@ msgstr "Règles de sécurité"
 
 #: .\templates\jira\bulk_labels.html:185
 msgid "Use a small limit first. Review the Change column. Apply only when the preview matches exactly what you expect."
-msgstr "Use a small limit first. Review the Change column. Apply only when the preview matches exactly what you expect."
+msgstr "Commencez avec une petite limite. Vérifiez la colonne Change. N'appliquez que si l'aperçu correspond exactement à vos attentes."
 
 #: .\templates\jira\bulk_labels.html:192
 msgid "JQL examples"
@@ -1361,27 +1361,27 @@ msgstr "Exemples JQL"
 
 #: .\templates\jira\bulk_operations.html:8
 msgid "Jira automation"
-msgstr "Jira automation"
+msgstr "Automatisation Jira"
 
 #: .\templates\jira\bulk_operations.html:18
 msgid "Browser-driven Jira operations with preview before apply."
-msgstr "Browser-driven Jira operations with preview before apply."
+msgstr "Opérations Jira pilotées depuis le navigateur, avec aperçu avant application."
 
 #: .\templates\jira\bulk_operations.html:26
 msgid "Labels by JQL"
-msgstr "Labels by JQL"
+msgstr "Labels par JQL"
 
 #: .\templates\jira\bulk_operations.html:27
 msgid "Add or remove labels from a frozen preview of JQL-selected issues."
-msgstr "Add or remove labels from a frozen preview of JQL-selected issues."
+msgstr "Ajouter ou retirer des labels depuis un aperçu figé des tickets sélectionnés par JQL."
 
 #: .\templates\jira\bulk_operations.html:34
 msgid "Bulk create issues"
-msgstr "Bulk create issues"
+msgstr "Création de tickets en masse"
 
 #: .\templates\jira\bulk_operations.html:35
 msgid "Create multiple tasks, bugs or epics from structured input."
-msgstr "Create multiple tasks, bugs or epics from structured input."
+msgstr "Créer plusieurs tâches, bugs ou epics à partir d'une saisie structurée."
 
 #: .\templates\jira\bulk_operations.html:36
 #: .\templates\jira\bulk_operations.html:44
@@ -1391,19 +1391,19 @@ msgstr "Roadmap"
 
 #: .\templates\jira\bulk_operations.html:42
 msgid "Assign by JQL"
-msgstr "Assign by JQL"
+msgstr "Assigner par JQL"
 
 #: .\templates\jira\bulk_operations.html:43
 msgid "Assign selected issues to a developer after preview."
-msgstr "Assign selected issues to a developer after preview."
+msgstr "Assigner les tickets sélectionnés à un développeur après aperçu."
 
 #: .\templates\jira\bulk_operations.html:50
 msgid "Transition by JQL"
-msgstr "Transition by JQL"
+msgstr "Transition par JQL"
 
 #: .\templates\jira\bulk_operations.html:51
 msgid "Move selected issues through a Jira workflow transition."
-msgstr "Move selected issues through a Jira workflow transition."
+msgstr "Faire passer les tickets sélectionnés par une transition du workflow Jira."
 
 #: .\templates\jira\bulk_operations.html:61
 msgid "Safety model"
@@ -1411,7 +1411,7 @@ msgstr "Modèle de sécurité"
 
 #: .\templates\jira\bulk_operations.html:65
 msgid "Every operation should show affected issues and computed changes before Jira is modified."
-msgstr "Every operation should show affected issues and computed changes before Jira is modified."
+msgstr "Chaque opération doit afficher les tickets concernés et les modifications calculées avant que Jira ne soit modifié."
 
 #: .\templates\jira\bulk_operations.html:68
 msgid "Frozen target set"
@@ -1419,7 +1419,7 @@ msgstr "Liste cible figée"
 
 #: .\templates\jira\bulk_operations.html:69
 msgid "Apply should use the previewed issue list, not a freshly evaluated JQL query."
-msgstr "Apply should use the previewed issue list, not a freshly evaluated JQL query."
+msgstr "L'application doit utiliser la liste de tickets de l'aperçu, pas une requête JQL réévaluée."
 
 #: .\templates\jira\bulk_operations.html:72
 msgid "Small batches"
@@ -1427,23 +1427,23 @@ msgstr "Petits lots"
 
 #: .\templates\jira\bulk_operations.html:73
 msgid "Start with a small limit, validate the result, then increase the scope."
-msgstr "Start with a small limit, validate the result, then increase the scope."
+msgstr "Commencez avec une petite limite, validez le résultat, puis élargissez le périmètre."
 
 #: .\templates\jira\bulk_operations.html:79
 msgid "Recommended workflow"
-msgstr "Recommended workflow"
+msgstr "Démarche recommandée"
 
 #: .\templates\jira\bulk_operations.html:81
 msgid "Write or select a precise JQL query."
-msgstr "Write or select a precise JQL query."
+msgstr "Écrivez ou choisissez une requête JQL précise."
 
 #: .\templates\jira\bulk_operations.html:82
 msgid "Run preview and inspect changed rows."
-msgstr "Run preview and inspect changed rows."
+msgstr "Lancez l'aperçu et vérifiez les lignes modifiées."
 
 #: .\templates\jira\bulk_operations.html:83
 msgid "Apply only when the preview is exact."
-msgstr "Apply only when the preview is exact."
+msgstr "N'appliquez que lorsque l'aperçu est exact."
 
 #: .\templates\jira\bulk_operations.html:84
 msgid "Review the execution result."
@@ -1484,7 +1484,7 @@ msgstr "Tester la connexion"
 
 #: .\templates\jira\jira_config_list.html:70
 msgid "Editer"
-msgstr "Editer"
+msgstr "Éditer"
 
 #: .\templates\jira\jira_config_list.html:77
 msgid "Supprimer"
@@ -1524,11 +1524,11 @@ msgstr "Configuration enregistrée."
 
 #: .\templates\jira\jira_config_list.html:113
 msgid "Jira connection validated."
-msgstr "Jira connection validated."
+msgstr "Connexion Jira validée."
 
 #: .\templates\jira\jira_config_list.html:114
 msgid "Jira connection failed."
-msgstr "Jira connection failed."
+msgstr "Échec de la connexion Jira."
 
 #: .\templates\jira\jira_config_list.html:115
 msgid "Delete configuration"
@@ -1548,7 +1548,7 @@ msgstr "Configuration supprimée."
 
 #: .\templates\jira\jira_config_list.html:120
 msgid "Jira connection OK."
-msgstr "Jira connection OK."
+msgstr "Connexion Jira OK."
 
 #: .\templates\jira\jira_config_list.html:121
 msgid "Unexpected response format"
@@ -1641,7 +1641,7 @@ msgstr "Console de requête Jira"
 
 #: .\templates\query.html:31
 msgid "Load full issue details"
-msgstr "Load full issue details"
+msgstr "Charger le détail complet des tickets"
 
 #: .\templates\query.html:40
 msgid "Run"
@@ -1697,7 +1697,7 @@ msgstr "Vous n'avez encore aucun projet."
 
 #: .\templates\query.html:168
 msgid "Epic bootstrap"
-msgstr "Epic bootstrap"
+msgstr "Initialisation des epics"
 
 #: .\templates\query.html:173
 msgid "Create epics"
@@ -1705,11 +1705,11 @@ msgstr "Créer les epics"
 
 #: .\templates\settings.html:7
 msgid "Profile and workspace settings"
-msgstr "Profile and workspace settings"
+msgstr "Profil et paramètres de l'espace de travail"
 
 #: .\templates\settings.html:8
 msgid "Manage your account details, preferred language and the Jira configuration currently driving the workspace."
-msgstr "Manage your account details, preferred language and the Jira configuration currently driving the workspace."
+msgstr "Gérez les informations de votre compte, votre langue préférée et la configuration Jira qui alimente actuellement l'espace de travail."
 
 #: .\templates\settings.html:25
 msgid "User profile"
@@ -1717,7 +1717,7 @@ msgstr "Profil utilisateur"
 
 #: .\templates\settings.html:26
 msgid "These values are used for your account and interface preferences."
-msgstr "These values are used for your account and interface preferences."
+msgstr "Ces valeurs servent à votre compte et à vos préférences d'interface."
 
 #: .\templates\settings.html:61
 msgid "Interface language"
@@ -1733,7 +1733,7 @@ msgstr "Gestion du mot de passe"
 
 #: .\templates\settings.html:88
 msgid "Update your password from an authenticated session."
-msgstr "Update your password from an authenticated session."
+msgstr "Mettez à jour votre mot de passe depuis une session authentifiée."
 
 #: .\templates\settings.html:107
 msgid "Manage the project"
@@ -1743,25 +1743,45 @@ msgstr "Gérer le projet"
 msgid "Manage Jira connections"
 msgstr "Gérer les connexions Jira"
 
-#: .\templates\sprint\_capacity_table.html:21
+#: .\templates\sprint\_capacity_table.html:22
 #: .\templates\team\_dev_table.html:39
 msgid "Workload"
 msgstr "Charge"
 
-#: .\templates\sprint\_capacity_table.html:25
+#: .\templates\sprint\_capacity_table.html:23
+#: .\templates\sprint\_capacity_table.html:27
+#: .\templates\sprint\_capacity_table.html:31
+#: .\templates\sprint\_capacity_table.html:35
+#: .\templates\sprint\_capacity_table.html:39
+msgid "Template:"
+msgstr "Template :"
+
+#: .\templates\sprint\_capacity_table.html:26
 #: .\templates\team\_dev_table.html:43
 msgid "Holidays"
 msgstr "Congés"
 
-#: .\templates\sprint\_capacity_table.html:33
+#: .\templates\sprint\_capacity_table.html:34
 #: .\templates\team\_dev_table.html:51
 msgid "Project meetings"
 msgstr "Réunions projet"
 
-#: .\templates\sprint\_capacity_table.html:37
+#: .\templates\sprint\_capacity_table.html:38
 #: .\templates\team\_dev_table.html:55
 msgid "Other meetings"
 msgstr "Autres réunions"
+
+#: .\templates\sprint\_capacity_table.html:42
+msgid "Workload minus holidays, fastlane and meetings."
+msgstr "Charge moins les congés, la fastlane et les réunions."
+
+#: .\templates\sprint\_capacity_table.html:42
+msgid "Available"
+msgstr "Disponible"
+
+#: .\templates\sprint\_capacity_table.html:49
+msgid "Value set for this sprint, apart from the developer's template (hover a cell to see the template)."
+msgstr "Valeur propre à ce sprint, distincte du template du développeur (survolez une cellule pour voir le template)."
 
 #: .\templates\sprint\management_report.html:4
 #: .\templates\sprint\management_report.html:8
@@ -1833,11 +1853,11 @@ msgstr "Copié"
 
 #: .\templates\sprint\sprint_detail.html:17
 msgid "Sprint backlog"
-msgstr "Sprint backlog"
+msgstr "Backlog du sprint"
 
 #: .\templates\sprint\sprint_detail.html:18
 msgid "Detailed sprint issue view with direct access to details and Jira."
-msgstr "Detailed sprint issue view with direct access to details and Jira."
+msgstr "Vue détaillée des tickets du sprint avec accès direct aux détails et à Jira."
 
 #: .\templates\sprint\sprint_header.html:2
 #, python-format
@@ -1851,7 +1871,7 @@ msgstr "Kanban"
 
 #: .\templates\sprint\sprint_kanban.html:14
 msgid "Column-by-column view of sprint issues."
-msgstr "Column-by-column view of sprint issues."
+msgstr "Vue colonne par colonne des tickets du sprint."
 
 #: .\templates\sprint\sprint_kanban.html:27
 msgid "No issue"
@@ -1906,7 +1926,7 @@ msgstr "Rapport de sprint"
 
 #: .\templates\sprint\sprint_report.html:14
 msgid "Ready-to-open JQL queries by sprint segment."
-msgstr "Ready-to-open JQL queries by sprint segment."
+msgstr "Requêtes JQL prêtes à ouvrir par segment de sprint."
 
 #: .\templates\sprint\sprint_scope_flow.html:23
 #: .\templates\sprint\sprint_scope_flow.html:32
@@ -2263,7 +2283,7 @@ msgstr "Diagramme Work Item Age"
 
 #: .\templates\sprint\sprint_wia.html:20
 msgid "Chart and table are powered by the same API."
-msgstr "Chart and table are powered by the same API."
+msgstr "Le graphique et le tableau utilisent la même API."
 
 #: .\templates\sprint\sprint_wia.html:49
 msgid "Items sorted by descending age"
@@ -2307,11 +2327,11 @@ msgstr "ticket"
 
 #: .\templates\sprint\sprint_wia.html:92
 msgid "Item age (days)"
-msgstr "Item age (days)"
+msgstr "Âge de l'item (jours)"
 
 #: .\templates\sprint\sprint_xls_report.html:19
 msgid "Capacity sheet"
-msgstr "Capacity sheet"
+msgstr "Capacity Sheet"
 
 #: .\templates\sprint\sprint_xls_report.html:21
 msgid "Team"
@@ -2362,7 +2382,7 @@ msgstr "Revenir aux dates Jira"
 
 #: .\templates\sprint\sprint_xls_report.html:68
 msgid "Generer le Capacity Sheet"
-msgstr "Generer le Capacity Sheet"
+msgstr "Générer le Capacity Sheet"
 
 #: .\templates\sprint\sprint_xls_report.html:71
 msgid "One tab per developer: planned vs logged hours and ticket status at sprint start and end."
@@ -2374,7 +2394,7 @@ msgstr "Générer le rapport des temps prestés"
 
 #: .\templates\team\_dev_table.html:14
 msgid "Reordonner le dev"
-msgstr "Reordonner le dev"
+msgstr "Réordonner le dev"
 
 #: .\templates\team\_dev_table.html:20
 msgid "Retirer de la team"
