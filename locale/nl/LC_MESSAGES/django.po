@@ -2339,7 +2339,7 @@ msgstr "Team"
 
 #: .\templates\sprint\sprint_xls_report.html:22
 msgid "Hours of this sprint only, copied from the developers' templates: adjust the holidays and recurring time before generating the file."
-msgstr "Uren van alleen deze sprint, gekopieerd uit de sjablonen van de ontwikkelaars: pas verlof en terugkerende tijd aan voordat je het bestand genereert."
+msgstr "Uren van alleen deze sprint, gekopieerd uit de sjablonen van de ontwikkelaars: pas verlof en terugkerende tijd aan voordat u het bestand genereert."
 
 #: .\templates\sprint\sprint_xls_report.html:26
 #: .\templates\team\project_devs.html:4 .\templates\team\project_devs.html:13
