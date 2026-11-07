@@ -1,4 +1,5 @@
 import io
+from decimal import Decimal
 import shutil
 import tempfile
 
@@ -17,6 +18,13 @@ class TeamServicesTests(SimpleTestCase):
         field, value = parse_dev_update("workload", "12")
         self.assertEqual(field, "workload")
         self.assertEqual(value, 12)
+
+    def test_parse_dev_update_takes_hours_to_the_hundredth(self):
+        self.assertEqual(parse_dev_update("holidays", "3,6"), ("holidays", Decimal("3.60")))
+        self.assertEqual(parse_dev_update("holidays", " 3.6 "), ("holidays", Decimal("3.60")))
+        for wrong in ("", "abc", "NaN", "Infinity", "1e5"):
+            with self.subTest(value=wrong), self.assertRaisesMessage(ValueError, "Invalid number"):
+                parse_dev_update("holidays", wrong)
 
     def test_parse_dev_update_rejects_unknown_field(self):
         with self.assertRaisesMessage(ValueError, "Invalid field"):

@@ -1,9 +1,11 @@
+from decimal import Decimal, InvalidOperation
+
 from django.db import transaction
 
 from dev.models import Dev
 from team.models import Team, TeamDev
 
-ALLOWED_INT_FIELDS = {"workload", "holidays", "fastlane", "project_meetings", "other_meetings"}
+ALLOWED_HOURS_FIELDS = {"workload", "holidays", "fastlane", "project_meetings", "other_meetings"}
 ALLOWED_TEXT_FIELDS = {"name", "jira_username"}
 
 
@@ -20,7 +22,7 @@ def teamdevs_for_user(user):
     return TeamDev.objects.filter(team__members=user).distinct()
 
 
-def parse_dev_update(field: str | None, value: str | None) -> tuple[str, int | str]:
+def parse_dev_update(field: str | None, value: str | None) -> tuple[str, Decimal | str]:
     if field in ALLOWED_TEXT_FIELDS:
         text = (value or "").strip()
         if len(text) > Dev._meta.get_field(field).max_length:
@@ -28,15 +30,18 @@ def parse_dev_update(field: str | None, value: str | None) -> tuple[str, int | s
         if field == "name" and not text:
             raise ValueError("Name required")
         return field, text
-    if field not in ALLOWED_INT_FIELDS:
+    if field not in ALLOWED_HOURS_FIELDS:
         raise ValueError("Invalid field")
 
+    # Hours to the hundredth, with a decimal comma or point (3,6 or 3.6).
     try:
-        parsed_value = int(value)
-    except (TypeError, ValueError) as exc:
-        raise ValueError("Invalid integer value") from exc
+        hours = Decimal((value or "").strip().replace(",", "."))
+    except InvalidOperation as exc:
+        raise ValueError("Invalid number") from exc
+    if not hours.is_finite() or abs(hours) >= 10000:
+        raise ValueError("Invalid number")
 
-    return field, parsed_value
+    return field, hours.quantize(Decimal("0.01"))
 
 
 def serialize_dev(dev: Dev) -> dict:

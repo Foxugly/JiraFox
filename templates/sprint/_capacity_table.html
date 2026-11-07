@@ -1,5 +1,6 @@
-{% load i18n %}
-{# The developers' hours for this sprint, as columns, edited in place by js/sprint-xls.js (see team/_dev_table_js.html). #}
+{% load i18n common_tags %}
+{# The developers' hours for this sprint, as columns, edited in place by js/sprint-xls.js (see team/_dev_table_js.html).
+   A value set apart from the developer's template is highlighted; the last row is what is left to plan. #}
 <div class="table-responsive">
     <table id="dev-table" class="table align-middle">
         <thead>
@@ -19,26 +20,33 @@
         <tbody>
         <tr>
             <td class="fw-bold">{% trans "Workload" %}</td>
-            {% for capacity in capacities %}<td><input type="number" class="form-control form-control-sm dev-input" data-update-url="{% url 'sprint-capacity-update' capacity.id %}" data-field="workload" value="{{ capacity.workload }}"></td>{% endfor %}
+            {% for capacity in capacities %}<td><input type="number" step="any" class="form-control form-control-sm dev-input capacity-input{% if capacity.workload != capacity.dev.workload %} capacity-changed{% endif %}" data-update-url="{% url 'sprint-capacity-update' capacity.id %}" data-field="workload" data-dev-id="{{ capacity.dev.id }}" data-template="{{ capacity.dev.workload|hours_input }}" title="{% trans "Template:" %} {{ capacity.dev.workload|floatformat:"-2" }}" value="{{ capacity.workload|hours_input }}"></td>{% endfor %}
         </tr>
         <tr>
             <td class="fw-bold">{% trans "Holidays" %}</td>
-            {% for capacity in capacities %}<td><input type="number" class="form-control form-control-sm dev-input" data-update-url="{% url 'sprint-capacity-update' capacity.id %}" data-field="holidays" value="{{ capacity.holidays }}"></td>{% endfor %}
+            {% for capacity in capacities %}<td><input type="number" step="any" class="form-control form-control-sm dev-input capacity-input{% if capacity.holidays != capacity.dev.holidays %} capacity-changed{% endif %}" data-update-url="{% url 'sprint-capacity-update' capacity.id %}" data-field="holidays" data-dev-id="{{ capacity.dev.id }}" data-template="{{ capacity.dev.holidays|hours_input }}" title="{% trans "Template:" %} {{ capacity.dev.holidays|floatformat:"-2" }}" value="{{ capacity.holidays|hours_input }}"></td>{% endfor %}
         </tr>
         <tr>
             <td class="fw-bold">{% trans "Fastlane" %}</td>
-            {% for capacity in capacities %}<td><input type="number" class="form-control form-control-sm dev-input" data-update-url="{% url 'sprint-capacity-update' capacity.id %}" data-field="fastlane" value="{{ capacity.fastlane }}"></td>{% endfor %}
+            {% for capacity in capacities %}<td><input type="number" step="any" class="form-control form-control-sm dev-input capacity-input{% if capacity.fastlane != capacity.dev.fastlane %} capacity-changed{% endif %}" data-update-url="{% url 'sprint-capacity-update' capacity.id %}" data-field="fastlane" data-dev-id="{{ capacity.dev.id }}" data-template="{{ capacity.dev.fastlane|hours_input }}" title="{% trans "Template:" %} {{ capacity.dev.fastlane|floatformat:"-2" }}" value="{{ capacity.fastlane|hours_input }}"></td>{% endfor %}
         </tr>
         <tr>
             <td class="fw-bold">{% trans "Project meetings" %}</td>
-            {% for capacity in capacities %}<td><input type="number" class="form-control form-control-sm dev-input" data-update-url="{% url 'sprint-capacity-update' capacity.id %}" data-field="project_meetings" value="{{ capacity.project_meetings }}"></td>{% endfor %}
+            {% for capacity in capacities %}<td><input type="number" step="any" class="form-control form-control-sm dev-input capacity-input{% if capacity.project_meetings != capacity.dev.project_meetings %} capacity-changed{% endif %}" data-update-url="{% url 'sprint-capacity-update' capacity.id %}" data-field="project_meetings" data-dev-id="{{ capacity.dev.id }}" data-template="{{ capacity.dev.project_meetings|hours_input }}" title="{% trans "Template:" %} {{ capacity.dev.project_meetings|floatformat:"-2" }}" value="{{ capacity.project_meetings|hours_input }}"></td>{% endfor %}
         </tr>
         <tr>
             <td class="fw-bold">{% trans "Other meetings" %}</td>
-            {% for capacity in capacities %}<td><input type="number" class="form-control form-control-sm dev-input" data-update-url="{% url 'sprint-capacity-update' capacity.id %}" data-field="other_meetings" value="{{ capacity.other_meetings }}"></td>{% endfor %}
+            {% for capacity in capacities %}<td><input type="number" step="any" class="form-control form-control-sm dev-input capacity-input{% if capacity.other_meetings != capacity.dev.other_meetings %} capacity-changed{% endif %}" data-update-url="{% url 'sprint-capacity-update' capacity.id %}" data-field="other_meetings" data-dev-id="{{ capacity.dev.id }}" data-template="{{ capacity.dev.other_meetings|hours_input }}" title="{% trans "Template:" %} {{ capacity.dev.other_meetings|floatformat:"-2" }}" value="{{ capacity.other_meetings|hours_input }}"></td>{% endfor %}
+        </tr>
+        <tr class="capacity-available-row">
+            <td class="fw-bold" title="{% trans 'Workload minus holidays, fastlane and meetings.' %}">{% trans "Available" %}</td>
+            {% for capacity in capacities %}<td class="fw-bold capacity-available" data-dev-id="{{ capacity.dev.id }}"></td>{% endfor %}
         </tr>
         </tbody>
     </table>
 </div>
+<p class="small text-secondary mt-2 mb-0">
+    <span class="capacity-legend capacity-changed"></span>{% trans "Value set for this sprint, apart from the developer's template (hover a cell to see the template)." %}
+</p>
 
 <form id="csrf-form" class="d-none">{% csrf_token %}</form>

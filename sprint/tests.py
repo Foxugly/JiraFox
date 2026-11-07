@@ -1,4 +1,5 @@
 import base64
+from decimal import Decimal
 from datetime import date, datetime, timedelta, timezone as dt_timezone
 from io import BytesIO
 from types import SimpleNamespace
@@ -870,6 +871,27 @@ class SprintCapacityTests(TestCase):
         self.assertEqual(capacity.holidays, 8)
         self.alice.refresh_from_db()
         self.assertEqual((self.alice.holidays, self.alice.name), (0, "Alice"))
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_capacity_page_marks_the_hours_set_apart_from_the_template(self, mock_get_jira):
+        user = get_user_model().objects.create_user(username="member", password="secret", language="fr")
+        self.client.force_login(user)
+        mock_get_jira.return_value = SimpleNamespace(
+            cfg=SimpleNamespace(team=self.team), get_sprint=lambda sprint_id: SPRINT
+        )
+        capacity = sprint_capacities(self.team, 2446)[0]
+        capacity.holidays = Decimal("3.6")
+        capacity.save()
+
+        response = self.client.get(reverse("sprint_xls_report", args=[2446]))
+
+        holidays = [
+            line for line in response.content.decode().splitlines() if 'data-field="holidays"' in line
+        ][0]
+        self.assertIn('capacity-changed" data-update-url="%s"' % reverse("sprint-capacity-update", args=[capacity.pk]), holidays)
+        self.assertIn('value="3.6"', holidays)  # a decimal point, whatever the language, for <input type="number">
+        self.assertEqual(holidays.count("capacity-changed"), 1)  # Bob still has his template
+        self.assertContains(response, 'class="fw-bold capacity-available"', count=2)
 
     def test_sprint_hours_and_periods_are_listed_in_the_admin(self):
         capacity = sprint_capacities(self.team, 41)[0]

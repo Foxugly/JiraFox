@@ -1717,3 +1717,23 @@ button:has(.fa-jira):focus,
         display: none !important;
     }
 }
+
+/* Capacity sheet of a sprint: a value set apart from the developer's template. */
+.capacity-changed {
+    background-color: rgba(255, 193, 7, 0.18);
+    border-color: rgba(255, 193, 7, 0.7);
+}
+
+.capacity-legend {
+    display: inline-block;
+    width: 0.9rem;
+    height: 0.9rem;
+    margin-right: 0.4rem;
+    vertical-align: -0.1rem;
+    border: 1px solid;
+    border-radius: 0.2rem;
+}
+
+.capacity-available-row td {
+    border-top: 2px solid var(--bs-border-color);
+}

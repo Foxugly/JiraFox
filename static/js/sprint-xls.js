@@ -17,6 +17,41 @@
 
     const csrfToken = getCsrfToken();
 
+    // Capacity sheet of a sprint: hours left to plan per developer, and the values set apart from the template.
+    const CAPACITY_DEDUCTIONS = ["holidays", "fastlane", "project_meetings", "other_meetings"];
+
+    function capacityValue(devId, field) {
+        const input = table.querySelector(`.capacity-input[data-dev-id="${devId}"][data-field="${field}"]`);
+        const value = parseFloat((input?.value || "").replace(",", "."));
+        return Number.isFinite(value) ? value : 0;
+    }
+
+    function refreshAvailable() {
+        table.querySelectorAll(".capacity-available").forEach((cell) => {
+            const devId = cell.dataset.devId;
+            const available = CAPACITY_DEDUCTIONS.reduce(
+                (left, field) => left - capacityValue(devId, field),
+                capacityValue(devId, "workload"),
+            );
+            cell.textContent = (Math.round(available * 100) / 100).toLocaleString(document.documentElement.lang || undefined);
+            cell.classList.toggle("text-danger", available < 0);
+        });
+    }
+
+    function refreshChanged(input) {
+        if (!("template" in input.dataset)) return;
+        const value = parseFloat(input.value.replace(",", "."));
+        input.classList.toggle("capacity-changed", value !== parseFloat(input.dataset.template));
+    }
+
+    table.querySelectorAll(".capacity-input").forEach((input) => {
+        input.addEventListener("input", () => {
+            refreshChanged(input);
+            refreshAvailable();
+        });
+    });
+    refreshAvailable();
+
     document.querySelectorAll("#dev-table .dev-input").forEach((input) => {
         const saveInput = async () => {
             try {

@@ -1,4 +1,4 @@
-{% load i18n %}
+{% load i18n common_tags %}
 {# Developers of `team` as columns, edited in place by js/sprint-xls.js (see _dev_table_js.html).
    The hours are the template each sprint's capacity sheet starts from. #}
 <div class="table-responsive">
@@ -37,23 +37,23 @@
         </tr>
         <tr>
             <td class="fw-bold">{% trans "Workload" %}</td>
-            {% for td in teamdevs %}<td><input type="number" class="form-control form-control-sm dev-input" data-update-url="{% url 'update_dev' td.dev.id %}" data-field="workload" value="{{ td.dev.workload }}"></td>{% endfor %}
+            {% for td in teamdevs %}<td><input type="number" step="any" class="form-control form-control-sm dev-input" data-update-url="{% url 'update_dev' td.dev.id %}" data-field="workload" value="{{ td.dev.workload|hours_input }}"></td>{% endfor %}
         </tr>
         <tr>
             <td class="fw-bold">{% trans "Holidays" %}</td>
-            {% for td in teamdevs %}<td><input type="number" class="form-control form-control-sm dev-input" data-update-url="{% url 'update_dev' td.dev.id %}" data-field="holidays" value="{{ td.dev.holidays }}"></td>{% endfor %}
+            {% for td in teamdevs %}<td><input type="number" step="any" class="form-control form-control-sm dev-input" data-update-url="{% url 'update_dev' td.dev.id %}" data-field="holidays" value="{{ td.dev.holidays|hours_input }}"></td>{% endfor %}
         </tr>
         <tr>
             <td class="fw-bold">{% trans "Fastlane" %}</td>
-            {% for td in teamdevs %}<td><input type="number" class="form-control form-control-sm dev-input" data-update-url="{% url 'update_dev' td.dev.id %}" data-field="fastlane" value="{{ td.dev.fastlane }}"></td>{% endfor %}
+            {% for td in teamdevs %}<td><input type="number" step="any" class="form-control form-control-sm dev-input" data-update-url="{% url 'update_dev' td.dev.id %}" data-field="fastlane" value="{{ td.dev.fastlane|hours_input }}"></td>{% endfor %}
         </tr>
         <tr>
             <td class="fw-bold">{% trans "Project meetings" %}</td>
-            {% for td in teamdevs %}<td><input type="number" class="form-control form-control-sm dev-input" data-update-url="{% url 'update_dev' td.dev.id %}" data-field="project_meetings" value="{{ td.dev.project_meetings }}"></td>{% endfor %}
+            {% for td in teamdevs %}<td><input type="number" step="any" class="form-control form-control-sm dev-input" data-update-url="{% url 'update_dev' td.dev.id %}" data-field="project_meetings" value="{{ td.dev.project_meetings|hours_input }}"></td>{% endfor %}
         </tr>
         <tr>
             <td class="fw-bold">{% trans "Other meetings" %}</td>
-            {% for td in teamdevs %}<td><input type="number" class="form-control form-control-sm dev-input" data-update-url="{% url 'update_dev' td.dev.id %}" data-field="other_meetings" value="{{ td.dev.other_meetings }}"></td>{% endfor %}
+            {% for td in teamdevs %}<td><input type="number" step="any" class="form-control form-control-sm dev-input" data-update-url="{% url 'update_dev' td.dev.id %}" data-field="other_meetings" value="{{ td.dev.other_meetings|hours_input }}"></td>{% endfor %}
         </tr>
         </tbody>
     </table>

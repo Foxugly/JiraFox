@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django import template
 
 register = template.Library()
@@ -33,3 +35,11 @@ def format_assignee(assignee):
         return f"{full} ({username})"
 
     return full
+
+
+@register.filter
+def hours_input(value):
+    """Hours as an <input type="number"> value: a decimal point and no trailing zeros (3.60 -> "3.6", 36.00 -> "36")."""
+    if value is None or value == "":
+        return ""
+    return format(Decimal(value).normalize(), "f")

@@ -34,11 +34,11 @@ class SprintCapacity(models.Model):
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="sprint_capacities")
     sprint_id = models.PositiveIntegerField()
     dev = models.ForeignKey("dev.Dev", on_delete=models.CASCADE, related_name="sprint_capacities")
-    workload = models.IntegerField()
-    holidays = models.IntegerField()
-    fastlane = models.IntegerField()
-    project_meetings = models.IntegerField()
-    other_meetings = models.IntegerField()
+    workload = models.DecimalField(max_digits=6, decimal_places=2)
+    holidays = models.DecimalField(max_digits=6, decimal_places=2)
+    fastlane = models.DecimalField(max_digits=6, decimal_places=2)
+    project_meetings = models.DecimalField(max_digits=6, decimal_places=2)
+    other_meetings = models.DecimalField(max_digits=6, decimal_places=2)
 
     class Meta:
         constraints = [
