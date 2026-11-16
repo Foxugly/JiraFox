@@ -1659,6 +1659,9 @@ msgstr "Resultaten"
 msgid "issue(s)"
 msgstr "ticket(s)"
 
+msgid "of which {count} removed from the sprint"
+msgstr "waarvan {count} uit de sprint verwijderd"
+
 #: .\templates\query.html:69
 msgid "Category"
 msgstr "Categorie"

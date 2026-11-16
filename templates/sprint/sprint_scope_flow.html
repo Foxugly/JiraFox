@@ -363,7 +363,12 @@
                                     title: () => "",
                                     label: (item) => {
                                         const flow = item.dataset.data[item.dataIndex];
-                                        return `${nodeLabel(flow.from)} → ${nodeLabel(flow.to)}: ${flow.flow} {% trans 'issue(s)' %}`;
+                                        const lines = [`${nodeLabel(flow.from)} → ${nodeLabel(flow.to)}: ${flow.flow} {% trans 'issue(s)' %}`];
+                                        // "Not completed" also holds the issues removed from the sprint: say how many.
+                                        const removed = scope.issues.filter((issue) => issue.outcome === "removed"
+                                            && [flow.from, flow.to].every((node) => issueNodes(issue).includes(node))).length;
+                                        if (removed) lines.push("{% trans 'of which {count} removed from the sprint' %}".replace("{count}", removed));
+                                        return lines;
                                     }
                                 }
                             }
