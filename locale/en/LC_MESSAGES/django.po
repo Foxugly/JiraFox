@@ -2608,3 +2608,96 @@ msgstr ""
 
 #~ msgid "Ajuster la capacite, les conges et les temps recurrents avant generation du fichier."
 #~ msgstr "Adjust capacity, holidays and recurring time before generating the file."
+
+msgid "What must the template contain?"
+msgstr "What must the template contain?"
+
+msgid "JiraFox builds the report from the 6 example slides of this deck: it copies them, replaces the text of the shapes listed below, then deletes the examples. Everything else on a slide (background, logo, pictures, other shapes) is kept as is. A deck without exactly 6 slides is refused; a missing shape only leaves its text empty and is reported in the notes of the report's first slide."
+msgstr "JiraFox builds the report from the 6 example slides of this deck: it copies them, replaces the text of the shapes listed below, then deletes the examples. Everything else on a slide (background, logo, pictures, other shapes) is kept as is. A deck without exactly 6 slides is refused; a missing shape only leaves its text empty and is reported in the notes of the report's first slide."
+
+msgid "Used for"
+msgstr "Used for"
+
+msgid "Shapes to name"
+msgstr "Shapes to name"
+
+msgid "Title slide"
+msgstr "Title slide"
+
+msgid "report title"
+msgstr "report title"
+
+msgid "project name"
+msgstr "project name"
+
+msgid "period"
+msgstr "period"
+
+msgid "audience and date"
+msgstr "audience and date"
+
+msgid "Kanban snapshot, in two columns"
+msgstr "Kanban snapshot, in two columns"
+
+msgid "title and subtitle"
+msgstr "title and subtitle"
+
+msgid "left heading and text"
+msgstr "left heading and text"
+
+msgid "right heading and text"
+msgstr "right heading and text"
+
+msgid "AI synthesis, two blocks one above the other"
+msgstr "AI synthesis, two blocks one above the other"
+
+msgid "top heading and text"
+msgstr "top heading and text"
+
+msgid "bottom heading and text"
+msgstr "bottom heading and text"
+
+msgid "Progress: a chart and a key figure panel. Its titles also head the Flow, Predictability and Annex slides."
+msgstr "Progress: a chart and a key figure panel. Its titles also head the Flow, Predictability and Annex slides."
+
+msgid "chart heading"
+msgstr "chart heading"
+
+msgid "replaced by the chart"
+msgstr "replaced by the chart"
+
+msgid "key figure"
+msgstr "key figure"
+
+msgid "its caption"
+msgstr "its caption"
+
+msgid "details"
+msgstr "details"
+
+msgid "AI risks, three rows"
+msgstr "AI risks, three rows"
+
+msgid "label and text of each risk"
+msgstr "label and text of each risk"
+
+msgid "Closing slide"
+msgstr "Closing slide"
+
+msgid "Nothing: copied as is."
+msgstr "Nothing: copied as is."
+
+msgid "When a name is used twice on a slide, the higher shape comes first: the title above the subtitle."
+msgstr "When a name is used twice on a slide, the higher shape comes first: the title above the subtitle."
+
+msgid "The text takes the formatting of the shape's first paragraph: type a sample text formatted as you want it."
+msgstr "The text takes the formatting of the shape's first paragraph: type a sample text formatted as you want it."
+
+msgid "Charts and tables are drawn by JiraFox below the titles, from about a third of the slide height down: keep that area clear on slide 4."
+msgstr "Charts and tables are drawn by JiraFox below the titles, from about a third of the slide height down: keep that area clear on slide 4."
+
+msgid "To see or rename a shape: Home › Arrange › Selection Pane (Alt+F10), then double-click its name. The names are those PowerPoint gives in French; a shape may sit in a group."
+msgstr "To see or rename a shape: Home › Arrange › Selection Pane (Alt+F10), then double-click its name. The names are those PowerPoint gives in French; a shape may sit in a group."
+
+msgid "Without a template, JiraFox uses a neutral layout with the same structure."
+msgstr "Without a template, JiraFox uses a neutral layout with the same structure."

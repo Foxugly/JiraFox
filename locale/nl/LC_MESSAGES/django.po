@@ -2629,3 +2629,96 @@ msgstr "U bent nog geen lid van een project: maak er een aan, of vraag een lid o
 
 #~ msgid "Removed / carried over"
 #~ msgstr "Verwijderd / doorgeschoven"
+
+msgid "What must the template contain?"
+msgstr "Wat moet de sjabloon bevatten?"
+
+msgid "JiraFox builds the report from the 6 example slides of this deck: it copies them, replaces the text of the shapes listed below, then deletes the examples. Everything else on a slide (background, logo, pictures, other shapes) is kept as is. A deck without exactly 6 slides is refused; a missing shape only leaves its text empty and is reported in the notes of the report's first slide."
+msgstr "JiraFox bouwt het rapport op uit de 6 voorbeeldslides van dit bestand: het kopieert ze, vervangt de tekst van de hieronder vermelde vormen en verwijdert daarna de voorbeelden. Al de rest van een slide (achtergrond, logo, afbeeldingen, andere vormen) blijft ongewijzigd. Een bestand zonder precies 6 slides wordt geweigerd; een ontbrekende vorm laat enkel zijn tekst leeg en wordt vermeld in de notities van de eerste slide van het rapport."
+
+msgid "Used for"
+msgstr "Gebruikt voor"
+
+msgid "Shapes to name"
+msgstr "Te benoemen vormen"
+
+msgid "Title slide"
+msgstr "Titelslide"
+
+msgid "report title"
+msgstr "titel van het rapport"
+
+msgid "project name"
+msgstr "naam van het project"
+
+msgid "period"
+msgstr "periode"
+
+msgid "audience and date"
+msgstr "publiek en datum"
+
+msgid "Kanban snapshot, in two columns"
+msgstr "Kanban-momentopname, in twee kolommen"
+
+msgid "title and subtitle"
+msgstr "titel en ondertitel"
+
+msgid "left heading and text"
+msgstr "kop en tekst links"
+
+msgid "right heading and text"
+msgstr "kop en tekst rechts"
+
+msgid "AI synthesis, two blocks one above the other"
+msgstr "AI-synthese, twee blokken boven elkaar"
+
+msgid "top heading and text"
+msgstr "kop en tekst bovenaan"
+
+msgid "bottom heading and text"
+msgstr "kop en tekst onderaan"
+
+msgid "Progress: a chart and a key figure panel. Its titles also head the Flow, Predictability and Annex slides."
+msgstr "Voortgang: een grafiek en een paneel met het kerncijfer. De titels ervan dienen ook voor de slides Flow, Voorspelbaarheid en Bijlage."
+
+msgid "chart heading"
+msgstr "kop van de grafiek"
+
+msgid "replaced by the chart"
+msgstr "vervangen door de grafiek"
+
+msgid "key figure"
+msgstr "kerncijfer"
+
+msgid "its caption"
+msgstr "het onderschrift ervan"
+
+msgid "details"
+msgstr "details"
+
+msgid "AI risks, three rows"
+msgstr "AI-risico's, drie rijen"
+
+msgid "label and text of each risk"
+msgstr "label en tekst van elk risico"
+
+msgid "Closing slide"
+msgstr "Slotslide"
+
+msgid "Nothing: copied as is."
+msgstr "Niets: ongewijzigd gekopieerd."
+
+msgid "When a name is used twice on a slide, the higher shape comes first: the title above the subtitle."
+msgstr "Wanneer een naam twee keer op een slide voorkomt, komt de hoogste vorm eerst: de titel boven de ondertitel."
+
+msgid "The text takes the formatting of the shape's first paragraph: type a sample text formatted as you want it."
+msgstr "De tekst neemt de opmaak van de eerste alinea van de vorm over: typ er een voorbeeldtekst in, opgemaakt zoals u wenst."
+
+msgid "Charts and tables are drawn by JiraFox below the titles, from about a third of the slide height down: keep that area clear on slide 4."
+msgstr "JiraFox tekent de grafieken en tabellen onder de titels, vanaf ongeveer een derde van de hoogte van de slide: houd die zone vrij op slide 4."
+
+msgid "To see or rename a shape: Home › Arrange › Selection Pane (Alt+F10), then double-click its name. The names are those PowerPoint gives in French; a shape may sit in a group."
+msgstr "Een vorm bekijken of hernoemen: Start › Schikken › Selectiedeelvenster (Alt+F10), en dubbelklik daarna op de naam. Het zijn de namen die PowerPoint in het Frans geeft; een vorm kan in een groep zitten."
+
+msgid "Without a template, JiraFox uses a neutral layout with the same structure."
+msgstr "Zonder sjabloon gebruikt JiraFox een neutrale lay-out met dezelfde structuur."

@@ -72,6 +72,7 @@
                                 {{ form.report_template }}
                                 {% if form.report_template.errors %}<div class="invalid-feedback d-block">{{ form.report_template.errors|striptags }}</div>{% endif %}
                                 <div class="form-text">{% trans "The company deck with its 6 example slides. Stays on this PC." %}</div>
+                                {% include "team/_report_template_guide.html" %}
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary mt-4">

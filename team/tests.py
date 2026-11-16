@@ -191,6 +191,16 @@ class ReportTemplateUploadTests(TestCase):
             {"name": "Core", "report_template": SimpleUploadedFile("deck.pptx", content)},
         )
 
+    def test_project_form_explains_every_shape_the_report_fills(self):
+        from sprint.pptx_report import EXPECTED_SHAPES
+
+        response = self.client.get(reverse("project_edit", args=[self.project.id]))
+
+        guide = response.content.decode()
+        for names in EXPECTED_SHAPES.values():
+            for name in names:
+                self.assertIn(f"<code>{name}</code>", guide)
+
     def test_report_template_accepts_a_six_slide_deck(self):
         response = self._upload(_deck(6))
 

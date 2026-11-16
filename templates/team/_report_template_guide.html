@@ -1,0 +1,79 @@
+{% load i18n %}
+{# What the PowerPoint template must hold: the example slides and shape names of sprint/pptx_report.py (EXPECTED_SHAPES). #}
+<details class="report-template-guide mt-2">
+    <summary class="small">{% trans "What must the template contain?" %}</summary>
+    <div class="small mt-2">
+        <p>{% trans "JiraFox builds the report from the 6 example slides of this deck: it copies them, replaces the text of the shapes listed below, then deletes the examples. Everything else on a slide (background, logo, pictures, other shapes) is kept as is. A deck without exactly 6 slides is refused; a missing shape only leaves its text empty and is reported in the notes of the report's first slide." %}</p>
+        <div class="table-responsive">
+            <table class="table table-sm align-top mb-2">
+                <thead>
+                <tr><th>#</th><th>{% trans "Used for" %}</th><th>{% trans "Shapes to name" %}</th></tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>{% trans "Title slide" %}</td>
+                    <td>
+                        <code>Rectangle 4</code> — {% trans "report title" %}<br>
+                        <code>Rectangle 5</code> — {% trans "project name" %}<br>
+                        <code>Rectangle 3</code> — {% trans "period" %}<br>
+                        <code>Espace réservé de la date 3</code> — {% trans "audience and date" %}
+                    </td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>{% trans "Kanban snapshot, in two columns" %}</td>
+                    <td>
+                        <code>Titre 1</code> ×2 — {% trans "title and subtitle" %}<br>
+                        <code>Rectangle 31</code> / <code>ZoneTexte 29</code> — {% trans "left heading and text" %}<br>
+                        <code>Rectangle 58</code> / <code>ZoneTexte 55</code> — {% trans "right heading and text" %}
+                    </td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>{% trans "AI synthesis, two blocks one above the other" %}</td>
+                    <td>
+                        <code>Titre 1</code> ×2 — {% trans "title and subtitle" %}<br>
+                        <code>Rectangle 24</code> / <code>ZoneTexte 58</code> — {% trans "top heading and text" %}<br>
+                        <code>Rectangle 16</code> / <code>ZoneTexte 58</code> — {% trans "bottom heading and text" %}
+                    </td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td>{% trans "Progress: a chart and a key figure panel. Its titles also head the Flow, Predictability and Annex slides." %}</td>
+                    <td>
+                        <code>Titre 1</code> ×2 — {% trans "title and subtitle" %}<br>
+                        <code>Rectangle 14</code> — {% trans "chart heading" %}<br>
+                        <code>ZoneTexte 58</code> — {% trans "replaced by the chart" %}<br>
+                        <code>Rectangle 21</code> — {% trans "key figure" %}<br>
+                        <code>Rectangle 18</code> — {% trans "its caption" %}<br>
+                        <code>ZoneTexte 19</code> — {% trans "details" %}
+                    </td>
+                </tr>
+                <tr>
+                    <td>5</td>
+                    <td>{% trans "AI risks, three rows" %}</td>
+                    <td>
+                        <code>Titre 1</code> ×2 — {% trans "title and subtitle" %}<br>
+                        <code>Rectangle 4</code> / <code>Rectangle 6</code>,
+                        <code>Rectangle 18</code> / <code>Rectangle 20</code>,
+                        <code>Rectangle 22</code> / <code>Rectangle 24</code> — {% trans "label and text of each risk" %}
+                    </td>
+                </tr>
+                <tr>
+                    <td>6</td>
+                    <td>{% trans "Closing slide" %}</td>
+                    <td>{% trans "Nothing: copied as is." %}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <ul class="mb-0">
+            <li>{% trans "When a name is used twice on a slide, the higher shape comes first: the title above the subtitle." %}</li>
+            <li>{% trans "The text takes the formatting of the shape's first paragraph: type a sample text formatted as you want it." %}</li>
+            <li>{% trans "Charts and tables are drawn by JiraFox below the titles, from about a third of the slide height down: keep that area clear on slide 4." %}</li>
+            <li>{% trans "To see or rename a shape: Home › Arrange › Selection Pane (Alt+F10), then double-click its name. The names are those PowerPoint gives in French; a shape may sit in a group." %}</li>
+            <li>{% trans "Without a template, JiraFox uses a neutral layout with the same structure." %}</li>
+        </ul>
+    </div>
+</details>

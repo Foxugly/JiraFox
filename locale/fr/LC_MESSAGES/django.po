@@ -2629,3 +2629,96 @@ msgstr "Vous n'êtes encore membre d'aucun projet : créez-en un, ou demandez à
 
 #~ msgid "Removed / carried over"
 #~ msgstr "Retirés / reportés"
+
+msgid "What must the template contain?"
+msgstr "Que doit contenir le modèle ?"
+
+msgid "JiraFox builds the report from the 6 example slides of this deck: it copies them, replaces the text of the shapes listed below, then deletes the examples. Everything else on a slide (background, logo, pictures, other shapes) is kept as is. A deck without exactly 6 slides is refused; a missing shape only leaves its text empty and is reported in the notes of the report's first slide."
+msgstr "JiraFox construit le rapport à partir des 6 slides d'exemple de ce fichier : il les copie, remplace le texte des formes listées ci-dessous, puis supprime les exemples. Tout le reste d'une slide (fond, logo, images, autres formes) est gardé tel quel. Un fichier qui n'a pas exactement 6 slides est refusé ; une forme absente laisse seulement son texte vide et est signalée dans les notes de la première slide du rapport."
+
+msgid "Used for"
+msgstr "Sert à"
+
+msgid "Shapes to name"
+msgstr "Formes à nommer"
+
+msgid "Title slide"
+msgstr "Slide de titre"
+
+msgid "report title"
+msgstr "titre du rapport"
+
+msgid "project name"
+msgstr "nom du projet"
+
+msgid "period"
+msgstr "période"
+
+msgid "audience and date"
+msgstr "destinataires et date"
+
+msgid "Kanban snapshot, in two columns"
+msgstr "Instantané Kanban, en deux colonnes"
+
+msgid "title and subtitle"
+msgstr "titre et sous-titre"
+
+msgid "left heading and text"
+msgstr "intitulé et texte de gauche"
+
+msgid "right heading and text"
+msgstr "intitulé et texte de droite"
+
+msgid "AI synthesis, two blocks one above the other"
+msgstr "Synthèse IA, deux blocs l'un au-dessus de l'autre"
+
+msgid "top heading and text"
+msgstr "intitulé et texte du haut"
+
+msgid "bottom heading and text"
+msgstr "intitulé et texte du bas"
+
+msgid "Progress: a chart and a key figure panel. Its titles also head the Flow, Predictability and Annex slides."
+msgstr "Avancement : un graphique et un panneau avec le chiffre clé. Ses titres servent aussi aux slides Flux, Prévisibilité et Annexe."
+
+msgid "chart heading"
+msgstr "intitulé du graphique"
+
+msgid "replaced by the chart"
+msgstr "remplacée par le graphique"
+
+msgid "key figure"
+msgstr "chiffre clé"
+
+msgid "its caption"
+msgstr "sa légende"
+
+msgid "details"
+msgstr "détail"
+
+msgid "AI risks, three rows"
+msgstr "Risques IA, trois lignes"
+
+msgid "label and text of each risk"
+msgstr "étiquette et texte de chaque risque"
+
+msgid "Closing slide"
+msgstr "Slide de fin"
+
+msgid "Nothing: copied as is."
+msgstr "Rien : copiée telle quelle."
+
+msgid "When a name is used twice on a slide, the higher shape comes first: the title above the subtitle."
+msgstr "Quand un nom sert deux fois sur une slide, la forme la plus haute passe en premier : le titre au-dessus du sous-titre."
+
+msgid "The text takes the formatting of the shape's first paragraph: type a sample text formatted as you want it."
+msgstr "Le texte reprend la mise en forme du premier paragraphe de la forme : tapez-y un texte d'exemple mis en forme comme vous le souhaitez."
+
+msgid "Charts and tables are drawn by JiraFox below the titles, from about a third of the slide height down: keep that area clear on slide 4."
+msgstr "JiraFox dessine les graphiques et les tableaux sous les titres, à partir d'environ un tiers de la hauteur de la slide : laissez cette zone libre sur la slide 4."
+
+msgid "To see or rename a shape: Home › Arrange › Selection Pane (Alt+F10), then double-click its name. The names are those PowerPoint gives in French; a shape may sit in a group."
+msgstr "Pour voir ou renommer une forme : Accueil › Organiser › Volet Sélection (Alt+F10), puis double-cliquez sur son nom. Ce sont les noms que PowerPoint donne en français ; une forme peut se trouver dans un groupe."
+
+msgid "Without a template, JiraFox uses a neutral layout with the same structure."
+msgstr "Sans modèle, JiraFox utilise une mise en page neutre de même structure."
