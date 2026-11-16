@@ -1,13 +1,15 @@
 import base64
+import tempfile
 from decimal import Decimal
 from datetime import date, datetime, timedelta, timezone as dt_timezone
-from io import BytesIO
+from io import BytesIO, StringIO
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
-from django.test import SimpleTestCase, TestCase
+from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 from openpyxl import load_workbook
@@ -2153,6 +2155,9 @@ class ManagementReportViewTests(TestCase):
     def setUp(self):
         cache.clear()
         self.addCleanup(cache.clear)
+        traces = tempfile.TemporaryDirectory()
+        self.addCleanup(traces.cleanup)
+        self.enterContext(override_settings(PPTX_LOG_DIR=traces.name))
 
     @staticmethod
     def _sprint(sprint_id, start, end, state="closed"):
@@ -2376,3 +2381,75 @@ class ManagementReportViewTests(TestCase):
 
         self.assertContains(response, "Rapport direction")
         self.assertContains(response, "sprint=3&amp;focus=3")
+
+
+class PptxTraceTests(SimpleTestCase):
+    def setUp(self):
+        traces = tempfile.TemporaryDirectory()
+        self.addCleanup(traces.cleanup)
+        self.enterContext(override_settings(PPTX_LOG_DIR=traces.name, PPTX_LOG_KEEP=2))
+        self.root = Path(traces.name)
+        report = PptxReportTests()
+        self.data, self.analysis = report._data(), report._analysis()
+        # Dates must come back as dates on replay.
+        self.data["sprints"][1]["start"] = datetime(2026, 10, 1, 8, tzinfo=dt_timezone.utc)
+
+    def _folders(self):
+        return sorted(path for path in self.root.iterdir() if path.is_dir())
+
+    def test_a_generation_leaves_its_inputs_and_its_deck(self):
+        from sprint.pptx_log import traced_build_deck
+
+        deck = traced_build_deck(self.data, self.analysis, None, "Mon Projet")
+
+        (folder,) = self._folders()
+        self.assertTrue(folder.name.endswith("-mon-projet"))
+        self.assertEqual((folder / "deck.pptx").read_bytes(), deck)
+        self.assertIn(f"{folder.name} OK", (self.root / "pptx.log").read_text(encoding="utf-8"))
+
+    def test_a_trace_replays_to_the_same_deck(self):
+        from pptx import Presentation
+
+        from sprint.pptx_log import load_trace, traced_build_deck
+        from sprint.pptx_report import build_deck
+
+        deck = traced_build_deck(self.data, self.analysis, None, "Mon Projet")
+        data, analysis, template = load_trace(self._folders()[0])
+
+        self.assertEqual(data["sprints"][1]["start"], self.data["sprints"][1]["start"])
+        self.assertEqual(analysis, self.analysis)
+        self.assertIsNone(template)
+        replayed = Presentation(BytesIO(build_deck(data, analysis, template)))
+        self.assertEqual(len(replayed.slides), len(Presentation(BytesIO(deck)).slides))
+
+    def test_a_failure_is_traced_and_raised(self):
+        from sprint.pptx_log import traced_build_deck
+
+        with self.assertRaises(KeyError):
+            traced_build_deck({"sprints": []}, None, None, "Mon Projet")
+
+        (folder,) = self._folders()
+        self.assertIn("KeyError", (folder / "error.txt").read_text(encoding="utf-8"))
+        self.assertIn(f"{folder.name} ERROR", (self.root / "pptx.log").read_text(encoding="utf-8"))
+
+    def test_only_the_latest_traces_are_kept(self):
+        from sprint.pptx_log import traced_build_deck
+
+        for _ in range(3):
+            traced_build_deck(self.data, None, None, "Mon Projet")
+
+        self.assertEqual(len(self._folders()), 2)
+
+    def test_replay_command_writes_the_deck_again(self):
+        from django.core.management import call_command
+        from pptx import Presentation
+
+        from sprint.pptx_log import traced_build_deck
+
+        deck = traced_build_deck(self.data, self.analysis, None, "Mon Projet")
+        (folder,) = self._folders()
+
+        call_command("replay_pptx", str(folder), stdout=StringIO())
+
+        replayed = Presentation(str(folder / "replay.pptx"))
+        self.assertEqual(len(replayed.slides), len(Presentation(BytesIO(deck)).slides))

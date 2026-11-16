@@ -16,3 +16,6 @@ exports/
 
 # Uploaded files (PowerPoint templates): never committed.
 media/
+
+# Traces of the PowerPoint generations (Jira data): never committed.
+logs/

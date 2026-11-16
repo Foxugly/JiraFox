@@ -145,6 +145,10 @@ LOGGING = {
     },
 }
 
+# Trace of each PowerPoint generation (inputs, template, deck), to replay it elsewhere: sprint/pptx_log.py.
+PPTX_LOG_DIR = Path(os.getenv("JIRAFOX_PPTX_LOG_DIR", BASE_DIR / "logs" / "pptx"))
+PPTX_LOG_KEEP = 20
+
 # Uploaded files (PowerPoint templates). Never served: they are only read server-side.
 MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_URL = "/media/"

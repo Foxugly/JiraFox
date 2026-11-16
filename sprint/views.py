@@ -22,7 +22,7 @@ from .logged_report import create_logged_xlsx_bytes, sprint_window
 from .models import CAPACITY_FIELDS, SprintCapacity, SprintPeriod
 from .report import create_xlsx_bytes
 from .analysis import MAX_RISKS, PROVIDERS, Analysis, AnalysisParseError, Risk, build_dossier, risky_keys
-from .pptx_report import build_deck
+from .pptx_log import traced_build_deck
 from .report_data import (
     build_report_data, closed_sprints, load_sprint_scope, sprint_warning_lines, sprints_in_range, trend_for,
 )
@@ -556,7 +556,7 @@ class ManagementReportView(LoginRequiredMixin, View):
         template = getattr(project, "report_template", None)
         template_path = template.path if template else None
         with translation.override("fr"):
-            deck = build_deck(data, analysis, template_path)
+            deck = traced_build_deck(data, analysis, template_path, getattr(project, "name", "") or "")
         response = HttpResponse(deck, content_type=PPTX_CONTENT_TYPE)
         name = slugify(getattr(project, "name", "") or "") or "sprint"
         response["Content-Disposition"] = (
