@@ -28,6 +28,10 @@ OUTCOMES = (
     ("puntedIssues", "removed"),
 )
 
+# Diagram node of an outcome: issues removed from the sprint were not completed either, so they
+# share that node; their own outcome stays "removed" everywhere else.
+DIAGRAM_OUTCOMES = {"removed": "not_done"}
+
 # Issues already done outside the sprint (done before being put in it, or closed in another
 # sprint): no work of this sprint, so left out of every figure and only listed.
 DONE_ELSEWHERE_BUCKET = "issuesCompletedInAnotherSprint"
@@ -57,7 +61,7 @@ def build_scope_flow(
 ) -> dict:
     """
     Nodes are keyed "start:<status>", "origin:<x>", "outcome:<x>" and "end:<status>" so a status
-    never collides with an outcome. Flows are ticket counts: start status -> planned (planned
+    never collides with an outcome; removed issues flow through "outcome:not_done". Flows are ticket counts: start status -> planned (planned
     issues only), origin -> outcome, then outcome -> status at the sprint end.
 
     Without `histories` (or for an issue missing from it) the end status is the current one and
@@ -119,9 +123,10 @@ def build_scope_flow(
 
     counts: dict[tuple[str, str], int] = {}
     for issue in issues:
+        outcome = DIAGRAM_OUTCOMES.get(issue["outcome"], issue["outcome"])
         steps = [
-            (f"origin:{issue['origin']}", f"outcome:{issue['outcome']}"),
-            (f"outcome:{issue['outcome']}", f"end:{issue['status_end']}"),
+            (f"origin:{issue['origin']}", f"outcome:{outcome}"),
+            (f"outcome:{outcome}", f"end:{issue['status_end']}"),
         ]
         if issue["status_start"]:
             steps.insert(0, (f"start:{issue['status_start']}", f"origin:{issue['origin']}"))

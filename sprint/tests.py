@@ -934,13 +934,15 @@ class SprintScopeFlowTests(TestCase):
             {
                 ("origin:planned", "outcome:done"): 2,
                 ("origin:added", "outcome:done"): 1,
-                ("origin:planned", "outcome:removed"): 1,
-                ("origin:added", "outcome:removed"): 1,
+                ("origin:planned", "outcome:not_done"): 1,
+                ("origin:added", "outcome:not_done"): 1,
                 ("outcome:done", "end:Done"): 2,
                 ("outcome:done", "end:Canceled"): 1,
-                ("outcome:removed", "end:In Progress"): 2,
+                ("outcome:not_done", "end:In Progress"): 2,
             },
         )
+        # Removed issues share the "Not completed" node of the diagram but keep their own outcome.
+        self.assertEqual(sum(issue["outcome"] == "removed" for issue in scope["issues"]), 2)
         # BKL1-6 was done in another sprint: left out of every figure, only listed.
         self.assertEqual(scope["totals"], {"planned": 3, "added": 2})
         self.assertNotIn("BKL1-6", [issue["key"] for issue in scope["issues"]])
@@ -1067,7 +1069,7 @@ class SprintScopeFlowTests(TestCase):
         self.assertEqual(flows[(START_NO_STATUS, "origin:planned")], 1)
         self.assertEqual(scope["columns"][START_NO_STATUS], 0)
         self.assertNotIn((START_NO_STATUS, "origin:added"), flows)
-        self.assertEqual(flows[("outcome:removed", "end:In Test")], 1)
+        self.assertEqual(flows[("outcome:not_done", "end:In Test")], 1)
         self.assertEqual(scope["columns"]["start:To Do"], 0)
         self.assertEqual(scope["columns"]["end:In Test"], 3)
         self.assertTrue(scope["has_history"])

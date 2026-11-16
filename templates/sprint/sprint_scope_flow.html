@@ -256,8 +256,7 @@
                     "origin:planned": "#2f7de1",
                     "origin:added": "#f0a202",
                     "outcome:done": "#2e9d5b",
-                    "outcome:not_done": "#e07a1f",
-                    "outcome:removed": "#c8475a"
+                    "outcome:not_done": "#e07a1f"
                 };
                 const statusColors = {new: "#8a94a6", indeterminate: "#4a8fe0", done: "#2e9d5b"};
                 // Issues whose status is unknown: "start:" in the diagram, null entry status in the tab.
@@ -285,8 +284,9 @@
                 });
                 const color = (key) => colors[key] || "#8a94a6";
                 const nodeLabel = (key) => labels[key] || key;
+                // Removed issues flow through the "Not completed" node (DIAGRAM_OUTCOMES in scope_flow.py).
                 const issueNodes = (issue) => [`start:${issue.status_start || ""}`, `origin:${issue.origin}`,
-                    `outcome:${issue.outcome}`, `end:${issue.status_end}`];
+                    `outcome:${issue.outcome === "removed" ? "not_done" : issue.outcome}`, `end:${issue.status_end}`];
 
                 const rows = document.getElementById("scopeIssueRows");
                 const count = document.getElementById("scopeIssueCount");
