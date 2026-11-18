@@ -217,6 +217,16 @@ def planned_assignee_at(issue: dict, start: datetime | None) -> dict | None:
     return _value_at(changes, _planning_moment(issue, start), issue.get("assignee")) or _first_value_set(changes)
 
 
+def sprint_start(sprint: dict) -> datetime | None:
+    """
+    When the sprint was really started (Jira's activatedDate), else its startDate. The startDate is
+    the date typed when the sprint was created or started and may be well before the click on
+    "Start sprint": statuses "at the start" then predated the changes made just before starting it,
+    while Jira's own "added during the sprint" counts from the activation.
+    """
+    return parse_jira_datetime(sprint.get("activatedDate")) or parse_jira_datetime(sprint.get("startDate"))
+
+
 def sprint_window(
     sprint: dict, now: datetime, period: SprintPeriod | None = None
 ) -> tuple[datetime | None, datetime]:
@@ -224,7 +234,7 @@ def sprint_window(
     if period:
         start, end = period.start, period.end
     else:
-        start = parse_jira_datetime(sprint.get("startDate"))
+        start = sprint_start(sprint)
         end = parse_jira_datetime(sprint.get("completeDate")) or parse_jira_datetime(sprint.get("endDate"))
     return start, min(end, now) if end else now
 

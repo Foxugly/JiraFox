@@ -32,7 +32,7 @@
                     <h2 class="h4 mb-1">{% trans "Sprint scope" %}</h2>
                     <div class="inline-note">
                         {% if scope.has_history %}
-                            {% trans "Status of the planned issues at the sprint start, planned or added during the sprint, how the issues ended (Jira sprint report) and their status at the sprint end. Sub-tasks are not counted." %}
+                            {% trans "Status of each issue on entering the sprint (at its start for the planned issues, when it was added for the others), planned or added during the sprint, how the issues ended (Jira sprint report) and their status at the sprint end. Sub-tasks are not counted." %}
                         {% else %}
                             {% trans "Planned at the sprint start or added during the sprint, how the issues ended (Jira sprint report) and their current status. Sub-tasks are not counted." %}
                         {% endif %}
@@ -222,8 +222,7 @@
                                 <th>{% trans "Key" %}</th>
                                 <th>{% trans "Summary" %}</th>
                                 <th>{% trans "Origin" %}</th>
-                                <th>{% trans "Status at sprint start" %}</th>
-                                <th>{% trans "Status on entering the sprint" %}</th>
+                                <th title="{% trans 'At the sprint start for the planned issues, when it was added for the others.' %}">{% trans "Status on entering the sprint" %}</th>
                                 <th>{% trans "Outcome" %}</th>
                                 <th>{% trans "Status at sprint end" %}</th>
                                 <th>{% trans "Current status" %}</th>
@@ -285,7 +284,7 @@
                 const color = (key) => colors[key] || "#8a94a6";
                 const nodeLabel = (key) => labels[key] || key;
                 // Removed issues flow through the "Not completed" node (DIAGRAM_OUTCOMES in scope_flow.py).
-                const issueNodes = (issue) => [`start:${issue.status_start || ""}`, `origin:${issue.origin}`,
+                const issueNodes = (issue) => [`start:${issue.status_entry || ""}`, `origin:${issue.origin}`,
                     `outcome:${issue.outcome === "removed" ? "not_done" : issue.outcome}`, `end:${issue.status_end}`];
 
                 const rows = document.getElementById("scopeIssueRows");
@@ -313,7 +312,7 @@
                         link.textContent = issue.key;
                         key.appendChild(link);
                         tr.append(key, cell(issue.summary), cell(nodeLabel(`origin:${issue.origin}`)),
-                            cell(issue.status_start || "-"), cell(issue.status_entry || "-"),
+                            cell(issue.status_entry || "-"),
                             cell(nodeLabel(`outcome:${issue.outcome}`)),
                             cell(issue.status_end), cell(issue.status_current), cell(issue.assignee || "-"));
                         return tr;

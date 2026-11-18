@@ -232,6 +232,7 @@ class JiraManager:
                     "name": getattr(sprint, "name", None),
                     "state": getattr(sprint, "state", None),
                     "startDate": getattr(sprint, "startDate", None),
+                    "activatedDate": getattr(sprint, "activatedDate", None),
                     "endDate": getattr(sprint, "endDate", None),
                     "completeDate": getattr(sprint, "completeDate", None),
                     "originBoardId": getattr(sprint, "originBoardId", None),
@@ -275,6 +276,8 @@ class JiraManager:
             "name": getattr(sprint, "name", None),
             "state": getattr(sprint, "state", None),
             "startDate": getattr(sprint, "startDate", None),
+            # When the sprint was really started; startDate is the date typed in Jira, often earlier.
+            "activatedDate": getattr(sprint, "activatedDate", None),
             "endDate": getattr(sprint, "endDate", None),
             "completeDate": getattr(sprint, "completeDate", None),
             "originBoardId": getattr(sprint, "originBoardId", None),
