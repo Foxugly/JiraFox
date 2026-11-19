@@ -1,7 +1,8 @@
 """
-Sprint scope flow: the status of the planned issues at the sprint start, where the sprint's issues
-came from (planned at the start or added during the sprint), how they ended (Jira's sprint report
-buckets) and their status at the sprint end.
+Sprint scope flow: the status of each issue on entering the sprint (at the start for the planned
+ones, when it was added for the others), where the sprint's issues came from (planned at the start
+or added during the sprint), how they ended (Jira's sprint report buckets) and their status at the
+sprint end.
 
 Built from Jira's sprint report, which already knows which issues were added after the start;
 statuses at the start and end are rebuilt from each issue's changelog.
@@ -61,12 +62,14 @@ def build_scope_flow(
 ) -> dict:
     """
     Nodes are keyed "start:<status>", "origin:<x>", "outcome:<x>" and "end:<status>" so a status
-    never collides with an outcome; removed issues flow through "outcome:not_done". Flows are ticket counts: start status -> planned (planned
-    issues only), origin -> outcome, then outcome -> status at the sprint end.
+    never collides with an outcome; removed issues flow through "outcome:not_done". Flows are ticket
+    counts: status on entering the sprint -> origin, origin -> outcome, then outcome -> status at
+    the sprint end.
 
     Without `histories` (or for an issue missing from it) the end status is the current one and
-    the start status is unknown. With histories, a planned issue whose start status is unknown
-    flows from START_NO_STATUS.
+    the entry status is unknown. With histories, an issue whose entry status is unknown flows from
+    START_NO_STATUS. `status_start` (the status at the sprint start, planned issues only) is kept
+    for the AI dossier.
 
     `status_entry` is the status when the issue entered the sprint (its start for planned issues,
     or its creation if Jira counts it planned though created later) and `moved` whether its status
@@ -128,10 +131,8 @@ def build_scope_flow(
             (f"origin:{issue['origin']}", f"outcome:{outcome}"),
             (f"outcome:{outcome}", f"end:{issue['status_end']}"),
         ]
-        if issue["status_start"]:
-            steps.insert(0, (f"start:{issue['status_start']}", f"origin:{issue['origin']}"))
-        elif issue["origin"] == PLANNED and histories:
-            steps.insert(0, (START_NO_STATUS, f"origin:{PLANNED}"))
+        if issue["status_entry"] or histories:
+            steps.insert(0, (f"start:{issue['status_entry'] or ''}", f"origin:{issue['origin']}"))
         for step in steps:
             counts[step] = counts.get(step, 0) + 1
 
@@ -192,7 +193,7 @@ def consistency_errors(scope: dict) -> list[str]:
     )
     starts = sum(count for node, count in outflow.items() if node.startswith("start:"))
     if origins != len(issues) or ends != len(issues) or not outcomes_balanced or (
-        scope["has_history"] and starts != sizes[PLANNED]
+        scope["has_history"] and starts != len(issues)
     ):
         errors.append(_("The flow diagram does not add up."))
     return errors

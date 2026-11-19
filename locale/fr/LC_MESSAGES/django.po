@@ -1938,8 +1938,11 @@ msgid "Sprint scope"
 msgstr "Périmètre du sprint"
 
 #: .\templates\sprint\sprint_scope_flow.html:35
-msgid "Status of the planned issues at the sprint start, planned or added during the sprint, how the issues ended (Jira sprint report) and their status at the sprint end. Sub-tasks are not counted."
-msgstr "Statut des tickets prévus au début du sprint, prévus ou ajoutés en cours de sprint, comment les tickets ont fini (rapport de sprint Jira) et leur statut à la fin du sprint. Les sous-tâches ne sont pas comptées."
+msgid "Status of each issue on entering the sprint (at its start for the planned issues, when it was added for the others), planned or added during the sprint, how the issues ended (Jira sprint report) and their status at the sprint end. Sub-tasks are not counted."
+msgstr "Statut de chaque ticket à son entrée dans le sprint (au début du sprint pour les tickets prévus, au moment de son ajout pour les autres), prévus ou ajoutés en cours de sprint, comment les tickets ont fini (rapport de sprint Jira) et leur statut à la fin du sprint. Les sous-tâches ne sont pas comptées."
+
+msgid "At the sprint start for the planned issues, when it was added for the others."
+msgstr "Au début du sprint pour les tickets prévus, au moment de son ajout pour les autres."
 
 #: .\templates\sprint\sprint_scope_flow.html:37
 msgid "Planned at the sprint start or added during the sprint, how the issues ended (Jira sprint report) and their current status. Sub-tasks are not counted."

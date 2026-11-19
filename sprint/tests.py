@@ -468,6 +468,23 @@ class LoggedReportTests(SimpleTestCase):
         # Bob is the assignee but logged nothing on it: an outside ticket only shows up with logged time.
         self.assertEqual(len(build_dev_rows(ISSUES, "Bob", start, end, ["Alice", "Bob"], [support])), 2)
 
+    def test_the_sprint_starts_when_it_was_really_started(self):
+        # startDate is the date typed in Jira; the tickets went from "Ready for sprint" to "To Do"
+        # after it, just before the click on "Start sprint" (activatedDate).
+        sprint = {**SPRINT, "startDate": "2026-03-02T08:00:00.000+0000", "activatedDate": "2026-03-02T10:00:00.000+0000"}
+        issue = {"created": "2026-02-01T10:00:00.000+0000", "state": "Done", "status_changes": [
+            {"at": "2026-03-02T09:30:00.000+0000", "from": "Ready for sprint", "to": "To Do"},
+            {"at": "2026-03-05T09:30:00.000+0000", "from": "To Do", "to": "Done"},
+        ]}
+
+        start, _ = sprint_window(sprint, NOW)
+
+        self.assertEqual(start, datetime(2026, 3, 2, 10, 0, tzinfo=dt_timezone.utc))
+        self.assertEqual(status_at(issue, start), "To Do")
+        # Without activatedDate (older Jira), startDate stands.
+        self.assertEqual(sprint_window({**sprint, "activatedDate": None}, NOW)[0],
+                         datetime(2026, 3, 2, 8, 0, tzinfo=dt_timezone.utc))
+
     def test_period_set_by_hand_replaces_the_jira_dates(self):
         period = SprintPeriod(
             start=datetime(2026, 3, 2, 0, 0, tzinfo=dt_timezone.utc), end=datetime(2026, 3, 4, 0, 0, tzinfo=dt_timezone.utc)
@@ -1046,7 +1063,7 @@ class SprintScopeFlowTests(TestCase):
                 {"at": "2026-03-10T10:00:00.000+0000", "from": "In Progress", "to": "In Test"},
                 {"at": "2026-03-20T10:00:00.000+0000", "from": "In Test", "to": "In Progress"},
             ]},
-            # Added during the sprint: no start status.
+            # Added during the sprint: no status at the start, its status at creation on entering it.
             "BKL1-5": {"state": "In Progress", "created": "2026-03-04T10:00:00.000+0000", "status_changes": []},
         }
 
@@ -1070,11 +1087,39 @@ class SprintScopeFlowTests(TestCase):
         # Planned without a known start status (no history for BKL1-3): "No status".
         self.assertEqual(flows[(START_NO_STATUS, "origin:planned")], 1)
         self.assertEqual(scope["columns"][START_NO_STATUS], 0)
-        self.assertNotIn((START_NO_STATUS, "origin:added"), flows)
+        # Added issues enter the diagram too, with their status when they entered the sprint (BKL1-5,
+        # created in it) or "No status" without history (BKL1-2).
+        self.assertEqual(flows[("start:In Progress", "origin:added")], 1)
+        self.assertEqual(flows[(START_NO_STATUS, "origin:added")], 1)
+        self.assertEqual(issues["BKL1-5"]["status_entry"], "In Progress")
+        self.assertEqual(consistency_errors(scope), [])
         self.assertEqual(flows[("outcome:not_done", "end:In Test")], 1)
         self.assertEqual(scope["columns"]["start:To Do"], 0)
         self.assertEqual(scope["columns"]["end:In Test"], 3)
         self.assertTrue(scope["has_history"])
+
+    def test_an_issue_added_during_the_sprint_starts_from_its_status_when_added(self):
+        start = datetime(2026, 3, 2, 8, tzinfo=dt_timezone.utc)
+        end = datetime(2026, 3, 13, 18, tzinfo=dt_timezone.utc)
+        histories = {
+            # Existing issue, "Ready for sprint" at the start, moved to To Do then put in the sprint.
+            "BKL1-5": {"state": "In Progress", "created": "2026-02-01T10:00:00.000+0000", "status_changes": [
+                {"at": "2026-03-03T09:00:00.000+0000", "from": "Ready for sprint", "to": "To Do"},
+                {"at": "2026-03-06T09:00:00.000+0000", "from": "To Do", "to": "In Progress"},
+            ], "sprint_changes": [
+                {"at": "2026-03-04T09:00:00.000+0000", "from": "", "to": "2446"},
+            ]},
+        }
+
+        scope = build_scope_flow(SCOPE_REPORT, lambda key: key, histories=histories, start=start, end=end,
+                                 sprint_id=2446)
+
+        issue = next(issue for issue in scope["issues"] if issue["key"] == "BKL1-5")
+        self.assertEqual(issue["status_entry"], "To Do")
+        flows = {(flow["from"], flow["to"]): flow["flow"] for flow in scope["flows"]}
+        self.assertEqual(flows[("start:To Do", "origin:added")], 1)
+        self.assertNotIn(("start:Ready for sprint", "origin:added"), flows)
+        self.assertEqual(consistency_errors(scope), [])
 
     def test_stability_compares_the_status_on_entering_the_sprint_with_the_end(self):
         start = datetime(2026, 3, 2, 8, tzinfo=dt_timezone.utc)
