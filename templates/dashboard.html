@@ -24,6 +24,7 @@
             items: "{% trans 'items' %}",
             days: "{% trans 'days' %}",
             work_item_age: "{% trans 'Work Item Age' %}",
+            no_epic: "{% trans 'No epic' %}",
             bottlenecks: "{% trans 'Bottlenecks' %}",
             top_aging: "{% trans 'Top aging items' %}",
             status: "{% trans 'Status' %}",
@@ -114,5 +115,6 @@
             fallbackItems: typeof FALLBACK_ITEMS !== "undefined" ? FALLBACK_ITEMS : null
         };
     </script>
+    <script src="{% static 'js/epic-colors.js' %}"></script>
     <script src="{% static 'js/dashboard.js' %}"></script>
 {% endblock %}

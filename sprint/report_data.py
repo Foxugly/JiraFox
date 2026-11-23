@@ -15,16 +15,88 @@ from jiramodule.exceptions import JiraUnavailable, describe_jira_error
 
 from .logged_report import parse_jira_datetime, sprint_window
 from .report_metrics import kanban_snapshot, sprint_metrics
-from .scope_flow import OUTCOMES as SCOPE_OUTCOMES, build_scope_flow, consistency_errors
+from .scope_flow import DONE_ELSEWHERE_BUCKET, OUTCOMES as SCOPE_OUTCOMES, build_scope_flow, consistency_errors
 
 CACHE_SECONDS = 24 * 3600
 TREND_COUNT = 5
+#: Filter value for the issues without an epic.
+NO_EPIC = "none"
+REPORT_BUCKETS = tuple(bucket for bucket, _ in SCOPE_OUTCOMES) + (DONE_ELSEWHERE_BUCKET,)
 
 
-def load_sprint_scope(jira, sprint: dict) -> dict:
-    """Scope flow of one sprint with its status histories and the warnings to show next to it."""
+def _report_keys(report: dict) -> list[str]:
+    return [issue.get("key") for bucket in REPORT_BUCKETS for issue in report.get(bucket) or [] if issue.get("key")]
+
+
+def epic_choices(epic_of: dict[str, dict | None]) -> list[dict]:
+    """[{"value", "key", "name", "count"}] of the epics of the issues, by name, "no epic" last."""
+    counts: dict[str, dict] = {}
+    for epic in epic_of.values():
+        value = epic["key"] if epic else NO_EPIC
+        entry = counts.setdefault(
+            value, {"value": value, "key": epic["key"] if epic else "", "name": epic["name"] if epic else "", "count": 0}
+        )
+        entry["count"] += 1
+    return sorted(counts.values(), key=lambda c: (c["value"] == NO_EPIC, c["name"].casefold(), c["key"]))
+
+
+def epic_breakdown(issues: list[dict], epic_of: dict[str, dict | None]) -> list[dict]:
+    """[{"value", "key", "name", "planned", "added", "all", "done", "not_done", "removed",
+    "done_percent"}] issue counts per epic (by origin, then by how they ended), most issues first,
+    "no epic" last."""
+    rows: dict[str, dict] = {}
+    for issue in issues:
+        epic = epic_of.get(issue["key"])
+        value = epic["key"] if epic else NO_EPIC
+        row = rows.setdefault(
+            value,
+            {"value": value, "key": epic["key"] if epic else "", "name": epic["name"] if epic else "",
+             "planned": 0, "added": 0, "all": 0, "done": 0, "not_done": 0, "removed": 0},
+        )
+        row[issue["origin"]] += 1
+        row["all"] += 1
+        row[issue["outcome"]] += 1
+    for row in rows.values():
+        row["done_percent"] = round(100 * row["done"] / row["all"]) if row["all"] else None
+    return sorted(rows.values(), key=lambda r: (r["value"] == NO_EPIC, -r["all"], r["name"].casefold(), r["key"]))
+
+
+def filter_report_by_epic(report: dict, epic_of: dict[str, dict | None], selected: set[str]) -> dict:
+    """The sprint report keeping only the issues of the `selected` epics (NO_EPIC: without one)."""
+    def kept(issue: dict) -> bool:
+        epic = epic_of.get(issue.get("key"))
+        return (epic["key"] if epic else NO_EPIC) in selected
+
+    return {
+        **report,
+        **{bucket: [issue for issue in report.get(bucket) or [] if kept(issue)] for bucket in REPORT_BUCKETS},
+    }
+
+
+def load_sprint_scope(jira, sprint: dict, *, epics: set[str] | None = None, with_epics: bool = False) -> dict:
+    """
+    Scope flow of one sprint with its status histories and the warnings to show next to it.
+
+    `with_epics` also loads the epic of each issue (`epic_choices`, or `epic_error` when Jira fails);
+    `epics` (epic keys, NO_EPIC) then keeps only their issues. The check against the sprint's issues
+    still covers the whole report.
+    """
     sprint_id = sprint["id"]
     report = jira.get_sprint_scope_report(sprint_id)
+    full_keys = set(_report_keys(report))
+    epic_info = {"epic_choices": [], "epic_error": None, "epic_selected": sorted(epics or ()), "epic_breakdown": []}
+    epic_of = None
+    if with_epics or epics:
+        try:
+            epic_of = jira.get_issue_epics(sorted(full_keys))
+            epic_info["epic_choices"] = epic_choices({key: epic_of.get(key) for key in full_keys})
+            if epics:
+                report = filter_report_by_epic(report, epic_of, set(epics))
+        except (JIRAError, RequestException, JiraUnavailable) as exc:
+            # Without epics the page still shows the whole sprint: say why it is not filtered.
+            epic_info["epic_error"] = describe_jira_error(exc)
+            epic_info["epic_selected"] = []
+            epic_of = None
     # Jira's own dates: the hand-set period only bounds the logged sheet.
     start, end = sprint_window(sprint, timezone.now())
     warnings = {
@@ -46,6 +118,8 @@ def load_sprint_scope(jira, sprint: dict) -> dict:
         sprint_id=sprint_id, started_statuses=getattr(jira.cfg, "started_statuses", ()),
     )
     warnings["scope_errors"] = consistency_errors(scope)
+    if epic_of is not None:
+        epic_info["epic_breakdown"] = epic_breakdown(scope["issues"], epic_of)
     warnings["planned_created_late"] = [
         {**issue, "created_at": parse_jira_datetime(issue["created"])}
         for issue in scope["issues"]
@@ -53,17 +127,17 @@ def load_sprint_scope(jira, sprint: dict) -> dict:
     ]
     warnings["done_elsewhere"] = scope["done_elsewhere"]
     report_keys = {issue["key"] for issue in scope["issues"]}
-    elsewhere_keys = {issue["key"] for issue in scope["done_elsewhere"]}
     if histories is not None:
         warnings["without_history"] = sorted(report_keys - set(histories))
     try:
-        # Jira's sprint report only holds the issues of the board's filter.
-        warnings["missing_from_report"] = sorted(jira.get_sprint_issue_keys(sprint_id) - report_keys - elsewhere_keys)
+        # Jira's sprint report only holds the issues of the board's filter (whole report, epic filter or not).
+        warnings["missing_from_report"] = sorted(jira.get_sprint_issue_keys(sprint_id) - full_keys)
     except Exception as exc:  # noqa: BLE001
         # An extra check only: whatever goes wrong, the figures are still shown, with a warning.
         warnings["missing_check_error"] = describe_jira_error(exc)
     return {
         "sprint": sprint, "start": start, "end": end, "scope": scope, "histories": histories, "warnings": warnings,
+        **epic_info,
     }
 
 

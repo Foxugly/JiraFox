@@ -2597,8 +2597,6 @@ msgstr "U bent nog geen lid van een project: maak er een aan, of vraag een lid o
 #~ msgid "Creer, tester et activer plusieurs connexions selon vos boards et vos contextes d'equipe."
 #~ msgstr "Creer, tester et activer plusieurs connexions selon vos boards et vos contextes d'equipe."
 
-#~ msgid "Epic"
-#~ msgstr "Epic"
 
 #~ msgid "Definir comme configuration courante"
 #~ msgstr "Definir comme configuration courante"
@@ -2725,3 +2723,47 @@ msgstr "Een vorm bekijken of hernoemen: Start › Schikken › Selectiedeelvenst
 
 msgid "Without a template, JiraFox uses a neutral layout with the same structure."
 msgstr "Zonder sjabloon gebruikt JiraFox een neutrale lay-out met dezelfde structuur."
+
+msgid "All epics"
+msgstr "Alle epics"
+
+msgid "No epic"
+msgstr "Zonder epic"
+
+msgid "Apply"
+msgstr "Toepassen"
+
+msgid "Show all epics"
+msgstr "Alle epics tonen"
+
+msgid "Only the issues of these epics are counted:"
+msgstr "Alleen de tickets van deze epics worden geteld:"
+
+msgid "The epics could not be loaded, the whole sprint is shown:"
+msgstr "De epics konden niet worden geladen, de hele sprint wordt getoond:"
+
+msgid "%(counter)s epic"
+msgid_plural "%(counter)s epics"
+msgstr[0] "%(counter)s epic"
+msgstr[1] "%(counter)s epics"
+
+msgid "Epics"
+msgstr "Epics"
+
+msgid "Epic"
+msgstr "Epic"
+
+msgid "Number of issues per epic: planned at the sprint start, added during the sprint, and all of them (removed issues included, sub-tasks and issues completed in another sprint left out)."
+msgstr "Aantal tickets per epic: gepland bij de start van de sprint, toegevoegd tijdens de sprint, en allemaal samen (verwijderde tickets inbegrepen, subtaken en tickets afgerond in een andere sprint niet meegeteld)."
+
+msgid "Removed from sprint"
+msgstr "Uit de sprint gehaald"
+
+msgid "Share completed"
+msgstr "Aandeel afgerond"
+
+msgid "Progress per epic"
+msgstr "Voortgang per epic"
+
+msgid "How the issues of each epic ended: completed in the sprint, not completed, or removed from it."
+msgstr "Hoe de tickets van elke epic eindigden: afgerond in de sprint, niet afgerond, of uit de sprint gehaald."

@@ -9,6 +9,8 @@
     const ttKey = document.getElementById("ttKey");
     const ttTitle = document.getElementById("ttTitle");
     const ttStatus = document.getElementById("ttStatus");
+    const ttEpic = document.getElementById("ttEpic");
+    const ttEpicRow = document.getElementById("ttEpicRow");
     const ttAge = document.getElementById("ttAge");
     const ttLink = document.getElementById("ttLink");
     const countState = {statuses: [], counts: {}};
@@ -95,6 +97,10 @@
         ttKey.textContent = raw.key ?? "-";
         ttTitle.textContent = raw.title ?? "";
         ttStatus.textContent = raw.status ?? "-";
+        if (ttEpic && ttEpicRow) {
+            ttEpicRow.hidden = !raw.epicsLoaded;
+            ttEpic.textContent = raw.epic ? `${raw.epic.name} (${raw.epic.key})` : (i18n.no_epic || "No epic");
+        }
         ttAge.textContent = `${age} ${i18n.days_short || "d"}`;
         ttAge.className = `badge badge-age ${ageBadgeClass(Number(age) || 999)}`;
         ttLink.href = raw.url || "#";
@@ -153,8 +159,19 @@
                 key: item.key,
                 status: item.status,
                 title: item.title ?? "",
-                url: item.url ?? ""
+                url: item.url ?? "",
+                epic: item.epic || null,
+                epicsLoaded: Boolean(apiData.epics)
             }));
+        // One scatter dataset per epic (a legend entry each, click to hide it); each in its own
+        // stack, or the y scale (stacked for the zones) would add their ages up.
+        const point = {type: "scatter", pointRadius: 5, pointHoverRadius: 7, order: 1};
+        const itemDatasets = apiData.epics && window.JiraFoxEpics
+            ? window.JiraFoxEpics.groupByEpic(scatterData, i18n.no_epic || "No epic").map((group, index) => ({
+                ...point, label: group.label, data: group.items, backgroundColor: group.color,
+                borderColor: group.color, stack: `epic-${index}`
+            }))
+            : [{...point, label: "Items", data: scatterData, backgroundColor: "#111", borderColor: "#111", stack: "items"}];
 
         return {
             statuses,
@@ -164,7 +181,7 @@
                 {type: "bar", label: "0-10", data: makeBarPoints(10), backgroundColor: "rgba(46,204,113,0.35)", borderWidth: 0, stack: "zones", order: 2, barThickness: 45},
                 {type: "bar", label: "10-20", data: makeBarPoints(10), backgroundColor: "rgba(243,156,18,0.35)", borderWidth: 0, stack: "zones", order: 2, barThickness: 45},
                 {type: "bar", label: "20-50", data: makeBarPoints(30), backgroundColor: "rgba(231,76,60,0.35)", borderWidth: 0, stack: "zones", order: 2, barThickness: 45},
-                {type: "scatter", label: "Items", data: scatterData, pointRadius: 5, pointHoverRadius: 7, backgroundColor: "#111", borderColor: "#111", order: 1}
+                ...itemDatasets
             ]
         };
     }

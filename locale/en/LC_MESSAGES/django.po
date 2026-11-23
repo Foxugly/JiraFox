@@ -2576,8 +2576,6 @@ msgstr ""
 #~ msgid "Creer, tester et activer plusieurs connexions selon vos boards et vos contextes d'equipe."
 #~ msgstr "Create, test and activate multiple connections for your boards and team contexts."
 
-#~ msgid "Epic"
-#~ msgstr "Epic"
 
 #~ msgid "Current"
 #~ msgstr "Current"
@@ -2704,3 +2702,47 @@ msgstr "To see or rename a shape: Home › Arrange › Selection Pane (Alt+F10),
 
 msgid "Without a template, JiraFox uses a neutral layout with the same structure."
 msgstr "Without a template, JiraFox uses a neutral layout with the same structure."
+
+msgid "All epics"
+msgstr "All epics"
+
+msgid "No epic"
+msgstr "No epic"
+
+msgid "Apply"
+msgstr "Apply"
+
+msgid "Show all epics"
+msgstr "Show all epics"
+
+msgid "Only the issues of these epics are counted:"
+msgstr "Only the issues of these epics are counted:"
+
+msgid "The epics could not be loaded, the whole sprint is shown:"
+msgstr "The epics could not be loaded, the whole sprint is shown:"
+
+msgid "%(counter)s epic"
+msgid_plural "%(counter)s epics"
+msgstr[0] "%(counter)s epic"
+msgstr[1] "%(counter)s epics"
+
+msgid "Epics"
+msgstr "Epics"
+
+msgid "Epic"
+msgstr "Epic"
+
+msgid "Number of issues per epic: planned at the sprint start, added during the sprint, and all of them (removed issues included, sub-tasks and issues completed in another sprint left out)."
+msgstr "Number of issues per epic: planned at the sprint start, added during the sprint, and all of them (removed issues included, sub-tasks and issues completed in another sprint left out)."
+
+msgid "Removed from sprint"
+msgstr "Removed from sprint"
+
+msgid "Share completed"
+msgstr "Share completed"
+
+msgid "Progress per epic"
+msgstr "Progress per epic"
+
+msgid "How the issues of each epic ended: completed in the sprint, not completed, or removed from it."
+msgstr "How the issues of each epic ended: completed in the sprint, not completed, or removed from it."

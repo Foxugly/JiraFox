@@ -37,6 +37,18 @@
                             {% trans "Planned at the sprint start or added during the sprint, how the issues ended (Jira sprint report) and their current status. Sub-tasks are not counted." %}
                         {% endif %}
                     </div>
+                    {% if epic_selected %}
+                        <div class="alert alert-info py-2 mt-2 mb-0">
+                            {% trans "Only the issues of these epics are counted:" %}
+                            {% for choice in epic_selected_choices %}<strong>{% if choice.value == no_epic %}{% trans "No epic" %}{% else %}{{ choice.name }}{% endif %}</strong> ({{ choice.count }}){% if not forloop.last %}, {% endif %}{% endfor %}
+                            · <a href="{{ request.path }}">{% trans "Show all epics" %}</a>
+                        </div>
+                    {% endif %}
+                    {% if epic_error %}
+                        <div class="alert alert-warning py-2 mt-2 mb-0">
+                            {% trans "The epics could not be loaded, the whole sprint is shown:" %} {{ epic_error }}
+                        </div>
+                    {% endif %}
                     {% if scope_errors %}
                         <div class="alert alert-danger py-2 mt-2 mb-0">
                             {% trans "These figures do not add up, do not trust them:" %}
@@ -79,6 +91,31 @@
                     {% endif %}
                 </div>
                 <div class="d-flex flex-wrap gap-2 align-items-center">
+                    {% if epic_choices %}
+                        <form method="get" class="dropdown" id="epic-filter">
+                            <button type="button" class="btn btn-sm {% if epic_selected %}btn-primary{% else %}btn-outline-secondary{% endif %} dropdown-toggle"
+                                    data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                                <i class="fa-solid fa-filter me-1"></i>
+                                {% if epic_selected %}{% blocktrans count counter=epic_selected|length %}{{ counter }} epic{% plural %}{{ counter }} epics{% endblocktrans %}{% else %}{% trans "All epics" %}{% endif %}
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end p-3" style="min-width: 22rem; max-height: 60vh; overflow-y: auto;">
+                                {% for choice in epic_choices %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="epic" value="{{ choice.value }}"
+                                               id="epic-{{ forloop.counter }}" {% if choice.value in epic_selected %}checked{% endif %}>
+                                        <label class="form-check-label" for="epic-{{ forloop.counter }}">
+                                            {% if choice.value == no_epic %}<em>{% trans "No epic" %}</em>{% else %}{{ choice.name }} <span class="text-secondary small">{{ choice.key }}</span>{% endif %}
+                                            <span class="badge text-bg-light">{{ choice.count }}</span>
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                                <div class="d-flex gap-2 mt-3">
+                                    <button type="submit" class="btn btn-sm btn-primary">{% trans "Apply" %}</button>
+                                    <a href="{{ request.path }}" class="btn btn-sm btn-outline-secondary">{% trans "All epics" %}</a>
+                                </div>
+                            </div>
+                        </form>
+                    {% endif %}
                     <span class="badge scope-planned">{% trans "Planned" %}: {{ scope.totals.planned }}</span>
                     <span class="badge scope-added">{% trans "Added during sprint" %}: {{ scope.totals.added }}</span>
                 </div>
@@ -139,6 +176,14 @@
                         {% trans "Status evolution" %}
                     </button>
                 </li>
+                {% if epic_breakdown %}
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="scope-epics-tab" data-bs-toggle="tab" data-bs-target="#scope-epics-pane"
+                                type="button" role="tab" aria-controls="scope-epics-pane" aria-selected="false">
+                            {% trans "Epics" %}
+                        </button>
+                    </li>
+                {% endif %}
             </ul>
 
             <div class="tab-content">
@@ -155,6 +200,61 @@
                 {% endif %}
             </div>
             </div>
+
+            {% if epic_breakdown %}
+            <div class="tab-pane fade" id="scope-epics-pane" role="tabpanel" aria-labelledby="scope-epics-tab" tabindex="0">
+                <p class="inline-note">
+                    {% trans "Number of issues per epic: planned at the sprint start, added during the sprint, and all of them (removed issues included, sub-tasks and issues completed in another sprint left out)." %}
+                </p>
+                <div class="row g-3 mb-3">
+                    {% for group, label in epic_pie_groups %}
+                        <div class="col-12 col-lg-4">
+                            <div class="card p-3 h-100 scope-metric scope-{{ group }}">
+                                <div class="text-uppercase text-secondary small mb-2 text-center">{{ label }}</div>
+                                <div style="height: 320px;"><canvas id="epicPie-{{ group }}" data-group="{{ group }}"></canvas></div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="card p-3 mb-3">
+                    <div class="text-uppercase text-secondary small mb-1 text-center">{% trans "Progress per epic" %}</div>
+                    <div class="inline-note text-center mb-2">{% trans "How the issues of each epic ended: completed in the sprint, not completed, or removed from it." %}</div>
+                    <div id="epicProgressWrap" style="position: relative;">
+                        <canvas id="epicProgressChart"></canvas>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped align-middle mb-0">
+                        <thead>
+                        <tr>
+                            <th>{% trans "Epic" %}</th>
+                            <th class="text-end">{% trans "Planned at start" %}</th>
+                            <th class="text-end">{% trans "Added during sprint" %}</th>
+                            <th class="text-end">{% trans "Total" %}</th>
+                            <th class="text-end">{% trans "Completed" %}</th>
+                            <th class="text-end">{% trans "Not completed" %}</th>
+                            <th class="text-end">{% trans "Removed from sprint" %}</th>
+                            <th class="text-end">{% trans "Share completed" %}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for row in epic_breakdown %}
+                            <tr>
+                                <td>{% if row.value == no_epic %}<em>{% trans "No epic" %}</em>{% else %}<a href="{{ jira_browse_url }}{{ row.key }}" target="_blank" rel="noopener">{{ row.key }}</a> {{ row.name }}{% endif %}</td>
+                                <td class="text-end">{{ row.planned }}</td>
+                                <td class="text-end">{{ row.added }}</td>
+                                <td class="text-end fw-semibold">{{ row.all }}</td>
+                                <td class="text-end">{{ row.done }}</td>
+                                <td class="text-end">{{ row.not_done }}</td>
+                                <td class="text-end">{{ row.removed }}</td>
+                                <td class="text-end">{% if row.done_percent is not None %}{{ row.done_percent }} %{% else %}-{% endif %}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
 
             <div class="tab-pane fade" id="scope-stability-pane" role="tabpanel" aria-labelledby="scope-stability-tab" tabindex="0">
                 <p class="inline-note">
@@ -237,9 +337,117 @@
         </div>
     </section>
     {{ scope|json_script:"scope-flow-data" }}
+    {{ epic_breakdown|json_script:"scope-epics-data" }}
 {% endblock %}
 
 {% block js %}
+    {% if epic_breakdown %}
+        <script>
+            (function () {
+                const rows = JSON.parse(document.getElementById("scope-epics-data").textContent);
+                const NO_EPIC = "{{ no_epic|escapejs }}";
+                const NO_EPIC_LABEL = "{% trans 'No epic'|escapejs %}";
+                const palette = ["#2f7de1", "#f0a202", "#2e9d5b", "#c8475a", "#7a5cc7", "#16a3b8",
+                                 "#e07a1f", "#5b8c2a", "#d14fa0", "#3d5a80", "#a0522d", "#8e9b2f"];
+                // One colour per epic, the same in the three charts; "no epic" stays grey.
+                const color = (row, index) => row.value === NO_EPIC ? "#8a94a6" : palette[index % palette.length];
+                const label = (row) => row.value === NO_EPIC ? NO_EPIC_LABEL : `${row.name} (${row.key})`;
+                const textColor = getComputedStyle(document.body).color;
+                let drawn = false;
+
+                function draw() {
+                    if (drawn) return;
+                    drawn = true;
+                    document.querySelectorAll("canvas[id^=epicPie-]").forEach((canvas) => {
+                        const group = canvas.dataset.group;
+                        const kept = rows.map((row, index) => ({row, index})).filter(({row}) => row[group] > 0);
+                        const total = kept.reduce((sum, {row}) => sum + row[group], 0);
+                        if (!total) {
+                            canvas.replaceWith(Object.assign(document.createElement("div"), {
+                                className: "text-center text-secondary py-5",
+                                textContent: "{% trans 'No issue' %}"
+                            }));
+                            return;
+                        }
+                        new Chart(canvas, {
+                            type: "pie",
+                            data: {
+                                labels: kept.map(({row}) => label(row)),
+                                datasets: [{
+                                    data: kept.map(({row}) => row[group]),
+                                    backgroundColor: kept.map(({row, index}) => color(row, index))
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {position: "bottom", labels: {color: textColor, boxWidth: 12}},
+                                    tooltip: {
+                                        callbacks: {
+                                            label: (ctx) => `${ctx.label}: ${ctx.parsed} (${Math.round(100 * ctx.parsed / total)} %)`
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    });
+                }
+
+                function drawProgress() {
+                    const canvas = document.getElementById("epicProgressChart");
+                    if (!canvas) return;
+                    // One bar per epic: 34 px each, so a long list stays readable.
+                    document.getElementById("epicProgressWrap").style.height = `${Math.max(160, 34 * rows.length + 70)}px`;
+                    const outcomes = [
+                        {key: "done", label: "{% trans 'Completed'|escapejs %}", color: "#2e9d5b"},
+                        {key: "not_done", label: "{% trans 'Not completed'|escapejs %}", color: "#e07a1f"},
+                        {key: "removed", label: "{% trans 'Removed from sprint'|escapejs %}", color: "#c8475a"}
+                    ];
+                    const PLANNED = "{% trans 'Planned at start'|escapejs %}";
+                    const ADDED = "{% trans 'Added during sprint'|escapejs %}";
+                    new Chart(canvas, {
+                        type: "bar",
+                        data: {
+                            labels: rows.map(label),
+                            datasets: outcomes.map((outcome) => ({
+                                label: outcome.label,
+                                data: rows.map((row) => row[outcome.key]),
+                                backgroundColor: outcome.color
+                            }))
+                        },
+                        options: {
+                            indexAxis: "y",
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: {stacked: true, ticks: {precision: 0, color: textColor}},
+                                y: {stacked: true, ticks: {color: textColor}}
+                            },
+                            plugins: {
+                                legend: {position: "bottom", labels: {color: textColor}},
+                                tooltip: {
+                                    callbacks: {
+                                        footer: (items) => {
+                                            const row = rows[items[0].dataIndex];
+                                            const percent = row.done_percent === null ? "-" : `${row.done_percent} %`;
+                                            return `${PLANNED}: ${row.planned} · ${ADDED}: ${row.added} · ${percent}`;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // A chart drawn in a hidden tab has no size: draw them when the tab is first shown.
+                document.getElementById("scope-epics-tab").addEventListener("shown.bs.tab", () => {
+                    if (!drawn) drawProgress();
+                    draw();
+                });
+            })();
+        </script>
+    {% endif %}
     {% if scope.issues %}
         <script>
             (function () {

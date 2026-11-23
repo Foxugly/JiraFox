@@ -224,6 +224,7 @@ class SprintPagesTests(TestCase):
                     },
                 }
             ],
+            get_issue_epics=lambda keys: {key: None for key in keys},
         )
 
         response = self.client.get(reverse("sprint-api-wia", args=[12]))
@@ -232,6 +233,27 @@ class SprintPagesTests(TestCase):
         payload = response.json()
         self.assertEqual(payload["statuses"], ["In Progress"])
         self.assertEqual(payload["items"][0]["key"], "ABC-1")
+        self.assertTrue(payload["epics"])
+        self.assertIsNone(payload["items"][0]["epic"])
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_sprint_wia_api_stays_uncoloured_when_epics_fail(self, mock_get_jira):
+        def broken(keys):
+            raise Timeout("read timed out")
+
+        mock_get_jira.return_value = SimpleNamespace(
+            JIRA_ONLY_STANDARD_TYPES="issuetype in standardIssueTypes()",
+            get_cached_sprint_issues=lambda sprint_id, jql_extra=None, full=None: [
+                {"key": "ABC-1", "summary": "t", "state": "In Progress", "kanban_metrics": {}}
+            ],
+            get_issue_epics=broken,
+        )
+
+        payload = self.client.get(reverse("sprint-api-wia", args=[12])).json()
+
+        self.assertNotIn("epics", payload)
+        self.assertNotIn("epic", payload["items"][0])
+        self.assertIn("epicError", payload)
 
 
 SPRINT = {
@@ -1194,6 +1216,7 @@ class SprintScopeFlowTests(TestCase):
             get_status_histories=lambda keys: {},
             status_category_keys=lambda: {},
             get_sprint_issue_keys=lambda sprint_id: {"BKL1-1", "BKL1-2", "BKL1-4", "BKL1-5", "BKL1-6"},
+            get_issue_epics=lambda keys: {},
         )
         fake.update(overrides)
         mock_get_jira.return_value = SimpleNamespace(**fake)
@@ -1218,13 +1241,91 @@ class SprintScopeFlowTests(TestCase):
         response = self.client.get(reverse("sprint-scope-flow", args=[2446]))
         self.assertContains(response, "Périmètre du sprint")
         self.assertContains(response, "Non terminés")
-        self.assertNotContains(response, "Retirés")
+        # Removed issues end in the "Not completed" node of the flow.
+        self.assertNotContains(response, '"outcome:removed": "Retirés')
         self.assertContains(response, "Tickets prévus clôturés")
         self.assertContains(response, "2 clôturés / 3 commencés")
         self.assertContains(response, "2 clôturés / 3 au total")
         self.assertContains(response, "Évolution des statuts")
         # No history: nothing to compare yet.
         self.assertContains(response, "historique des statuts est nécessaire")
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_scope_page_filters_on_epics(self, mock_get_jira):
+        login = {"key": "BKL1-100", "name": "Login"}
+        billing = {"key": "BKL1-200", "name": "Billing"}
+        epics = {"BKL1-1": login, "BKL1-2": billing, "BKL1-4": login, "BKL1-6": billing}
+        requested, asked_epics = [], []
+        user = self._login_and_fake_jira(
+            mock_get_jira,
+            get_status_histories=lambda keys: requested.extend(keys) or {},
+            get_issue_epics=lambda keys: asked_epics.extend(keys) or {k: epics.get(k) for k in keys},
+        )
+
+        response = self.client.get(reverse("sprint-scope-flow", args=[2446]))
+        self.assertEqual(
+            [(c["value"], c["count"]) for c in response.context["epic_choices"]],
+            [("BKL1-200", 2), ("BKL1-100", 2), ("none", 2)],
+        )
+        self.assertEqual(sorted(asked_epics), ["BKL1-1", "BKL1-2", "BKL1-3", "BKL1-4", "BKL1-5", "BKL1-6"])
+        self.assertEqual(response.context["scope"]["totals"], {"planned": 3, "added": 2})
+        # Done elsewhere (BKL1-6) is no issue of the sprint: not in the pies.
+        self.assertEqual(
+            [(r["value"], r["planned"], r["added"], r["all"]) for r in response.context["epic_breakdown"]],
+            [("BKL1-100", 2, 0, 2), ("BKL1-200", 0, 1, 1), ("none", 1, 1, 2)],
+        )
+        # How they ended: BKL1-1 done, BKL1-4 removed (Login); BKL1-2 done; BKL1-3 done, BKL1-5 removed.
+        self.assertEqual(
+            [(r["done"], r["not_done"], r["removed"], r["done_percent"]) for r in response.context["epic_breakdown"]],
+            [(1, 0, 1, 50), (1, 0, 0, 100), (1, 0, 1, 50)],
+        )
+        self.assertContains(response, 'id="epicProgressChart"')
+        self.assertContains(response, 'id="scope-epics-tab"')
+        self.assertContains(response, 'id="epicPie-planned"')
+        self.assertContains(response, 'id="scope-epics-data"')
+
+        requested.clear()
+        response = self.client.get(reverse("sprint-scope-flow", args=[2446]), {"epic": ["BKL1-100", "none"]})
+        scope = response.context["scope"]
+        self.assertEqual(sorted(issue["key"] for issue in scope["issues"]), ["BKL1-1", "BKL1-3", "BKL1-4", "BKL1-5"])
+        self.assertEqual(scope["totals"], {"planned": 3, "added": 1})
+        self.assertEqual(requested, ["BKL1-1", "BKL1-3", "BKL1-4", "BKL1-5"])
+        # BKL1-6 (Billing) is filtered out of "done elsewhere"; it is no "missing" issue either.
+        self.assertEqual(scope["done_elsewhere"], [])
+        self.assertEqual(response.context["missing_from_report"], [])
+        self.assertEqual(response.context["epic_selected"], ["BKL1-100", "none"])
+        self.assertContains(response, 'id="epic-2" checked')  # Login, 2nd choice
+        self.assertNotContains(response, 'id="epic-1" checked')
+
+        user.language = "fr"
+        user.save(update_fields=["language"])
+        response = self.client.get(reverse("sprint-scope-flow", args=[2446]), {"epic": "BKL1-100"})
+        self.assertContains(response, "Seuls les tickets de ces épics sont comptés")
+        self.assertContains(response, "<strong>Login</strong> (2)")
+        self.assertContains(response, "1 épic")
+        self.assertContains(response, "Tous les épics")
+        # The pies follow the filter.
+        self.assertEqual(
+            [(r["value"], r["all"]) for r in response.context["epic_breakdown"]], [("BKL1-100", 2)]
+        )
+        self.assertContains(response, "Nombre de tickets par épic")
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_scope_page_shows_the_whole_sprint_when_epics_fail(self, mock_get_jira):
+        def broken(keys):
+            raise Timeout("read timed out")
+
+        self._login_and_fake_jira(mock_get_jira, get_issue_epics=broken)
+
+        response = self.client.get(reverse("sprint-scope-flow", args=[2446]), {"epic": "BKL1-100"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["scope"]["totals"], {"planned": 3, "added": 2})
+        self.assertEqual(response.context["epic_selected"], [])
+        self.assertIsNotNone(response.context["epic_error"])
+        self.assertNotContains(response, 'id="epic-filter"')
+        self.assertEqual(response.context["epic_breakdown"], [])
+        self.assertNotContains(response, 'id="scope-epics-tab"')
 
     @patch("sprint.views.get_connected_jira_for_user")
     def test_scope_page_shows_unchanged_statuses_with_the_history(self, mock_get_jira):
@@ -2231,6 +2332,7 @@ class ManagementReportViewTests(TestCase):
             get_status_histories=lambda keys: {},
             status_category_keys=lambda: {},
             get_sprint_issue_keys=lambda sprint_id: {"BKL1-1", "BKL1-2", "BKL1-4", "BKL1-5", "BKL1-6"},
+            get_issue_epics=lambda keys: {},
             get_descriptions=lambda keys: {key: "Une description" for key in keys},
         )
         fake.update(overrides)
