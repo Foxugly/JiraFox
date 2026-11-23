@@ -12,6 +12,9 @@ from django.utils.translation import gettext as _
 from django.views import View
 from django.views.decorators.http import require_GET
 from django.views.generic import ListView, TemplateView
+from jira.exceptions import JIRAError
+from requests import RequestException
+from jiramodule.exceptions import JiraUnavailable, describe_jira_error
 from JiraFox.services.issue_data import build_sprint_issue_item, get_issue_status, is_issue_done
 from jiramodule.services.jira_config_service import get_connected_jira_for_user, require_config_fields
 from jiramodule.status import CANONICAL_ORDER, STATUS_EXCLUDED
@@ -361,7 +364,21 @@ def build_weighted_throughput_distribution_from_issues(issues: list[dict]) -> di
 
 def build_wia_data(jira, sprint_id: int) -> dict:
     issues = _get_sprint_standard_issues(jira, sprint_id, full=True)
-    return build_wia_data_from_issues(issues)
+    return attach_wia_epics(jira, build_wia_data_from_issues(issues))
+
+
+def attach_wia_epics(jira, wia: dict) -> dict:
+    """Adds `epic` ({key, name} or None) to each item and `epics: True`; when Jira fails, the chart
+    stays uncoloured and `epicError` says why."""
+    try:
+        epic_of = jira.get_issue_epics([item["key"] for item in wia["items"] if item.get("key")])
+    except (JIRAError, RequestException, JiraUnavailable) as exc:
+        wia["epicError"] = describe_jira_error(exc)
+        return wia
+    for item in wia["items"]:
+        item["epic"] = epic_of.get(item.get("key"))
+    wia["epics"] = True
+    return wia
 
 
 def build_wia_data_from_issues(issues: list[dict]) -> dict:

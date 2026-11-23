@@ -41,8 +41,9 @@ def epic_choices(epic_of: dict[str, dict | None]) -> list[dict]:
 
 
 def epic_breakdown(issues: list[dict], epic_of: dict[str, dict | None]) -> list[dict]:
-    """[{"value", "key", "name", "planned", "added", "all"}] issue counts per epic, most issues
-    first, "no epic" last."""
+    """[{"value", "key", "name", "planned", "added", "all", "done", "not_done", "removed",
+    "done_percent"}] issue counts per epic (by origin, then by how they ended), most issues first,
+    "no epic" last."""
     rows: dict[str, dict] = {}
     for issue in issues:
         epic = epic_of.get(issue["key"])
@@ -50,10 +51,13 @@ def epic_breakdown(issues: list[dict], epic_of: dict[str, dict | None]) -> list[
         row = rows.setdefault(
             value,
             {"value": value, "key": epic["key"] if epic else "", "name": epic["name"] if epic else "",
-             "planned": 0, "added": 0, "all": 0},
+             "planned": 0, "added": 0, "all": 0, "done": 0, "not_done": 0, "removed": 0},
         )
         row[issue["origin"]] += 1
         row["all"] += 1
+        row[issue["outcome"]] += 1
+    for row in rows.values():
+        row["done_percent"] = round(100 * row["done"] / row["all"]) if row["all"] else None
     return sorted(rows.values(), key=lambda r: (r["value"] == NO_EPIC, -r["all"], r["name"].casefold(), r["key"]))
 
 

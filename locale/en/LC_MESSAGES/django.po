@@ -2734,3 +2734,15 @@ msgstr "Epic"
 
 msgid "Number of issues per epic: planned at the sprint start, added during the sprint, and all of them (removed issues included, sub-tasks and issues completed in another sprint left out)."
 msgstr "Number of issues per epic: planned at the sprint start, added during the sprint, and all of them (removed issues included, sub-tasks and issues completed in another sprint left out)."
+
+msgid "Removed from sprint"
+msgstr "Removed from sprint"
+
+msgid "Share completed"
+msgstr "Share completed"
+
+msgid "Progress per epic"
+msgstr "Progress per epic"
+
+msgid "How the issues of each epic ended: completed in the sprint, not completed, or removed from it."
+msgstr "How the issues of each epic ended: completed in the sprint, not completed, or removed from it."

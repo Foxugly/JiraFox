@@ -224,6 +224,7 @@ class SprintPagesTests(TestCase):
                     },
                 }
             ],
+            get_issue_epics=lambda keys: {key: None for key in keys},
         )
 
         response = self.client.get(reverse("sprint-api-wia", args=[12]))
@@ -232,6 +233,27 @@ class SprintPagesTests(TestCase):
         payload = response.json()
         self.assertEqual(payload["statuses"], ["In Progress"])
         self.assertEqual(payload["items"][0]["key"], "ABC-1")
+        self.assertTrue(payload["epics"])
+        self.assertIsNone(payload["items"][0]["epic"])
+
+    @patch("sprint.views.get_connected_jira_for_user")
+    def test_sprint_wia_api_stays_uncoloured_when_epics_fail(self, mock_get_jira):
+        def broken(keys):
+            raise Timeout("read timed out")
+
+        mock_get_jira.return_value = SimpleNamespace(
+            JIRA_ONLY_STANDARD_TYPES="issuetype in standardIssueTypes()",
+            get_cached_sprint_issues=lambda sprint_id, jql_extra=None, full=None: [
+                {"key": "ABC-1", "summary": "t", "state": "In Progress", "kanban_metrics": {}}
+            ],
+            get_issue_epics=broken,
+        )
+
+        payload = self.client.get(reverse("sprint-api-wia", args=[12])).json()
+
+        self.assertNotIn("epics", payload)
+        self.assertNotIn("epic", payload["items"][0])
+        self.assertIn("epicError", payload)
 
 
 SPRINT = {
@@ -1219,7 +1241,8 @@ class SprintScopeFlowTests(TestCase):
         response = self.client.get(reverse("sprint-scope-flow", args=[2446]))
         self.assertContains(response, "Périmètre du sprint")
         self.assertContains(response, "Non terminés")
-        self.assertNotContains(response, "Retirés")
+        # Removed issues end in the "Not completed" node of the flow.
+        self.assertNotContains(response, '"outcome:removed": "Retirés')
         self.assertContains(response, "Tickets prévus clôturés")
         self.assertContains(response, "2 clôturés / 3 commencés")
         self.assertContains(response, "2 clôturés / 3 au total")
@@ -1251,6 +1274,12 @@ class SprintScopeFlowTests(TestCase):
             [(r["value"], r["planned"], r["added"], r["all"]) for r in response.context["epic_breakdown"]],
             [("BKL1-100", 2, 0, 2), ("BKL1-200", 0, 1, 1), ("none", 1, 1, 2)],
         )
+        # How they ended: BKL1-1 done, BKL1-4 removed (Login); BKL1-2 done; BKL1-3 done, BKL1-5 removed.
+        self.assertEqual(
+            [(r["done"], r["not_done"], r["removed"], r["done_percent"]) for r in response.context["epic_breakdown"]],
+            [(1, 0, 1, 50), (1, 0, 0, 100), (1, 0, 1, 50)],
+        )
+        self.assertContains(response, 'id="epicProgressChart"')
         self.assertContains(response, 'id="scope-epics-tab"')
         self.assertContains(response, 'id="epicPie-planned"')
         self.assertContains(response, 'id="scope-epics-data"')

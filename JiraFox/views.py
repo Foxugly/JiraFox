@@ -22,7 +22,9 @@ from JiraFox.services.dashboard import (
 from jiramodule.selectors import get_current_project_for_user
 from jiramodule.services.jira_config_service import get_connected_jira_for_user
 from jiramodule.services.jql import JqlBuilder
-from sprint.views import build_weighted_throughput_distribution_from_issues, build_wia_data_from_issues
+from sprint.views import (
+    attach_wia_epics, build_weighted_throughput_distribution_from_issues, build_wia_data_from_issues,
+)
 
 
 @require_POST
@@ -59,7 +61,7 @@ def dashboard_summary_api(request):
         {
             "kpis": build_dashboard_kpis(issues, throughput_7d=len(jira.throughput_7d())),
             "wia": {
-                **build_wia_data_from_issues(issues),
+                **attach_wia_epics(jira, build_wia_data_from_issues(issues)),
                 "maxYPad": 10,
                 "open_jira_url": jira.get_url_jql(f"sprint={sprint['id']}"),
             },

@@ -216,6 +216,13 @@
                         </div>
                     {% endfor %}
                 </div>
+                <div class="card p-3 mb-3">
+                    <div class="text-uppercase text-secondary small mb-1 text-center">{% trans "Progress per epic" %}</div>
+                    <div class="inline-note text-center mb-2">{% trans "How the issues of each epic ended: completed in the sprint, not completed, or removed from it." %}</div>
+                    <div id="epicProgressWrap" style="position: relative;">
+                        <canvas id="epicProgressChart"></canvas>
+                    </div>
+                </div>
                 <div class="table-responsive">
                     <table class="table table-sm table-striped align-middle mb-0">
                         <thead>
@@ -224,6 +231,10 @@
                             <th class="text-end">{% trans "Planned at start" %}</th>
                             <th class="text-end">{% trans "Added during sprint" %}</th>
                             <th class="text-end">{% trans "Total" %}</th>
+                            <th class="text-end">{% trans "Completed" %}</th>
+                            <th class="text-end">{% trans "Not completed" %}</th>
+                            <th class="text-end">{% trans "Removed from sprint" %}</th>
+                            <th class="text-end">{% trans "Share completed" %}</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -233,6 +244,10 @@
                                 <td class="text-end">{{ row.planned }}</td>
                                 <td class="text-end">{{ row.added }}</td>
                                 <td class="text-end fw-semibold">{{ row.all }}</td>
+                                <td class="text-end">{{ row.done }}</td>
+                                <td class="text-end">{{ row.not_done }}</td>
+                                <td class="text-end">{{ row.removed }}</td>
+                                <td class="text-end">{% if row.done_percent is not None %}{{ row.done_percent }} %{% else %}-{% endif %}</td>
                             </tr>
                         {% endfor %}
                         </tbody>
@@ -379,8 +394,57 @@
                     });
                 }
 
+                function drawProgress() {
+                    const canvas = document.getElementById("epicProgressChart");
+                    if (!canvas) return;
+                    // One bar per epic: 34 px each, so a long list stays readable.
+                    document.getElementById("epicProgressWrap").style.height = `${Math.max(160, 34 * rows.length + 70)}px`;
+                    const outcomes = [
+                        {key: "done", label: "{% trans 'Completed'|escapejs %}", color: "#2e9d5b"},
+                        {key: "not_done", label: "{% trans 'Not completed'|escapejs %}", color: "#e07a1f"},
+                        {key: "removed", label: "{% trans 'Removed from sprint'|escapejs %}", color: "#c8475a"}
+                    ];
+                    const PLANNED = "{% trans 'Planned at start'|escapejs %}";
+                    const ADDED = "{% trans 'Added during sprint'|escapejs %}";
+                    new Chart(canvas, {
+                        type: "bar",
+                        data: {
+                            labels: rows.map(label),
+                            datasets: outcomes.map((outcome) => ({
+                                label: outcome.label,
+                                data: rows.map((row) => row[outcome.key]),
+                                backgroundColor: outcome.color
+                            }))
+                        },
+                        options: {
+                            indexAxis: "y",
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: {stacked: true, ticks: {precision: 0, color: textColor}},
+                                y: {stacked: true, ticks: {color: textColor}}
+                            },
+                            plugins: {
+                                legend: {position: "bottom", labels: {color: textColor}},
+                                tooltip: {
+                                    callbacks: {
+                                        footer: (items) => {
+                                            const row = rows[items[0].dataIndex];
+                                            const percent = row.done_percent === null ? "-" : `${row.done_percent} %`;
+                                            return `${PLANNED}: ${row.planned} · ${ADDED}: ${row.added} · ${percent}`;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+
                 // A chart drawn in a hidden tab has no size: draw them when the tab is first shown.
-                document.getElementById("scope-epics-tab").addEventListener("shown.bs.tab", draw);
+                document.getElementById("scope-epics-tab").addEventListener("shown.bs.tab", () => {
+                    if (!drawn) drawProgress();
+                    draw();
+                });
             })();
         </script>
     {% endif %}

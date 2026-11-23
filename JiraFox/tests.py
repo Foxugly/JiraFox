@@ -177,6 +177,7 @@ class AuthPagesTests(TestCase):
         mock_get_jira.return_value = SimpleNamespace(
             throughput_7d=lambda: [1, 2, 3],
             get_url_jql=lambda query: f"https://jira.example/issues/?jql={query}",
+            get_issue_epics=lambda keys: {"ABC-1": {"key": "ABC-9", "name": "Login"}},
         )
         mock_get_sprint.return_value = (
             {"id": 12, "name": "Sprint 12"},
@@ -193,6 +194,8 @@ class AuthPagesTests(TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertIn("In Progress", payload["wia"]["statuses"])
+        self.assertTrue(payload["wia"]["epics"])
+        self.assertEqual(payload["wia"]["items"][0]["epic"], {"key": "ABC-9", "name": "Login"})
         self.assertEqual(payload["weightedThroughput"]["distribution"], {"labels": ["0", "3", "5"], "counts": [1, 1, 1]})
         done_bottleneck = next(item for item in payload["bottlenecks"] if item["status"] == "Done")
         self.assertEqual(done_bottleneck["count"], 3)
