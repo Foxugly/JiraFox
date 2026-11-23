@@ -290,6 +290,12 @@ class SprintScopeFlowView(LoginRequiredMixin, TemplateView):
         context["epic_selected"] = loaded["epic_selected"]
         context["epic_selected_choices"] = [c for c in loaded["epic_choices"] if c["value"] in loaded["epic_selected"]]
         context["epic_error"] = loaded["epic_error"]
+        context["epic_breakdown"] = loaded["epic_breakdown"]
+        context["epic_pie_groups"] = [
+            ("planned", _("Planned at start")),
+            ("added", _("Added during sprint")),
+            ("all", _("All issues")),
+        ]
         context["no_epic"] = NO_EPIC
         context["sprint"] = loaded["sprint"]
         context["scope"] = scope

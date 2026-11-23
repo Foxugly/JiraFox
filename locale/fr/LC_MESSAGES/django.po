@@ -2597,8 +2597,6 @@ msgstr "Vous n'êtes encore membre d'aucun projet : créez-en un, ou demandez à
 #~ msgid "Creer, tester et activer plusieurs connexions selon vos boards et vos contextes d'equipe."
 #~ msgstr "Creer, tester et activer plusieurs connexions selon vos boards et vos contextes d'equipe."
 
-#~ msgid "Epic"
-#~ msgstr "Epic"
 
 #~ msgid "Definir comme configuration courante"
 #~ msgstr "Definir comme configuration courante"
@@ -2748,3 +2746,12 @@ msgid "%(counter)s epic"
 msgid_plural "%(counter)s epics"
 msgstr[0] "%(counter)s épic"
 msgstr[1] "%(counter)s épics"
+
+msgid "Epics"
+msgstr "Épics"
+
+msgid "Epic"
+msgstr "Épic"
+
+msgid "Number of issues per epic: planned at the sprint start, added during the sprint, and all of them (removed issues included, sub-tasks and issues completed in another sprint left out)."
+msgstr "Nombre de tickets par épic : prévus au début du sprint, ajoutés pendant le sprint, et au total (tickets retirés compris, sous-tâches et tickets terminés dans un autre sprint exclus)."

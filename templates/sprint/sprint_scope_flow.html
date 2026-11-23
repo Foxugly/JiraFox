@@ -176,6 +176,14 @@
                         {% trans "Status evolution" %}
                     </button>
                 </li>
+                {% if epic_breakdown %}
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="scope-epics-tab" data-bs-toggle="tab" data-bs-target="#scope-epics-pane"
+                                type="button" role="tab" aria-controls="scope-epics-pane" aria-selected="false">
+                            {% trans "Epics" %}
+                        </button>
+                    </li>
+                {% endif %}
             </ul>
 
             <div class="tab-content">
@@ -192,6 +200,46 @@
                 {% endif %}
             </div>
             </div>
+
+            {% if epic_breakdown %}
+            <div class="tab-pane fade" id="scope-epics-pane" role="tabpanel" aria-labelledby="scope-epics-tab" tabindex="0">
+                <p class="inline-note">
+                    {% trans "Number of issues per epic: planned at the sprint start, added during the sprint, and all of them (removed issues included, sub-tasks and issues completed in another sprint left out)." %}
+                </p>
+                <div class="row g-3 mb-3">
+                    {% for group, label in epic_pie_groups %}
+                        <div class="col-12 col-lg-4">
+                            <div class="card p-3 h-100 scope-metric scope-{{ group }}">
+                                <div class="text-uppercase text-secondary small mb-2 text-center">{{ label }}</div>
+                                <div style="height: 320px;"><canvas id="epicPie-{{ group }}" data-group="{{ group }}"></canvas></div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped align-middle mb-0">
+                        <thead>
+                        <tr>
+                            <th>{% trans "Epic" %}</th>
+                            <th class="text-end">{% trans "Planned at start" %}</th>
+                            <th class="text-end">{% trans "Added during sprint" %}</th>
+                            <th class="text-end">{% trans "Total" %}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for row in epic_breakdown %}
+                            <tr>
+                                <td>{% if row.value == no_epic %}<em>{% trans "No epic" %}</em>{% else %}<a href="{{ jira_browse_url }}{{ row.key }}" target="_blank" rel="noopener">{{ row.key }}</a> {{ row.name }}{% endif %}</td>
+                                <td class="text-end">{{ row.planned }}</td>
+                                <td class="text-end">{{ row.added }}</td>
+                                <td class="text-end fw-semibold">{{ row.all }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
 
             <div class="tab-pane fade" id="scope-stability-pane" role="tabpanel" aria-labelledby="scope-stability-tab" tabindex="0">
                 <p class="inline-note">
@@ -274,9 +322,68 @@
         </div>
     </section>
     {{ scope|json_script:"scope-flow-data" }}
+    {{ epic_breakdown|json_script:"scope-epics-data" }}
 {% endblock %}
 
 {% block js %}
+    {% if epic_breakdown %}
+        <script>
+            (function () {
+                const rows = JSON.parse(document.getElementById("scope-epics-data").textContent);
+                const NO_EPIC = "{{ no_epic|escapejs }}";
+                const NO_EPIC_LABEL = "{% trans 'No epic'|escapejs %}";
+                const palette = ["#2f7de1", "#f0a202", "#2e9d5b", "#c8475a", "#7a5cc7", "#16a3b8",
+                                 "#e07a1f", "#5b8c2a", "#d14fa0", "#3d5a80", "#a0522d", "#8e9b2f"];
+                // One colour per epic, the same in the three charts; "no epic" stays grey.
+                const color = (row, index) => row.value === NO_EPIC ? "#8a94a6" : palette[index % palette.length];
+                const label = (row) => row.value === NO_EPIC ? NO_EPIC_LABEL : `${row.name} (${row.key})`;
+                const textColor = getComputedStyle(document.body).color;
+                let drawn = false;
+
+                function draw() {
+                    if (drawn) return;
+                    drawn = true;
+                    document.querySelectorAll("canvas[id^=epicPie-]").forEach((canvas) => {
+                        const group = canvas.dataset.group;
+                        const kept = rows.map((row, index) => ({row, index})).filter(({row}) => row[group] > 0);
+                        const total = kept.reduce((sum, {row}) => sum + row[group], 0);
+                        if (!total) {
+                            canvas.replaceWith(Object.assign(document.createElement("div"), {
+                                className: "text-center text-secondary py-5",
+                                textContent: "{% trans 'No issue' %}"
+                            }));
+                            return;
+                        }
+                        new Chart(canvas, {
+                            type: "pie",
+                            data: {
+                                labels: kept.map(({row}) => label(row)),
+                                datasets: [{
+                                    data: kept.map(({row}) => row[group]),
+                                    backgroundColor: kept.map(({row, index}) => color(row, index))
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {position: "bottom", labels: {color: textColor, boxWidth: 12}},
+                                    tooltip: {
+                                        callbacks: {
+                                            label: (ctx) => `${ctx.label}: ${ctx.parsed} (${Math.round(100 * ctx.parsed / total)} %)`
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    });
+                }
+
+                // A chart drawn in a hidden tab has no size: draw them when the tab is first shown.
+                document.getElementById("scope-epics-tab").addEventListener("shown.bs.tab", draw);
+            })();
+        </script>
+    {% endif %}
     {% if scope.issues %}
         <script>
             (function () {

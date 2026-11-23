@@ -1246,6 +1246,14 @@ class SprintScopeFlowTests(TestCase):
         )
         self.assertEqual(sorted(asked_epics), ["BKL1-1", "BKL1-2", "BKL1-3", "BKL1-4", "BKL1-5", "BKL1-6"])
         self.assertEqual(response.context["scope"]["totals"], {"planned": 3, "added": 2})
+        # Done elsewhere (BKL1-6) is no issue of the sprint: not in the pies.
+        self.assertEqual(
+            [(r["value"], r["planned"], r["added"], r["all"]) for r in response.context["epic_breakdown"]],
+            [("BKL1-100", 2, 0, 2), ("BKL1-200", 0, 1, 1), ("none", 1, 1, 2)],
+        )
+        self.assertContains(response, 'id="scope-epics-tab"')
+        self.assertContains(response, 'id="epicPie-planned"')
+        self.assertContains(response, 'id="scope-epics-data"')
 
         requested.clear()
         response = self.client.get(reverse("sprint-scope-flow", args=[2446]), {"epic": ["BKL1-100", "none"]})
@@ -1267,6 +1275,11 @@ class SprintScopeFlowTests(TestCase):
         self.assertContains(response, "<strong>Login</strong> (2)")
         self.assertContains(response, "1 épic")
         self.assertContains(response, "Tous les épics")
+        # The pies follow the filter.
+        self.assertEqual(
+            [(r["value"], r["all"]) for r in response.context["epic_breakdown"]], [("BKL1-100", 2)]
+        )
+        self.assertContains(response, "Nombre de tickets par épic")
 
     @patch("sprint.views.get_connected_jira_for_user")
     def test_scope_page_shows_the_whole_sprint_when_epics_fail(self, mock_get_jira):
@@ -1282,6 +1295,8 @@ class SprintScopeFlowTests(TestCase):
         self.assertEqual(response.context["epic_selected"], [])
         self.assertIsNotNone(response.context["epic_error"])
         self.assertNotContains(response, 'id="epic-filter"')
+        self.assertEqual(response.context["epic_breakdown"], [])
+        self.assertNotContains(response, 'id="scope-epics-tab"')
 
     @patch("sprint.views.get_connected_jira_for_user")
     def test_scope_page_shows_unchanged_statuses_with_the_history(self, mock_get_jira):

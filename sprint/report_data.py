@@ -40,6 +40,23 @@ def epic_choices(epic_of: dict[str, dict | None]) -> list[dict]:
     return sorted(counts.values(), key=lambda c: (c["value"] == NO_EPIC, c["name"].casefold(), c["key"]))
 
 
+def epic_breakdown(issues: list[dict], epic_of: dict[str, dict | None]) -> list[dict]:
+    """[{"value", "key", "name", "planned", "added", "all"}] issue counts per epic, most issues
+    first, "no epic" last."""
+    rows: dict[str, dict] = {}
+    for issue in issues:
+        epic = epic_of.get(issue["key"])
+        value = epic["key"] if epic else NO_EPIC
+        row = rows.setdefault(
+            value,
+            {"value": value, "key": epic["key"] if epic else "", "name": epic["name"] if epic else "",
+             "planned": 0, "added": 0, "all": 0},
+        )
+        row[issue["origin"]] += 1
+        row["all"] += 1
+    return sorted(rows.values(), key=lambda r: (r["value"] == NO_EPIC, -r["all"], r["name"].casefold(), r["key"]))
+
+
 def filter_report_by_epic(report: dict, epic_of: dict[str, dict | None], selected: set[str]) -> dict:
     """The sprint report keeping only the issues of the `selected` epics (NO_EPIC: without one)."""
     def kept(issue: dict) -> bool:
@@ -63,7 +80,8 @@ def load_sprint_scope(jira, sprint: dict, *, epics: set[str] | None = None, with
     sprint_id = sprint["id"]
     report = jira.get_sprint_scope_report(sprint_id)
     full_keys = set(_report_keys(report))
-    epic_info = {"epic_choices": [], "epic_error": None, "epic_selected": sorted(epics or ())}
+    epic_info = {"epic_choices": [], "epic_error": None, "epic_selected": sorted(epics or ()), "epic_breakdown": []}
+    epic_of = None
     if with_epics or epics:
         try:
             epic_of = jira.get_issue_epics(sorted(full_keys))
@@ -74,6 +92,7 @@ def load_sprint_scope(jira, sprint: dict, *, epics: set[str] | None = None, with
             # Without epics the page still shows the whole sprint: say why it is not filtered.
             epic_info["epic_error"] = describe_jira_error(exc)
             epic_info["epic_selected"] = []
+            epic_of = None
     # Jira's own dates: the hand-set period only bounds the logged sheet.
     start, end = sprint_window(sprint, timezone.now())
     warnings = {
@@ -95,6 +114,8 @@ def load_sprint_scope(jira, sprint: dict, *, epics: set[str] | None = None, with
         sprint_id=sprint_id, started_statuses=getattr(jira.cfg, "started_statuses", ()),
     )
     warnings["scope_errors"] = consistency_errors(scope)
+    if epic_of is not None:
+        epic_info["epic_breakdown"] = epic_breakdown(scope["issues"], epic_of)
     warnings["planned_created_late"] = [
         {**issue, "created_at": parse_jira_datetime(issue["created"])}
         for issue in scope["issues"]
