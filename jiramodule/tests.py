@@ -608,3 +608,33 @@ class JiraManagerQueryTests(TestCase):
         issue = SimpleNamespace(key="ABC-1", fields=SimpleNamespace(status=status))
 
         self.assertEqual(manager._ticket_info_from_issue(issue)["status_category"], "done")
+
+
+class KanbanTimeInStatusTests(SimpleTestCase):
+    def test_time_in_status_counts_business_hours_like_cycle_time(self):
+        from jiramodule.services.kanban_metrics import KanbanMetricsService
+
+        # Created Mon 2026-01-05 00:00 UTC in Backlog, In Progress Mon 2026-01-12,
+        # resolved Mon 2026-01-19: one full week (36 business hours) in each status.
+        def item(frm, to):
+            return SimpleNamespace(field="status", fromString=frm, toString=to)
+
+        issue = SimpleNamespace(
+            fields=SimpleNamespace(
+                created="2026-01-05T00:00:00.000+0000",
+                resolutiondate="2026-01-19T00:00:00.000+0000",
+                status=SimpleNamespace(name="Done"),
+            ),
+            changelog=SimpleNamespace(histories=[
+                SimpleNamespace(created="2026-01-12T00:00:00.000+0000", items=[item("Backlog", "In Progress")]),
+                SimpleNamespace(created="2026-01-19T00:00:00.000+0000", items=[item("In Progress", "Done")]),
+            ]),
+        )
+        with self.settings(TIME_ZONE="UTC"):
+            metrics = KanbanMetricsService().compute(issue)
+
+        self.assertEqual(metrics["time_in_status_hours"]["Backlog"], 36.0)
+        self.assertEqual(metrics["time_in_status_hours"]["In Progress"], 36.0)
+        self.assertEqual(metrics["cycle_time_hours"], 36.0)
+        in_progress = next(s for s in metrics["time_in_status"] if s["status"] == "In Progress")
+        self.assertEqual(in_progress["days"], metrics["cycle_time_days"])
