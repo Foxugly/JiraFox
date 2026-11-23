@@ -866,6 +866,21 @@ a:hover {
     position: relative;
 }
 
+/* Work Item Age chart: same size on the dashboard and in the sprint tab (width / 2). */
+.wia-chart-frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 2 / 1;
+    min-height: 320px;
+}
+
+.wia-chart-frame > canvas,
+.dashboard-shell .wia-chart-frame > canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+}
+
 #chartTooltip {
     position: absolute;
     pointer-events: auto;
