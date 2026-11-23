@@ -24,7 +24,7 @@ from .report import create_xlsx_bytes
 from .analysis import MAX_RISKS, PROVIDERS, Analysis, AnalysisParseError, Risk, build_dossier, risky_keys
 from .pptx_log import traced_build_deck
 from .report_data import (
-    build_report_data, closed_sprints, load_sprint_scope, sprint_warning_lines, sprints_in_range, trend_for,
+    NO_EPIC, build_report_data, closed_sprints, load_sprint_scope, sprint_warning_lines, sprints_in_range, trend_for,
 )
 
 def _to_float(v, default=0.0) -> float:
@@ -282,9 +282,15 @@ class SprintScopeFlowView(LoginRequiredMixin, TemplateView):
         sprint_id = kwargs["sprint_id"]
         jira = get_connected_jira_for_user(self.request.user)
         require_config_fields(jira.cfg, ["jira_board_id"])
-        loaded = load_sprint_scope(jira, jira.get_sprint(sprint_id))
+        selected = {value for value in self.request.GET.getlist("epic") if value}
+        loaded = load_sprint_scope(jira, jira.get_sprint(sprint_id), epics=selected or None, with_epics=True)
         scope = loaded["scope"]
         context.update(loaded["warnings"])
+        context["epic_choices"] = loaded["epic_choices"]
+        context["epic_selected"] = loaded["epic_selected"]
+        context["epic_selected_choices"] = [c for c in loaded["epic_choices"] if c["value"] in loaded["epic_selected"]]
+        context["epic_error"] = loaded["epic_error"]
+        context["no_epic"] = NO_EPIC
         context["sprint"] = loaded["sprint"]
         context["scope"] = scope
         context["sprint_start"] = loaded["start"]

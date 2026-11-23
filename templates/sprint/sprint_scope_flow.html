@@ -37,6 +37,18 @@
                             {% trans "Planned at the sprint start or added during the sprint, how the issues ended (Jira sprint report) and their current status. Sub-tasks are not counted." %}
                         {% endif %}
                     </div>
+                    {% if epic_selected %}
+                        <div class="alert alert-info py-2 mt-2 mb-0">
+                            {% trans "Only the issues of these epics are counted:" %}
+                            {% for choice in epic_selected_choices %}<strong>{% if choice.value == no_epic %}{% trans "No epic" %}{% else %}{{ choice.name }}{% endif %}</strong> ({{ choice.count }}){% if not forloop.last %}, {% endif %}{% endfor %}
+                            · <a href="{{ request.path }}">{% trans "Show all epics" %}</a>
+                        </div>
+                    {% endif %}
+                    {% if epic_error %}
+                        <div class="alert alert-warning py-2 mt-2 mb-0">
+                            {% trans "The epics could not be loaded, the whole sprint is shown:" %} {{ epic_error }}
+                        </div>
+                    {% endif %}
                     {% if scope_errors %}
                         <div class="alert alert-danger py-2 mt-2 mb-0">
                             {% trans "These figures do not add up, do not trust them:" %}
@@ -79,6 +91,31 @@
                     {% endif %}
                 </div>
                 <div class="d-flex flex-wrap gap-2 align-items-center">
+                    {% if epic_choices %}
+                        <form method="get" class="dropdown" id="epic-filter">
+                            <button type="button" class="btn btn-sm {% if epic_selected %}btn-primary{% else %}btn-outline-secondary{% endif %} dropdown-toggle"
+                                    data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                                <i class="fa-solid fa-filter me-1"></i>
+                                {% if epic_selected %}{% blocktrans count counter=epic_selected|length %}{{ counter }} epic{% plural %}{{ counter }} epics{% endblocktrans %}{% else %}{% trans "All epics" %}{% endif %}
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end p-3" style="min-width: 22rem; max-height: 60vh; overflow-y: auto;">
+                                {% for choice in epic_choices %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="epic" value="{{ choice.value }}"
+                                               id="epic-{{ forloop.counter }}" {% if choice.value in epic_selected %}checked{% endif %}>
+                                        <label class="form-check-label" for="epic-{{ forloop.counter }}">
+                                            {% if choice.value == no_epic %}<em>{% trans "No epic" %}</em>{% else %}{{ choice.name }} <span class="text-secondary small">{{ choice.key }}</span>{% endif %}
+                                            <span class="badge text-bg-light">{{ choice.count }}</span>
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                                <div class="d-flex gap-2 mt-3">
+                                    <button type="submit" class="btn btn-sm btn-primary">{% trans "Apply" %}</button>
+                                    <a href="{{ request.path }}" class="btn btn-sm btn-outline-secondary">{% trans "All epics" %}</a>
+                                </div>
+                            </div>
+                        </form>
+                    {% endif %}
                     <span class="badge scope-planned">{% trans "Planned" %}: {{ scope.totals.planned }}</span>
                     <span class="badge scope-added">{% trans "Added during sprint" %}: {{ scope.totals.added }}</span>
                 </div>

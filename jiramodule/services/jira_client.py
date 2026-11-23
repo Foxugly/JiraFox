@@ -434,6 +434,64 @@ class JiraManager:
                 }
         return out
 
+    EPIC_CHUNK_SIZE = 100
+
+    def _epic_link_field_id(self) -> Optional[str]:
+        """Id of Jira Server's "Epic Link" field (None on Cloud, which uses `parent`), cached an hour."""
+        key = f"{self._connection_cache_key()}:epic_link"
+        cached = cache.get(key)
+        if cached is not None:
+            return cached or None
+        field_id = ""
+        for field in self._with_retries(self.jira.fields) or []:
+            custom = ((field.get("schema") or {}).get("custom") or "")
+            if custom.endswith(":gh-epic-link") or (field.get("name") or "").strip().casefold() == "epic link":
+                field_id = field.get("id") or ""
+                break
+        cache.set(key, field_id, self.CONNECTION_CACHE_TTL_SECONDS)
+        return field_id or None
+
+    def _search_chunks(self, keys: List[str], fields: str) -> list:
+        found = []
+        for index in range(0, len(keys), self.EPIC_CHUNK_SIZE):
+            chunk = keys[index:index + self.EPIC_CHUNK_SIZE]
+            found.extend(
+                self._with_retries(
+                    self.jira.search_issues,
+                    f"key in ({', '.join(quote_value(key) for key in chunk)})",
+                    maxResults=len(chunk),
+                    fields=fields,
+                )
+            )
+        return found
+
+    def get_issue_epics(self, keys: List[str]) -> Dict[str, Optional[Dict[str, str]]]:
+        """
+        {key: {"key", "name"} of its epic, or None} for the given issues: the "Epic Link" field on
+        Jira Server, else a `parent` that is an Epic (Jira Cloud). Two light searches per 100 issues.
+        """
+        keys = [key for key in dict.fromkeys(keys) if key]
+        if not keys:
+            return {}
+        link_field = self._epic_link_field_id()
+        links: Dict[str, Optional[str]] = {key: None for key in keys}
+        for issue in self._search_chunks(keys, ",".join(filter(None, [link_field, "parent"]))):
+            epic = getattr(issue.fields, link_field, None) if link_field else None
+            if not isinstance(epic, str) or not epic:
+                parent = getattr(issue.fields, "parent", None)
+                parent_type = getattr(getattr(getattr(parent, "fields", None), "issuetype", None), "name", None)
+                epic = getattr(parent, "key", None) if parent_type == "Epic" else None
+            links[issue.key] = epic or None
+        epic_keys = sorted({epic for epic in links.values() if epic})
+        names = {
+            issue.key: getattr(issue.fields, "summary", None) or issue.key
+            for issue in (self._search_chunks(epic_keys, "summary") if epic_keys else [])
+        }
+        return {
+            key: {"key": epic, "name": names.get(epic, epic)} if epic else None
+            for key, epic in links.items()
+        }
+
     def get_descriptions(self, keys: List[str], limit: int = 500) -> Dict[str, str]:
         """{key: description cut to `limit` characters ("" if none)} for the given issues."""
         out: Dict[str, str] = {}

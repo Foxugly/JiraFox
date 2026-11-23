@@ -2725,3 +2725,26 @@ msgstr "Een vorm bekijken of hernoemen: Start › Schikken › Selectiedeelvenst
 
 msgid "Without a template, JiraFox uses a neutral layout with the same structure."
 msgstr "Zonder sjabloon gebruikt JiraFox een neutrale lay-out met dezelfde structuur."
+
+msgid "All epics"
+msgstr "Alle epics"
+
+msgid "No epic"
+msgstr "Zonder epic"
+
+msgid "Apply"
+msgstr "Toepassen"
+
+msgid "Show all epics"
+msgstr "Alle epics tonen"
+
+msgid "Only the issues of these epics are counted:"
+msgstr "Alleen de tickets van deze epics worden geteld:"
+
+msgid "The epics could not be loaded, the whole sprint is shown:"
+msgstr "De epics konden niet worden geladen, de hele sprint wordt getoond:"
+
+msgid "%(counter)s epic"
+msgid_plural "%(counter)s epics"
+msgstr[0] "%(counter)s epic"
+msgstr[1] "%(counter)s epics"

@@ -177,6 +177,50 @@ class JiraManagerDescriptionsTests(SimpleTestCase):
 
 
 class JiraManagerStatusHistoryTests(SimpleTestCase):
+    def test_issue_epics_from_epic_link_or_epic_parent(self):
+        cache.clear()
+        queries = []
+        epic = SimpleNamespace(key="ABC-9", fields=SimpleNamespace(issuetype=SimpleNamespace(name="Epic")))
+        story = SimpleNamespace(key="ABC-8", fields=SimpleNamespace(issuetype=SimpleNamespace(name="Story")))
+        rows = {
+            "ABC-1": SimpleNamespace(customfield_10101="ABC-7", parent=None),  # Server: Epic Link
+            "ABC-2": SimpleNamespace(customfield_10101=None, parent=epic),  # Cloud: parent epic
+            "ABC-3": SimpleNamespace(customfield_10101=None, parent=story),  # a sub-task's parent
+            "ABC-4": SimpleNamespace(customfield_10101=None, parent=None),
+        }
+        names = {"ABC-7": "Login", "ABC-9": "Billing"}
+
+        def search_issues(jql, **kwargs):
+            queries.append((jql, kwargs))
+            keys = re.findall(r'"([^"]+)"', jql)
+            if kwargs["fields"] == "summary":
+                return [SimpleNamespace(key=k, fields=SimpleNamespace(summary=names[k])) for k in keys]
+            return [SimpleNamespace(key=k, fields=rows[k]) for k in keys]
+
+        manager = JiraManager(SimpleNamespace(pk=1, jira_url="https://jira.example/", jira_token="t"))
+        manager._jira = SimpleNamespace(
+            search_issues=search_issues,
+            fields=lambda: [
+                {"id": "customfield_10102", "name": "Epic Name", "schema": {"custom": "x:gh-epic-label"}},
+                {"id": "customfield_10101", "name": "Epic Link", "schema": {"custom": "com.pyxis.greenhopper.jira:gh-epic-link"}},
+            ],
+        )
+
+        result = manager.get_issue_epics(["ABC-1", "ABC-2", "ABC-3", "ABC-4", "ABC-1"])
+
+        self.assertEqual(
+            result,
+            {
+                "ABC-1": {"key": "ABC-7", "name": "Login"},
+                "ABC-2": {"key": "ABC-9", "name": "Billing"},
+                "ABC-3": None,
+                "ABC-4": None,
+            },
+        )
+        self.assertEqual(queries[0][1]["fields"], "customfield_10101,parent")
+        self.assertEqual(len(queries), 2)
+        self.assertEqual(manager.get_issue_epics([]), {})
+
     def test_status_histories_are_fetched_by_chunks_of_keys(self):
         queries = []
 

@@ -2704,3 +2704,26 @@ msgstr "To see or rename a shape: Home › Arrange › Selection Pane (Alt+F10),
 
 msgid "Without a template, JiraFox uses a neutral layout with the same structure."
 msgstr "Without a template, JiraFox uses a neutral layout with the same structure."
+
+msgid "All epics"
+msgstr "All epics"
+
+msgid "No epic"
+msgstr "No epic"
+
+msgid "Apply"
+msgstr "Apply"
+
+msgid "Show all epics"
+msgstr "Show all epics"
+
+msgid "Only the issues of these epics are counted:"
+msgstr "Only the issues of these epics are counted:"
+
+msgid "The epics could not be loaded, the whole sprint is shown:"
+msgstr "The epics could not be loaded, the whole sprint is shown:"
+
+msgid "%(counter)s epic"
+msgid_plural "%(counter)s epics"
+msgstr[0] "%(counter)s epic"
+msgstr[1] "%(counter)s epics"

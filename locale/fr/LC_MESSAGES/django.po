@@ -2725,3 +2725,26 @@ msgstr "Pour voir ou renommer une forme : Accueil › Organiser › Volet Sélec
 
 msgid "Without a template, JiraFox uses a neutral layout with the same structure."
 msgstr "Sans modèle, JiraFox utilise une mise en page neutre de même structure."
+
+msgid "All epics"
+msgstr "Tous les épics"
+
+msgid "No epic"
+msgstr "Sans épic"
+
+msgid "Apply"
+msgstr "Appliquer"
+
+msgid "Show all epics"
+msgstr "Afficher tous les épics"
+
+msgid "Only the issues of these epics are counted:"
+msgstr "Seuls les tickets de ces épics sont comptés :"
+
+msgid "The epics could not be loaded, the whole sprint is shown:"
+msgstr "Les épics n'ont pas pu être chargés, tout le sprint est affiché :"
+
+msgid "%(counter)s epic"
+msgid_plural "%(counter)s epics"
+msgstr[0] "%(counter)s épic"
+msgstr[1] "%(counter)s épics"
