@@ -25,20 +25,22 @@
                 </div>
             </div>
 
-            <div id="wiaChartWrap" class="card p-4 position-relative mb-3">
-                <canvas id="ageChart"></canvas>
-                <div id="chartTooltip">
-                    <div class="tt-card">
-                        <div class="tt-title">
-                            <span id="ttKey">-</span>
-                            <span id="ttAge" class="badge text-bg-dark badge-age">-</span>
-                        </div>
-                        <div id="ttTitle" class="small mb-2 text-dark">-</div>
-                        <div class="tt-meta">
-                            <span class="me-2">{% trans "Status" %}: <strong id="ttStatus">-</strong></span>
-                        </div>
-                        <div class="tt-link">
-                            <a id="ttLink" href="#" target="_blank" rel="noopener noreferrer">{% trans "Open in Jira" %} -></a>
+            <div class="card p-4 mb-3">
+                <div id="wiaChartWrap" class="wia-chart-frame">
+                    <canvas id="ageChart"></canvas>
+                    <div id="chartTooltip">
+                        <div class="tt-card">
+                            <div class="tt-title">
+                                <span id="ttKey">-</span>
+                                <span id="ttAge" class="badge text-bg-dark badge-age">-</span>
+                            </div>
+                            <div id="ttTitle" class="small mb-2 text-dark">-</div>
+                            <div class="tt-meta">
+                                <span class="me-2">{% trans "Status" %}: <strong id="ttStatus">-</strong></span>
+                            </div>
+                            <div class="tt-link">
+                                <a id="ttLink" href="#" target="_blank" rel="noopener noreferrer">{% trans "Open in Jira" %} -></a>
+                            </div>
                         </div>
                     </div>
                 </div>
