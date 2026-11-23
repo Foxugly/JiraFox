@@ -136,13 +136,13 @@ class KanbanMetricsService:
                 "notes": _("Not enough information to compute metrics (missing created/status/changelog)."),
             }
 
-        # accumulate durations
+        # accumulate durations, in business hours like lead/cycle time (not wall-clock)
         for idx in range(len(points)):
             t0, st0 = points[idx]
             t1 = (points[idx + 1][0] if idx + 1 < len(points) else end.astimezone(tz))
-            dur = max(0.0, (t1 - t0).total_seconds())
             if st0:
-                time_in_status_sec[st0] = time_in_status_sec.get(st0, 0.0) + dur
+                hours = self.business_hours_between(t0, t1)
+                time_in_status_sec[st0] = time_in_status_sec.get(st0, 0.0) + hours * 3600.0
 
         time_in_status_hours = {k: round(v / 3600.0, 2) for k, v in time_in_status_sec.items()}
         max_hours = max(time_in_status_hours.values(), default=0.0)
