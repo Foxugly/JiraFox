@@ -48,23 +48,19 @@ connecter a JiraFox.)
 Ouvrir http://127.0.0.1:8000/ puis arreter avec Ctrl+C.
 
 
-6. Raccourci bureau vers la fenetre de pilotage (WinForms)
-----------------------------------------------------------
+6. Raccourci sur le bureau
+-------------------------
 
-La fenetre (tools\jirafox-gui.ps1) permet : Demarrer, Arreter, Ouvrir, Mettre a jour (git pull
-+ dependances + migrate), Migrer.
+Pas de commande a taper ici :
 
-$root = (Get-Location).Path
-$lnk = (New-Object -ComObject WScript.Shell).CreateShortcut("$([Environment]::GetFolderPath('Desktop'))\JiraFox.lnk")
-$lnk.TargetPath = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
-$lnk.Arguments = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$root\tools\jirafox-gui.ps1`""
-$lnk.WorkingDirectory = $root
-$lnk.IconLocation = "$env:SystemRoot\System32\shell32.dll,13"
-$lnk.Description = "JiraFox - demarrer, arreter, mettre a jour"
-$lnk.Save()
+  - dans l'explorateur Windows, ouvrir le dossier JiraFox ;
+  - clic droit sur JiraFox.cmd > "Envoyer vers" > "Bureau (creer un raccourci)"
+    (sous Windows 11 : d'abord "Afficher d'autres options") ;
+  - double-cliquer sur le raccourci : la fenetre JiraFox s'ouvre avec les boutons
+    Demarrer, Arreter, Ouvrir, Mettre a jour (git pull + dependances + migrate) et Migrer.
 
-Double-cliquer ensuite sur "JiraFox" sur le bureau. Sans raccourci, JiraFox.cmd (a la racine
-du depot) ouvre la meme fenetre.
+Une console noire peut apparaitre une fraction de seconde au lancement : c'est normal.
+Rien a faire dans le dossier tools : il contient la fenetre et ses fonctions.
 
 
 Si l'antivirus bloque la fenetre
