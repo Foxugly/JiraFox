@@ -19,3 +19,6 @@ media/
 
 # Traces of the PowerPoint generations (Jira data): never committed.
 logs/
+
+# PID of the server started by tools/jirafox.ps1 or the window.
+.jirafox.pid
