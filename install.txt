@@ -1,0 +1,81 @@
+JiraFox - installation sous Windows, commande par commande
+==========================================================
+
+A taper dans une fenetre PowerShell (menu Demarrer > "PowerShell"), une ligne a la fois.
+Pre-requis : Git et Python 3.14 installes (verifier avec : git --version  et  py -3.14 --version).
+
+
+1. Recuperer le code
+--------------------
+
+cd $HOME
+git clone https://github.com/Foxugly/JiraFox.git
+cd JiraFox
+
+
+2. Environnement Python et dependances
+--------------------------------------
+
+py -3.14 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+
+
+3. Configuration (.env)
+-----------------------
+
+Genere une cle secrete et ecrit le fichier .env (une seule fois ; ne pas le refaire s'il existe) :
+
+$key = .\.venv\Scripts\python.exe -c "import secrets; print(secrets.token_urlsafe(50))"
+Set-Content .env "DJANGO_DEBUG=False`nDJANGO_SECRET_KEY=$key`nDJANGO_ALLOWED_HOSTS=127.0.0.1,localhost`nDJANGO_LOG_LEVEL=INFO" -Encoding ascii
+
+
+4. Base de donnees SQLite et compte administrateur
+--------------------------------------------------
+
+.\.venv\Scripts\python.exe manage.py migrate --noinput
+.\.venv\Scripts\python.exe manage.py createsuperuser
+
+(createsuperuser demande un nom, un e-mail et un mot de passe : c'est le compte pour se
+connecter a JiraFox.)
+
+
+5. Test rapide (facultatif)
+---------------------------
+
+.\.venv\Scripts\python.exe manage.py runserver 127.0.0.1:8000 --insecure
+
+Ouvrir http://127.0.0.1:8000/ puis arreter avec Ctrl+C.
+
+
+6. Raccourci bureau vers la fenetre de pilotage (WinForms)
+----------------------------------------------------------
+
+La fenetre (tools\jirafox-gui.ps1) permet : Demarrer, Arreter, Ouvrir, Mettre a jour (git pull
++ dependances + migrate), Migrer.
+
+$root = (Get-Location).Path
+$lnk = (New-Object -ComObject WScript.Shell).CreateShortcut("$([Environment]::GetFolderPath('Desktop'))\JiraFox.lnk")
+$lnk.TargetPath = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
+$lnk.Arguments = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$root\tools\jirafox-gui.ps1`""
+$lnk.WorkingDirectory = $root
+$lnk.IconLocation = "$env:SystemRoot\System32\shell32.dll,13"
+$lnk.Description = "JiraFox - demarrer, arreter, mettre a jour"
+$lnk.Save()
+
+Double-cliquer ensuite sur "JiraFox" sur le bureau. Sans raccourci, JiraFox.cmd (a la racine
+du depot) ouvre la meme fenetre.
+
+
+Si l'antivirus bloque la fenetre
+--------------------------------
+
+Le serveur se pilote aussi sans PowerShell :
+
+  demarrer : .\.venv\Scripts\python.exe manage.py runserver 127.0.0.1:8000 --insecure
+  mettre a jour :
+    git pull --ff-only
+    .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+    .\.venv\Scripts\python.exe manage.py migrate --noinput
+
+Sinon, ajouter le dossier JiraFox aux exclusions de l'antivirus (decision a prendre par vous).
