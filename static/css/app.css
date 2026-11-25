@@ -1346,6 +1346,15 @@ div.dt-container div.dt-length select {
         var(--app-surface);
 }
 
+/* Login / signup aside: same panel as the rest of the app (it kept the old blue gradient). */
+.auth-aside {
+    background:
+        linear-gradient(120deg, rgba(227, 6, 19, 0.08), transparent 42%),
+        var(--app-surface);
+    border: 1px solid var(--app-line);
+    color: var(--app-ink);
+}
+
 .feature-card {
     background: var(--app-surface-strong);
     border: 1px solid var(--app-line);
