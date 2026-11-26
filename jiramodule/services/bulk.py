@@ -473,13 +473,24 @@ class InstanceCloner:
             olds = ", ".join(f'"{old}"' for old, _ in self.replacements)
             result.warnings.append(f"summary unchanged: {olds} not found")
 
+    def _delete_unverified(self, original_key: str, clone_key: str, reason: Exception) -> None:
+        """Delete a copy whose security level could not be confirmed; always raises, naming what is left."""
+        try:
+            self.jira.issue(clone_key, fields="summary").delete()
+        except Exception as exc:  # noqa: BLE001
+            raise RuntimeError(
+                f"{clone_key} (copy of {original_key}) may be less restricted than its template and could NOT "
+                f"be deleted ({_jira_error_text(exc)}): delete it by hand. Cause: {_jira_error_text(reason)}"
+            ) from exc
+        raise RuntimeError(f"{_jira_error_text(reason)}; the copy {clone_key} was deleted") from reason
+
     def _check_security(self, original: Any, clone_key: str) -> None:
         """Comments and attachments are copied only once the copy is as restricted as its template."""
         expected = ((original.raw.get("fields") or {}).get("security") or {}).get("id")
         actual = ((self.jira.issue(clone_key, fields="security").raw.get("fields") or {}).get("security") or {}).get("id")
         if expected != actual:
             raise RuntimeError(
-                f"{clone_key}: security level {actual!r}, expected {expected!r}; the copy was deleted"
+                f"{clone_key}: security level {actual!r}, expected {expected!r}"
             )
 
     def clone_one(self, original: Any, *, parent_key: Optional[str], dry_run: bool) -> CloneResult:
@@ -512,9 +523,8 @@ class InstanceCloner:
             # (link, comments, attachments) can point at it or fill it.
             try:
                 self._check_security(original, created.key)
-            except RuntimeError:
-                self.jira.issue(created.key, fields="summary").delete()
-                raise
+            except Exception as exc:  # noqa: BLE001 - any doubt on the level: the copy goes
+                self._delete_unverified(original.key, created.key, exc)
             result.clone = created.key
             self._link(created.key, original.key)
             if not parent_key:
