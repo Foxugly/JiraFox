@@ -479,7 +479,7 @@ class InstanceCloner:
         actual = ((self.jira.issue(clone_key, fields="security").raw.get("fields") or {}).get("security") or {}).get("id")
         if expected != actual:
             raise RuntimeError(
-                f"{clone_key}: security level {actual!r}, expected {expected!r}; comments and attachments not copied"
+                f"{clone_key}: security level {actual!r}, expected {expected!r}; the copy was deleted"
             )
 
     def clone_one(self, original: Any, *, parent_key: Optional[str], dry_run: bool) -> CloneResult:
@@ -508,11 +508,17 @@ class InstanceCloner:
             return result
         try:
             created = self._create(payload, result)
+            # Fail closed: a copy less restricted than its template is deleted before anything
+            # (link, comments, attachments) can point at it or fill it.
+            try:
+                self._check_security(original, created.key)
+            except RuntimeError:
+                self.jira.issue(created.key, fields="summary").delete()
+                raise
             result.clone = created.key
             self._link(created.key, original.key)
             if not parent_key:
                 self._check_sprint(created.key)
-            self._check_security(original, created.key)
             self._copy_extras(original, created.key, result)
             current = _status_name(self.jira.issue(created.key, fields="status").raw.get("fields") or {})
             if not _same(current, target_status):

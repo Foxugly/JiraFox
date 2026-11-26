@@ -38,9 +38,14 @@ VIA = "Canceled>Open>Backlog"
 
 
 class FakeIssue:
-    def __init__(self, key, fields):
+    def __init__(self, key, fields, jira=None):
         self.key = key
         self.raw = {"key": key, "fields": fields}
+        self._jira = jira
+
+    def delete(self):
+        self._jira.deleted.append(self.key)
+        self._jira.issues.pop(self.key)
 
 
 class Page(list):
@@ -63,6 +68,8 @@ class FakeJira:
         self.refuse_on_create: set[str] = set()
         self.cancel_sets_resolution = False
         self.security_on_create_screen = True
+        self.ignore_security_on_create = False
+        self.deleted: list[str] = []
 
     # -- setup -------------------------------------------------------------------------------
 
@@ -125,7 +132,7 @@ class FakeJira:
             raise KeyError(key)
         out = dict(fields_)
         out["issuelinks"] = [self._link_view(link, key) for link in self.links if key in (link["inward"], link["outward"])]
-        return FakeIssue(key, out)
+        return FakeIssue(key, out, self)
 
     def _link_view(self, link, key):
         # Jira's view: on the source ("inwardIssue" of the POST) the other issue is the outwardIssue.
@@ -190,6 +197,8 @@ class FakeJira:
         itype = {"1": "Story", "3": "Sub-task", "6": "Epic"}[fields["issuetype"]["id"]]
         parent = (fields.get("parent") or {}).get("key")
         extra = {k: v for k, v in fields.items() if k not in {"project", "issuetype", "parent", SPRINT_F, EPIC_F}}
+        if self.ignore_security_on_create:
+            extra.pop("security", None)
         sprint = fields.get(SPRINT_F)
         self.add(key, itype=itype, sprint=sprint, epic=fields.get(EPIC_F), parent=parent, **extra)
         if parent and self.issues[parent].get(SPRINT_F):
@@ -519,6 +528,17 @@ def test_instance_never_clones_a_restricted_issue_without_its_level():
     assert "security level" in results["BKL-1"].error and not results["BKL-1"].clone
     assert all(c["summary"] != "summary BKL-1" for c in jira.created)
     assert "BKL-1a" not in results  # its sub-tasks are not cloned either
+
+
+def test_instance_deletes_a_copy_that_lost_its_security_level():
+    jira = _template()
+    jira.issues["BKL-1"]["security"] = {"id": "10000", "name": "Internal"}
+    jira.ignore_security_on_create = True  # Jira accepts the field but does not apply it
+    results = {r.original: r for r in _run(jira)}
+    assert "deleted" in results["BKL-1"].error and not results["BKL-1"].clone
+    assert len(jira.deleted) == 1 and jira.deleted[0] not in jira.issues
+    assert not [l for l in jira.links if l["outward"] == "BKL-1" or l["inward"] == "BKL-1"]  # never linked
+    assert "BKL-1a" not in results
 
 
 def test_instance_security_field_is_not_droppable():
