@@ -400,6 +400,8 @@ def test_instance_replaces_text_in_summary():
     assert jira.issues[results["BKL-1"].clone]["summary"] == "[2027/01] Clôture [2027/"
     assert jira.issues[results["BKL-1a"].clone]["summary"] == "sub [2027/02]"
     assert jira.issues["BKL-1"]["summary"] == "[20XX/01] Clôture [20XX/"  # template untouched
+    assert any("summary unchanged" in w for w in results["BKL-2"].warnings)  # no [20XX/ in it
+    assert not any("summary unchanged" in w for w in results["BKL-1"].warnings)
 
 
 def test_instance_rerun_creates_nothing():

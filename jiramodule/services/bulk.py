@@ -467,6 +467,12 @@ class InstanceCloner:
         if ids != {self.new_sprint_id}:
             raise RuntimeError(f"{clone_key}: sprint field is {sorted(ids)}, expected only [{self.new_sprint_id}]")
 
+    def _warn_if_unreplaced(self, original: Any, result: "CloneResult") -> None:
+        """A --replace that changed nothing usually means a template written differently: say it."""
+        if self.replacements and result.summary == ((original.raw.get("fields") or {}).get("summary") or ""):
+            olds = ", ".join(f'"{old}"' for old, _ in self.replacements)
+            result.warnings.append(f"summary unchanged: {olds} not found")
+
     def _check_security(self, original: Any, clone_key: str) -> None:
         """Comments and attachments are copied only once the copy is as restricted as its template."""
         expected = ((original.raw.get("fields") or {}).get("security") or {}).get("id")
@@ -495,6 +501,7 @@ class InstanceCloner:
             return result
         result.dropped_fields.extend(skipped)
         result.summary = payload["summary"]
+        self._warn_if_unreplaced(original, result)
         target_status = _status_name(original.raw.get("fields") or {})
         if dry_run:
             result.status = WalkResult(key="(new)", start="", end=target_status, done=path_to(target_status, self.via_steps))
@@ -532,6 +539,7 @@ class InstanceCloner:
                     child = CloneResult(original=subtask.key, parent_clone=parent.clone or "(new)")
                     try:
                         child.summary = self.build_fields(subtask, parent_key="(new)")[0]["summary"]
+                        self._warn_if_unreplaced(subtask, child)
                     except RuntimeError as exc:  # e.g. a security level the copy could not get
                         child.error = str(exc)
                     status = _status_name(subtask.raw.get("fields") or {})
