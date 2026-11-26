@@ -2,7 +2,7 @@
 Bulk changes on Jira, from the command line.
 
     manage.py jira_bulk transition "<jql>" --from "To Do" --to "Ready for sprint" --via "Canceled>Open>Backlog" --dry-run
-    manage.py jira_bulk instance <template_sprint_id> --epic <epic key|id> --sprint <new_sprint_id> --via "Canceled>Open>Backlog" --dry-run
+    manage.py jira_bulk instance "<jql>" --epic <epic key|id> --sprint <new_sprint_id> --via "Canceled>Open>Backlog" --dry-run
 
 Without --dry-run the command shows what it is about to do and waits for "oui".
 Each real run writes its report to logs/jira_bulk/.
@@ -23,8 +23,14 @@ from jiramodule.services.jira_client import JiraManager
 from jiramodule.services.jql import quote_value
 
 
+def csv_cell(value) -> str:
+    """Jira text (error messages, field names) must not run as an Excel formula when the report is opened."""
+    text = "" if value is None else str(value)
+    return f"'{text}" if text[:1] in {"=", "+", "-", "@", "\t", "\r"} else text
+
+
 class Command(BaseCommand):
-    help = "Bulk Jira changes: walk issues to a status, or instance a template sprint into another sprint + epic."
+    help = "Bulk Jira changes: walk the issues of a JQL to a status, or clone them into a sprint + epic."
 
     def add_arguments(self, parser):
         parser.add_argument("--user", help="JiraFox login whose current project and Jira token are used.")
@@ -38,8 +44,8 @@ class Command(BaseCommand):
         transition.add_argument("--dry-run", action="store_true")
         transition.add_argument("--yes", action="store_true", help="Do not ask for confirmation.")
 
-        instance = sub.add_parser("instance", help="Copy every issue of a template sprint into another sprint + epic.")
-        instance.add_argument("sprint_id", type=int, help="Template sprint.")
+        instance = sub.add_parser("instance", help="Copy every issue of a JQL into a sprint + epic.")
+        instance.add_argument("jql", help="The template issues (their sub-tasks come with them).")
         instance.add_argument("--epic", required=True, help="Epic of the copies (key or id).")
         instance.add_argument("--sprint", dest="new_sprint_id", type=int, required=True, help="Sprint of the copies.")
         instance.add_argument("--via", help="Statuses a new issue goes through to reach its template's status.")
@@ -78,7 +84,7 @@ class Command(BaseCommand):
         with path.open("w", newline="", encoding="utf-8-sig") as handle:
             writer = csv.writer(handle, delimiter=";")
             writer.writerow(header)
-            writer.writerows(rows)
+            writer.writerows([[csv_cell(value) for value in row] for row in rows])
         self.stdout.write(f"Rapport : {path}")
 
     def handle(self, *args, **options):
@@ -122,17 +128,15 @@ class Command(BaseCommand):
     def _instance(self, jira, options):
         cloner = InstanceCloner(
             jira,
-            sprint_id=options["sprint_id"],
+            jql=options["jql"],
             new_sprint_id=options["new_sprint_id"],
             epic=options["epic"],
             via=options["via"],
         )
-        if options["sprint_id"] == options["new_sprint_id"]:
-            raise CommandError("Le sprint des copies doit être différent du sprint template.")
         epic_key = cloner.resolve_epic()
         originals = cloner.originals()
         self.stdout.write(
-            f"Sprint template {options['sprint_id']} : {len(originals)} ticket(s) -> sprint {options['new_sprint_id']}, epic {epic_key}"
+            f"JQL : {cloner.originals_jql()}\n{len(originals)} ticket(s) -> sprint {options['new_sprint_id']}, epic {epic_key}"
         )
         if not originals:
             return

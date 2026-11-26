@@ -22,13 +22,17 @@ rapport dans `logs/jira_bulk/` (CSV, séparateur `;`).
   du ticket l'indique (`ATTENTION résolution encore posée`).
 - Jira Server notifie à chaque transition faite par l'API (pas d'option pour l'éviter).
 
-## 2. Instancier un sprint template
+## 2. Instancier des tickets template
 
 ```
-.\.venv\Scripts\python.exe manage.py jira_bulk instance 123 --epic BKL-456 --sprint 789 --via "Canceled>Open>Backlog" --dry-run
+.\.venv\Scripts\python.exe manage.py jira_bulk instance "sprint = 123" --epic BKL-456 --sprint 789 --via "Canceled>Open>Backlog" --dry-run
 ```
 
-Pour chaque ticket du sprint template `123` (ordre du backlog), puis ses sous-tâches :
+Les templates sont les tickets du JQL (n'importe lequel), dans l'ordre de son `ORDER BY`, sinon
+celui du backlog. Les sous-tâches que le JQL renverrait sont ignorées : elles sont clonées avec
+leur parent. Un ticket déjà dans le sprint cible est ignoré (« already in the target sprint »).
+
+Pour chaque ticket template, puis ses sous-tâches :
 
 - crée une copie avec tous les champs de l'écran de création (résumé, description, priorité,
   composants, labels, versions, assignee, reporter, story points, estimation d'origine,
@@ -43,5 +47,13 @@ Pour chaque ticket du sprint template `123` (ordre du backlog), puis ses sous-t�
 
 Un champ refusé par Jira à la création (ex. reporter sans la permission) est retiré, la copie
 est créée sans lui et la ligne du ticket le signale.
+
+Niveau de sécurité : un ticket template restreint n'est **jamais** copié sans son niveau. Si le
+niveau ne peut pas être posé sur la copie, le ticket (et ses sous-tâches) n'est pas cloné et
+passe en erreur ; commentaires et pièces jointes ne sont copiés qu'après avoir vérifié que la
+copie a le même niveau que son template.
+
+Les rapports CSV neutralisent les cellules qui commencent par `=`, `+`, `-` ou `@` (pas de
+formule exécutée à l'ouverture dans Excel).
 
 Les ids de sprint se lisent dans l'URL du board (`sprint=123`) ou dans JiraFox.

@@ -4,7 +4,7 @@ Bulk operations on Jira issues, driven by the `jira_bulk` management command.
 - `walk_to_status`: moves an issue through a list of statuses, one transition at a time
   (Jira only exposes the transitions available from the current status, never the whole
   workflow, so the path is given by the caller).
-- `InstanceCloner`: copies every issue of a template sprint (fields, sub-tasks, comments,
+- `InstanceCloner`: copies every issue of a JQL (fields, sub-tasks, comments,
   attachments, watchers) into another sprint and epic, links each copy to its template
   ("clones"), and brings the copy to the template's status.
 
@@ -245,9 +245,9 @@ class CloneResult:
 
 
 class InstanceCloner:
-    def __init__(self, jira: Any, *, sprint_id: int, new_sprint_id: int, epic: str, via: Optional[str]) -> None:
+    def __init__(self, jira: Any, *, jql: str, new_sprint_id: int, epic: str, via: Optional[str]) -> None:
         self.jira = jira
-        self.sprint_id = int(sprint_id)
+        self.jql = jql
         self.new_sprint_id = int(new_sprint_id)
         self.epic_ref = str(epic)
         self.via_steps = [s.strip() for s in (via or "").split(">") if s.strip()]
@@ -317,9 +317,14 @@ class InstanceCloner:
 
     # -- reading -------------------------------------------------------------------------
 
+    def originals_jql(self) -> str:
+        """The templates: the JQL's standard issues (sub-tasks come with their parent), in its order or the backlog's."""
+        where, order = split_order_by(self.jql)
+        where = f"({where}) AND {STANDARD_ISSUE_TYPES}" if where else STANDARD_ISSUE_TYPES
+        return f"{where} ORDER BY {order or 'Rank ASC'}"
+
     def originals(self) -> list:
-        jql = f"sprint = {self.sprint_id} AND {STANDARD_ISSUE_TYPES} ORDER BY Rank ASC"
-        return search_all(self.jira, jql)
+        return search_all(self.jira, self.originals_jql())
 
     def subtasks_of(self, issue: Any) -> list:
         keys = [s.get("key") for s in (issue.raw.get("fields") or {}).get("subtasks") or [] if s.get("key")]
@@ -343,8 +348,16 @@ class InstanceCloner:
         allowed = self.create_fields(project_key, issuetype.get("id"))
         payload: dict[str, Any] = {"project": {"key": project_key}, "issuetype": {"id": issuetype.get("id")}}
         skipped: list[str] = []
+        # A restricted template must never give an unrestricted copy: no security level, no clone.
+        security = raw.get("security")
+        if security:
+            if "security" not in allowed or not (security or {}).get("id"):
+                raise RuntimeError(
+                    f'{issue.key} has the security level "{security.get("name")}", which cannot be set on its copy: not cloned.'
+                )
+            payload["security"] = {"id": security["id"]}
         for field_id, value in raw.items():
-            if field_id in NEVER_COPIED or value in (None, [], ""):
+            if field_id in NEVER_COPIED or field_id == "security" or value in (None, [], ""):
                 continue
             meta = self.fields_by_id.get(field_id) or {}
             custom = (meta.get("schema") or {}).get("custom") or ""
@@ -372,7 +385,7 @@ class InstanceCloner:
 
     def _create(self, payload: dict, result: CloneResult) -> Any:
         """Create the issue; on a per-field refusal (e.g. reporter without the permission), retry without those fields."""
-        essential = {"project", "issuetype", "summary", "parent", self.sprint_field, self.epic_link_field}
+        essential = {"project", "issuetype", "summary", "parent", "security", self.sprint_field, self.epic_link_field}
         try:
             return self.jira.create_issue(fields=payload)
         except Exception as exc:  # noqa: BLE001
@@ -438,16 +451,32 @@ class InstanceCloner:
         if ids != {self.new_sprint_id}:
             raise RuntimeError(f"{clone_key}: sprint field is {sorted(ids)}, expected only [{self.new_sprint_id}]")
 
+    def _check_security(self, original: Any, clone_key: str) -> None:
+        """Comments and attachments are copied only once the copy is as restricted as its template."""
+        expected = ((original.raw.get("fields") or {}).get("security") or {}).get("id")
+        actual = ((self.jira.issue(clone_key, fields="security").raw.get("fields") or {}).get("security") or {}).get("id")
+        if expected != actual:
+            raise RuntimeError(
+                f"{clone_key}: security level {actual!r}, expected {expected!r}; comments and attachments not copied"
+            )
+
     def clone_one(self, original: Any, *, parent_key: Optional[str], dry_run: bool) -> CloneResult:
         """Clone a template issue (parent_key=None) or a sub-task under its parent's copy (real runs only)."""
         result = CloneResult(original=original.key, parent_clone=parent_key or "")
+        if not parent_key and self.new_sprint_id in sprint_ids((original.raw.get("fields") or {}).get(self.sprint_field)):
+            result.skipped = "already in the target sprint"
+            return result
         scope = f"parent = {quote_value(parent_key)}" if parent_key else f"sprint = {self.new_sprint_id}"
         existing = self.existing_clone(original.key, scope)
         if existing:
             result.clone = existing
             result.skipped = "already cloned"
             return result
-        payload, skipped = self.build_fields(original, parent_key=parent_key)
+        try:
+            payload, skipped = self.build_fields(original, parent_key=parent_key)
+        except RuntimeError as exc:
+            result.error = str(exc)
+            return result
         result.dropped_fields.extend(skipped)
         target_status = _status_name(original.raw.get("fields") or {})
         if dry_run:
@@ -459,6 +488,7 @@ class InstanceCloner:
             self._link(created.key, original.key)
             if not parent_key:
                 self._check_sprint(created.key)
+            self._check_security(original, created.key)
             self._copy_extras(original, created.key, result)
             current = _status_name(self.jira.issue(created.key, fields="status").raw.get("fields") or {})
             if not _same(current, target_status):
@@ -494,6 +524,14 @@ class InstanceCloner:
                 on_result(child)
                 results.append(child)
         return results
+
+
+def split_order_by(jql: str) -> tuple[str, str]:
+    """("where part", "order part") of a JQL; the ORDER BY keyword is case-insensitive."""
+    match = re.search(r"\border\s+by\b", jql or "", flags=re.IGNORECASE)
+    if not match:
+        return (jql or "").strip(), ""
+    return jql[: match.start()].strip(), jql[match.end():].strip()
 
 
 def _field_errors(exc: Exception) -> dict[str, str]:

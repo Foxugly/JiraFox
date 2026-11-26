@@ -9,6 +9,7 @@ import pytest
 from django.core.management import call_command
 from django.core.management.base import CommandError
 
+from jiramodule.management.commands.jira_bulk import csv_cell
 from jiramodule.services.bulk import (
     InstanceCloner,
     parse_path,
@@ -61,6 +62,7 @@ class FakeJira:
         self.next_id = 100
         self.refuse_on_create: set[str] = set()
         self.cancel_sets_resolution = False
+        self.security_on_create_screen = True
 
     # -- setup -------------------------------------------------------------------------------
 
@@ -102,10 +104,13 @@ class FakeJira:
             {"id": EPIC_F, "schema": {"type": "any", "custom": "com.pyxis.greenhopper.jira:gh-epic-link"}},
             {"id": SP_F, "schema": {"type": "number", "custom": "com.atlassian.jira.plugin.system.customfieldtypes:float"}},
             {"id": RANK_F, "schema": {"type": "any", "custom": "com.pyxis.greenhopper.jira:gh-lexo-rank"}},
+            {"id": "security", "schema": {"type": "securitylevel", "system": "security"}},
         ]
 
     def createmeta_fieldtypes(self, project, issuetype_id, startAt=0, maxResults=50):
         ids = ["summary", "description", "assignee", "reporter", "priority", "labels", "components", "fixVersions", "timetracking", SP_F]
+        if self.security_on_create_screen:
+            ids.append("security")
         if issuetype_id == "3":
             ids.append("parent")
         else:
@@ -334,7 +339,7 @@ def _template():
 
 
 def _run(jira, dry_run=False):
-    cloner = InstanceCloner(jira, sprint_id=5, new_sprint_id=6, epic="BKL-E", via=VIA)
+    cloner = InstanceCloner(jira, jql="sprint = 5 ORDER BY Rank ASC", new_sprint_id=6, epic="BKL-E", via=VIA)
     return cloner.run(dry_run=dry_run, on_result=lambda r: None)
 
 
@@ -411,7 +416,7 @@ def test_instance_retries_without_a_refused_field():
 
 def test_instance_rejects_a_non_epic():
     jira = _template()
-    cloner = InstanceCloner(jira, sprint_id=5, new_sprint_id=6, epic="BKL-2", via=VIA)
+    cloner = InstanceCloner(jira, jql="sprint = 5", new_sprint_id=6, epic="BKL-2", via=VIA)
     with pytest.raises(RuntimeError, match="not an epic"):
         cloner.run(dry_run=True, on_result=lambda r: None)
 
@@ -451,14 +456,60 @@ def test_command_transition_real_run_writes_report(monkeypatch, tmp_path, settin
     assert list((tmp_path / "logs" / "jira_bulk").glob("*-transition.csv"))
 
 
-def test_command_instance_refuses_same_sprint():
+def test_instance_skips_issues_already_in_the_target_sprint():
     jira = _template()
-    with pytest.raises(CommandError):
-        _call(jira, "instance", "5", "--epic", "BKL-E", "--sprint", "5", "--dry-run")
+    cloner = InstanceCloner(jira, jql="sprint = 5", new_sprint_id=5, epic="BKL-E", via=VIA)
+    results = cloner.run(dry_run=False, on_result=lambda r: None)
+    assert jira.created == [] and all(r.skipped == "already in the target sprint" for r in results)
+
+
+def test_originals_jql_keeps_order_and_drops_subtasks():
+    jira = FakeJira()
+    cloner = InstanceCloner(jira, jql='project = BKL and labels = rec order by created DESC', new_sprint_id=6, epic="E", via=None)
+    assert cloner.originals_jql() == (
+        "(project = BKL and labels = rec) AND issuetype in standardIssueTypes() ORDER BY created DESC"
+    )
+    cloner.jql = "sprint = 5"
+    assert cloner.originals_jql().endswith("ORDER BY Rank ASC")
 
 
 def test_command_instance_dry_run():
     jira = _template()
-    out = _call(jira, "instance", "5", "--epic", "BKL-E", "--sprint", "6", "--via", VIA, "--dry-run")
+    out = _call(jira, "instance", "sprint = 5", "--epic", "BKL-E", "--sprint", "6", "--via", VIA, "--dry-run")
     assert "2 ticket(s) -> sprint 6, epic BKL-E" in out
     assert "simulation" in out and jira.created == []
+
+
+# --- security -----------------------------------------------------------------------------------
+
+
+def test_instance_keeps_the_security_level():
+    jira = _template()
+    jira.issues["BKL-1"]["security"] = {"id": "10000", "name": "Internal", "self": "x"}
+    results = {r.original: r for r in _run(jira)}
+    assert not results["BKL-1"].error
+    assert jira.issues[results["BKL-1"].clone]["security"] == {"id": "10000"}
+
+
+def test_instance_never_clones_a_restricted_issue_without_its_level():
+    jira = _template()
+    jira.security_on_create_screen = False
+    jira.issues["BKL-1"]["security"] = {"id": "10000", "name": "Internal"}
+    results = {r.original: r for r in _run(jira)}
+    assert "security level" in results["BKL-1"].error and not results["BKL-1"].clone
+    assert all(c["summary"] != "summary BKL-1" for c in jira.created)
+    assert "BKL-1a" not in results  # its sub-tasks are not cloned either
+
+
+def test_instance_security_field_is_not_droppable():
+    jira = _template()
+    jira.issues["BKL-1"]["security"] = {"id": "10000", "name": "Internal"}
+    jira.refuse_on_create = {"security"}
+    results = {r.original: r for r in _run(jira)}
+    assert results["BKL-1"].error and not results["BKL-1"].clone
+
+
+def test_csv_cell_neutralises_formulas():
+    assert csv_cell("=HYPERLINK(1)") == "'=HYPERLINK(1)"
+    assert csv_cell("@x") == "'@x" and csv_cell("-1") == "'-1"
+    assert csv_cell("BKL-1") == "BKL-1" and csv_cell(None) == ""
