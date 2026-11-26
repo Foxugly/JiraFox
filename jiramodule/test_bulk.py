@@ -541,6 +541,41 @@ def test_instance_deletes_a_copy_that_lost_its_security_level():
     assert "BKL-1a" not in results
 
 
+def test_instance_deletes_the_copy_when_the_level_cannot_be_read():
+    jira = _template()
+    jira.issues["BKL-1"]["security"] = {"id": "10000", "name": "Internal"}
+    real_issue = jira.issue
+
+    def flaky_issue(key, fields=None):
+        if fields == "security":
+            raise ConnectionError("timeout")
+        return real_issue(key, fields)
+
+    jira.issue = flaky_issue
+    results = {r.original: r for r in _run(jira)}
+    # The level of no copy can be read: every copy is deleted, none survives.
+    assert "was deleted" in results["BKL-1"].error and "was deleted" in results["BKL-2"].error
+    assert sorted(jira.deleted) == sorted(c for c in jira.deleted) and all(k not in jira.issues for k in jira.deleted)
+    assert len(jira.deleted) == len(jira.created)
+
+
+def test_instance_names_a_copy_it_could_not_delete():
+    jira = _template()
+    jira.issues["BKL-1"]["security"] = {"id": "10000", "name": "Internal"}
+    jira.ignore_security_on_create = True
+
+    def refuse_delete(self):
+        raise PermissionError("no delete permission")
+
+    with mock.patch.object(FakeIssue, "delete", refuse_delete):
+        results = {r.original: r for r in _run(jira)}
+    error = results["BKL-1"].error
+    assert "could NOT be deleted" in error and "delete it by hand" in error
+    leftover = next(k for k in jira.issues if jira.issues[k]["summary"] == "summary BKL-1" and k != "BKL-1")
+    assert leftover in error
+    assert not [l for l in jira.links if "BKL-1" in (l["inward"], l["outward"])]
+
+
 def test_instance_security_field_is_not_droppable():
     jira = _template()
     jira.issues["BKL-1"]["security"] = {"id": "10000", "name": "Internal"}
