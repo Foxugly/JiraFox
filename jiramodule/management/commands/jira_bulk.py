@@ -49,6 +49,13 @@ class Command(BaseCommand):
         instance.add_argument("--epic", required=True, help="Epic of the copies (key or id).")
         instance.add_argument("--sprint", dest="new_sprint_id", type=int, required=True, help="Sprint of the copies.")
         instance.add_argument("--via", help="Statuses a new issue goes through to reach its template's status.")
+        instance.add_argument(
+            "--replace",
+            nargs=2,
+            action="append",
+            metavar=("OLD", "NEW"),
+            help='Replace a text in the summary of the copies, e.g. --replace "[20XX/" "[2027/" (repeatable).',
+        )
         instance.add_argument("--dry-run", action="store_true")
         instance.add_argument("--yes", action="store_true", help="Do not ask for confirmation.")
 
@@ -132,6 +139,7 @@ class Command(BaseCommand):
             new_sprint_id=options["new_sprint_id"],
             epic=options["epic"],
             via=options["via"],
+            replacements=[tuple(pair) for pair in options.get("replace") or []],
         )
         epic_key = cloner.resolve_epic()
         originals = cloner.originals()
@@ -151,7 +159,7 @@ class Command(BaseCommand):
                 line = f"{who}: ERREUR {result.error}"
             else:
                 target = result.status.end if result.status else ""
-                line = f"{who} -> {result.clone or '(nouveau)'}  statut {target}"
+                line = f"{who} -> {result.clone or '(nouveau)'}  statut {target}  « {result.summary} »"
             if result.dropped_fields:
                 line += f"  champs non copiés : {', '.join(result.dropped_fields)}"
             for warning in result.warnings:
@@ -161,6 +169,7 @@ class Command(BaseCommand):
                 [
                     result.original,
                     result.clone,
+                    result.summary,
                     result.parent_clone,
                     result.skipped,
                     result.status.end if result.status else "",
@@ -178,6 +187,6 @@ class Command(BaseCommand):
         if not options["dry_run"]:
             self._report(
                 "instance",
-                ["template", "copie", "parent (copie)", "ignoré", "statut", "champs non copiés", "avertissements", "erreur"],
+                ["template", "copie", "résumé", "parent (copie)", "ignoré", "statut", "champs non copiés", "avertissements", "erreur"],
                 rows,
             )

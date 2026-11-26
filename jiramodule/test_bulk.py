@@ -389,6 +389,19 @@ def test_instance_copies_subtasks_comments_attachments_watchers():
     assert jira.watchers_by[parent_clone] == ["ann", "bob"]
 
 
+def test_instance_replaces_text_in_summary():
+    jira = _template()
+    jira.issues["BKL-1"]["summary"] = "[20XX/01] Clôture [20XX/"
+    jira.issues["BKL-1a"]["summary"] = "sub [20XX/02]"
+    cloner = InstanceCloner(
+        jira, jql="sprint = 5", new_sprint_id=6, epic="BKL-E", via=VIA, replacements=[("[20XX/", "[2027/")]
+    )
+    results = {r.original: r for r in cloner.run(dry_run=False, on_result=lambda r: None)}
+    assert jira.issues[results["BKL-1"].clone]["summary"] == "[2027/01] Clôture [2027/"
+    assert jira.issues[results["BKL-1a"].clone]["summary"] == "sub [2027/02]"
+    assert jira.issues["BKL-1"]["summary"] == "[20XX/01] Clôture [20XX/"  # template untouched
+
+
 def test_instance_rerun_creates_nothing():
     jira = _template()
     _run(jira)
@@ -475,7 +488,12 @@ def test_originals_jql_keeps_order_and_drops_subtasks():
 
 def test_command_instance_dry_run():
     jira = _template()
-    out = _call(jira, "instance", "sprint = 5", "--epic", "BKL-E", "--sprint", "6", "--via", VIA, "--dry-run")
+    jira.issues["BKL-2"]["summary"] = "[20XX/03] Paie"
+    out = _call(
+        jira, "instance", "sprint = 5", "--epic", "BKL-E", "--sprint", "6", "--via", VIA,
+        "--replace", "[20XX/", "[2027/", "--dry-run",
+    )
+    assert "« [2027/03] Paie »" in out
     assert "2 ticket(s) -> sprint 6, epic BKL-E" in out
     assert "simulation" in out and jira.created == []
 

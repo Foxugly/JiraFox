@@ -236,6 +236,7 @@ def sprint_ids(value: Any) -> set[int]:
 class CloneResult:
     original: str
     clone: str = ""
+    summary: str = ""
     parent_clone: str = ""
     skipped: str = ""
     dropped_fields: list[str] = field(default_factory=list)
@@ -245,8 +246,19 @@ class CloneResult:
 
 
 class InstanceCloner:
-    def __init__(self, jira: Any, *, jql: str, new_sprint_id: int, epic: str, via: Optional[str]) -> None:
+    def __init__(
+        self,
+        jira: Any,
+        *,
+        jql: str,
+        new_sprint_id: int,
+        epic: str,
+        via: Optional[str],
+        replacements: Optional[list[tuple[str, str]]] = None,
+    ) -> None:
         self.jira = jira
+        # Literal text replacements in the summary of every copy, in order (e.g. "[20XX/" -> "[2027/").
+        self.replacements = [(old, new) for old, new in (replacements or []) if old]
         self.jql = jql
         self.new_sprint_id = int(new_sprint_id)
         self.epic_ref = str(epic)
@@ -372,6 +384,10 @@ class InstanceCloner:
                 skipped.append(field_id)
                 continue
             payload[field_id] = converted
+        summary = payload.get("summary") or raw.get("summary") or ""
+        for old, new in self.replacements:
+            summary = summary.replace(old, new)
+        payload["summary"] = summary
         if parent_key:
             payload["parent"] = {"key": parent_key}
         else:
@@ -478,6 +494,7 @@ class InstanceCloner:
             result.error = str(exc)
             return result
         result.dropped_fields.extend(skipped)
+        result.summary = payload["summary"]
         target_status = _status_name(original.raw.get("fields") or {})
         if dry_run:
             result.status = WalkResult(key="(new)", start="", end=target_status, done=path_to(target_status, self.via_steps))
@@ -513,6 +530,10 @@ class InstanceCloner:
             for subtask in self.subtasks_of(original):
                 if dry_run:
                     child = CloneResult(original=subtask.key, parent_clone=parent.clone or "(new)")
+                    try:
+                        child.summary = self.build_fields(subtask, parent_key="(new)")[0]["summary"]
+                    except RuntimeError as exc:  # e.g. a security level the copy could not get
+                        child.error = str(exc)
                     status = _status_name(subtask.raw.get("fields") or {})
                     child.status = WalkResult(key="(new)", start="", end=status, done=path_to(status, self.via_steps))
                     if parent.clone:

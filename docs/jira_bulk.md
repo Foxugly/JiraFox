@@ -25,8 +25,12 @@ rapport dans `logs/jira_bulk/` (CSV, séparateur `;`).
 ## 2. Instancier des tickets template
 
 ```
-.\.venv\Scripts\python.exe manage.py jira_bulk instance "sprint = 123" --epic BKL-456 --sprint 789 --via "Canceled>Open>Backlog" --dry-run
+.\.venv\Scripts\python.exe manage.py jira_bulk instance "sprint = 123" --epic BKL-456 --sprint 789 --via "Canceled>Open>Backlog" --replace "[20XX/" "[2027/" --dry-run
 ```
+
+`--replace ANCIEN NOUVEAU` remplace un texte (tel quel, pas une expression régulière) dans le
+résumé de chaque copie, sous-tâches comprises ; répétable, appliqué dans l'ordre. Le dry-run
+affiche le résumé obtenu.
 
 Les templates sont les tickets du JQL (n'importe lequel), dans l'ordre de son `ORDER BY`, sinon
 celui du backlog. Les sous-tâches que le JQL renverrait sont ignorées : elles sont clonées avec
